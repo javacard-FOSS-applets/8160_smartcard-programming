@@ -2,6 +2,7 @@ import javacard.framework.APDU;
 import javacard.framework.Applet;
 import javacard.framework.ISO7816;
 import javacard.framework.ISOException;
+import javacard.security.KeyBuilder;
 import javacard.security.KeyPair;
 import javacard.security.RSAPrivateCrtKey;
 import javacard.security.RSAPublicKey;
@@ -14,11 +15,15 @@ public class Identification extends Applet
     private final static byte EXPORT_RSA_PUBLIC_MOD = (byte) 0xF0;
     private final static byte EXPORT_RSA_PUBLIC_EXP = (byte) 0xF2;
 
+    private final static byte IMPORT_RSA_PUBLIC_MOD = (byte) 0xE0;
+    private final static byte IMPORT_RSA_PUBLIC_EXP = (byte) 0xE2;
+
     private final static byte RSA_ENCODE = (byte) 0xD0;
     private final static byte RSA_DECODE = (byte) 0xD2;
 
     private RSAPrivateCrtKey rsaPrivateKey;
     private RSAPublicKey rsaPublicKey;
+    private RSAPublicKey otherPartyRsaPublicKey;
 
     private Cipher rsaCipher = null;
 
@@ -35,6 +40,11 @@ public class Identification extends Applet
 
         rsaPrivateKey = (RSAPrivateCrtKey) keyPair.getPrivate();
         rsaPublicKey = (RSAPublicKey) keyPair.getPublic();
+
+        otherPartyRsaPublicKey =
+                (RSAPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_RSA_PUBLIC,
+                        KeyBuilder.LENGTH_RSA_1024,
+                        false);
 
         // Don't forget to get an instance of the appropriate cipher class
         this.rsaCipher = Cipher.getInstance(Cipher.ALG_RSA_PKCS1, false);
@@ -60,6 +70,14 @@ public class Identification extends Applet
                     case EXPORT_RSA_PUBLIC_EXP:
                         exportPublicExponent(apdu);
                         break;
+                    case IMPORT_RSA_PUBLIC_MOD:
+                        importPublicModulus(apdu, lc);
+                        break;
+                    // IMPORT_RSA_PUBLIC_EXP = (byte) 0xE2;
+                    case IMPORT_RSA_PUBLIC_EXP:
+                        importPublicExponent(apdu, lc);
+                        break;
+                    // create cipher text from input
                     case RSA_ENCODE:
                         rsa_encode(apdu);
                         break;
@@ -102,11 +120,23 @@ public class Identification extends Applet
         apdu.setOutgoingAndSend((short) 0, expLen);
     }
 
+    private void importPublicModulus(APDU apdu, short lc) {
+        byte[] buffer = apdu.getBuffer();
+        // set the modulus with the data from the apdu buffer
+        otherPartyRsaPublicKey.setModulus(buffer, ISO7816.OFFSET_CDATA, lc);
+    }
+
+    // IMPORT_RSA_PUBLIC_EXP = (byte) 0xE2;
+    private void importPublicExponent(APDU apdu, short lc) {
+        byte[] buffer = apdu.getBuffer();
+        // set the modulus with the data from the apdu buffer
+        otherPartyRsaPublicKey.setExponent(buffer, ISO7816.OFFSET_CDATA, lc);
+    }
     private void rsa_encode(APDU apdu)
     {
         byte buffer[] = apdu.getBuffer();
         short byteRead = apdu.setIncomingAndReceive();
-        rsaCipher.init(rsaPublicKey, Cipher.MODE_ENCRYPT);
+        rsaCipher.init(otherPartyRsaPublicKey, Cipher.MODE_ENCRYPT);
         short ret =
                 rsaCipher.doFinal(
                         buffer,
