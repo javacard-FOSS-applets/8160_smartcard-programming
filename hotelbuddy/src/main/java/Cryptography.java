@@ -21,9 +21,6 @@ public class Cryptography extends Applet implements ICryptography
     private final static byte IMPORT_RSA_PUBLIC_MOD = (byte) 0xE0;
     private final static byte IMPORT_RSA_PUBLIC_EXP = (byte) 0xE2;
 
-    private final static byte RSA_ENCODE = (byte) 0xD0;
-    private final static byte RSA_DECODE = (byte) 0xD2;
-
     // Crypto
     private RSAPrivateCrtKey rsaPrivateKey;
     private RSAPublicKey rsaPublicKey;
@@ -79,12 +76,6 @@ public class Cryptography extends Applet implements ICryptography
                     case IMPORT_RSA_PUBLIC_EXP:
                         importPublicExponent(apdu, lc);
                         break;
-//                    case RSA_ENCODE:
-//                        rsa_encode(apdu);
-//                        break;
-//                    case RSA_DECODE:
-//                        rsa_decode(apdu);
-//                        break;
                     case ISO7816.CLA_ISO7816:
                         if (selectingApplet())
                         {
@@ -133,52 +124,22 @@ public class Cryptography extends Applet implements ICryptography
         otherPartyRsaPublicKey.setExponent(buffer, ISO7816.OFFSET_CDATA, lc);
     }
 
-//    private void rsa_encode(APDU apdu)
-//    {
-//        byte buffer[] = apdu.getBuffer();
-//        short byteRead = apdu.setIncomingAndReceive();
-//        rsaCipher.init(otherPartyRsaPublicKey, Cipher.MODE_ENCRYPT);
-//        short ret =
-//                rsaCipher.doFinal(
-//                        buffer,
-//                        (short) ISO7816.OFFSET_CDATA,
-//                        byteRead,
-//                        buffer,
-//                        (short) 0);
-//        apdu.setOutgoingAndSend((short) 0, ret);
-//    }
-//
-//    private void rsa_decode(APDU apdu)
-//    {
-//        byte buffer[] = apdu.getBuffer();
-//        short byteRead = apdu.setIncomingAndReceive();
-//        rsaCipher.init(rsaPrivateKey, Cipher.MODE_DECRYPT);
-//        short ret =
-//                rsaCipher.doFinal(
-//                        buffer,
-//                        (short) ISO7816.OFFSET_CDATA,
-//                        byteRead,
-//                        buffer,
-//                        (short) 0);
-//        apdu.setOutgoingAndSend((short) 0, ret);
-//    }
-
     public byte[] encrypt(byte[] message)
     {
-        rsaCipher.init(otherPartyRsaPublicKey, Cipher.MODE_ENCRYPT);
-
         byte[] encryptedMessage = JCSystem.makeTransientByteArray((short) 128, JCSystem.CLEAR_ON_DESELECT);
-        short ret = rsaCipher.doFinal(message, (short) 0, (short) message.length, encryptedMessage, (short) 0);
+
+        rsaCipher.init(otherPartyRsaPublicKey, Cipher.MODE_ENCRYPT);
+        rsaCipher.doFinal(message, (short) 0, (short) message.length, encryptedMessage, (short) 0);
 
         return encryptedMessage;
     }
 
     public byte[] decrypt(byte[] message)
     {
-        rsaCipher.init(rsaPrivateKey, Cipher.MODE_ENCRYPT);
-
         byte[] decryptedMessage = JCSystem.makeTransientByteArray((short) 128, JCSystem.CLEAR_ON_DESELECT);
-        short ret = rsaCipher.doFinal(message, (short) 0, (short) message.length, decryptedMessage, (short) 0);
+
+        rsaCipher.init(rsaPrivateKey, Cipher.MODE_DECRYPT);
+        rsaCipher.doFinal(message, (short) 0, (short) message.length, decryptedMessage, (short) 0);
 
         return decryptedMessage;
     }

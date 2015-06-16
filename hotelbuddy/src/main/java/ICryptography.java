@@ -5,11 +5,6 @@ import javacard.framework.Shareable;
  */
 public interface ICryptography extends Shareable
 {
-    short REASON_OK = (short) 0x00;
-    short SECRETE_BAD = (short) 0x01;
-    short AID_BAD = (short) 0x02;
-    short CALLER_AID_NEQ_GIVEN_AID = (short) 0x03;
-
     /**
      * Encrypts the message with the imported key
      *
