@@ -1,9 +1,18 @@
 import com.licel.jcardsim.base.Simulator;
+import org.junit.Assert;
 
 import java.nio.ByteBuffer;
 
 public class TestHelper
 {
+    /**
+     * @param sim
+     * @param classByte
+     * @param instruction
+     * @param content
+     * @param answerLength
+     * @return Answer with status bytes
+     */
     public static byte[] ExecuteCommand(Simulator sim, byte classByte, byte instruction, byte[] content, byte answerLength)
     {
         String answerString;
@@ -17,8 +26,20 @@ public class TestHelper
         answerString = new String(answer, 0, answer.length - 2);
         System.out.println(answerString);
 
-        byte[] strippedAnswer = new byte[answer.length - 2];
-        System.arraycopy(answer, 0, strippedAnswer, 0, strippedAnswer.length);
+        return answer;
+    }
+
+    public static byte[] GetStatusBytes(byte[] message)
+    {
+        byte[] status = new byte[2];
+        System.arraycopy(message, message.length - 2, status, 0, status.length);
+        return status;
+    }
+
+    public static byte[] GetAnswerWithoutStatus(byte[] message)
+    {
+        byte[] strippedAnswer = new byte[message.length - 2];
+        System.arraycopy(message, 0, strippedAnswer, 0, strippedAnswer.length);
         return strippedAnswer;
     }
 
@@ -68,5 +89,15 @@ public class TestHelper
         }
 
         return command;
+    }
+
+    public static void EnsureStatusBytes(byte[] message)
+    {
+        byte[] status = new byte[2];
+        System.arraycopy(message, message.length - 2, status, 0, status.length);
+
+        byte[] expected = {(byte) 0x90, 0x00};
+        Assert.assertEquals(expected[0], status[0]);
+        Assert.assertEquals(expected[1], status[1]);
     }
 }
