@@ -1,3 +1,5 @@
+package common;
+
 import com.licel.jcardsim.base.Simulator;
 import org.junit.Assert;
 

@@ -1,5 +1,6 @@
-package Identification;
+package identification;
 
+import cryptography.ICryptography;
 import javacard.framework.*;
 
 /**
@@ -22,6 +23,10 @@ public class Identification extends Applet {
 
     private static final byte SET_SAFEPIN = (byte) 0xD0;
     private static final byte CHECK_SAFEPIN = (byte) 0xD1;
+
+    // Other Applets
+    private static final byte[] CRYPTHOGRPHY_AID = {0x63, 0x72, 0x79, 0x70, 0x74, 0x6f, 0x67, 0x72, 0x61, 0x70, 0x68, 0x79};
+    private static final byte CRYPTOGRAPHY_SECRET = 0x2A;
 
     // Data
     private short MAX_NAME_LENGTH = 50;
@@ -116,10 +121,38 @@ public class Identification extends Applet {
     }
 
     private void getName(APDU apdu) {
+        byte[] message = encryptMessage(name);
 
+        Util.arrayCopy(message, (short) 0, apdu.getBuffer(), (short) 0, (short) message.length);
+        apdu.setOutgoingAndSend((short) 0, (short) message.length);
+    }
+
+    private byte[] encryptMessage(byte[] messsage) {
+        AID cryptogrphyAid = JCSystem.lookupAID(CRYPTHOGRPHY_AID, (short) 0, (byte) CRYPTHOGRPHY_AID.length);
+        ICryptography cryptoApp = (ICryptography) JCSystem.getAppletShareableInterfaceObject(cryptogrphyAid, CRYPTOGRAPHY_SECRET);
+
+        return cryptoApp.encrypt(messsage);
     }
 
     private void setName(APDU apdu) {
+        byte[] message = decryptMessage(apdu);
 
+        if (message.length > MAX_NAME_LENGTH) {
+            ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
+            return;
+        }
+
+        Util.arrayCopy(message, ISO7816.OFFSET_CDATA, name, (short) 0, (short) message.length);
+    }
+
+    private byte[] decryptMessage(APDU apdu) {
+        short messageLength = 128;
+        byte[] message = JCSystem.makeTransientByteArray(messageLength, JCSystem.CLEAR_ON_DESELECT);
+        Util.arrayCopy(apdu.getBuffer(), ISO7816.OFFSET_CDATA, message, (short) 0, messageLength);
+
+        AID cryptogrphyAid = JCSystem.lookupAID(CRYPTHOGRPHY_AID, (short) 0, (byte) CRYPTHOGRPHY_AID.length);
+        ICryptography cryptoApp = (ICryptography) JCSystem.getAppletShareableInterfaceObject(cryptogrphyAid, CRYPTOGRAPHY_SECRET);
+
+        return cryptoApp.decrypt(message);
     }
 }

@@ -1,4 +1,4 @@
-package Cryptography;
+package cryptography;
 
 import javacard.framework.*;
 import javacard.security.KeyBuilder;

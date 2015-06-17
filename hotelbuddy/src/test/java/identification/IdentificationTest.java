@@ -1,7 +1,9 @@
-import Cryptography.Cryptography;
-import Cryptography.ICryptography;
-import Identification.Identification;
+package identification;
+
 import com.licel.jcardsim.base.Simulator;
+import common.TestHelper;
+import cryptography.Cryptography;
+import cryptography.ICryptography;
 import javacard.framework.AID;
 import javacard.framework.JCSystem;
 import org.junit.Assert;
@@ -18,7 +20,7 @@ import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
 
-public class CryptographyTest
+public class IdentificationTest
 {
     private static final byte[] CryptographyAIDBytes = "cryptography".getBytes();
     private static final byte[] IdentificationAIDBytes = "identification".getBytes();
