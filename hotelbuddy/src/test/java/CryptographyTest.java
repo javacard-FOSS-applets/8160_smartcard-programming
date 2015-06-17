@@ -1,3 +1,6 @@
+import Cryptography.Cryptography;
+import Cryptography.ICryptography;
+import Identification.Identification;
 import com.licel.jcardsim.base.Simulator;
 import javacard.framework.AID;
 import javacard.framework.JCSystem;
