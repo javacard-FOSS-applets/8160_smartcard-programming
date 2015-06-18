@@ -1,5 +1,6 @@
 package cryptography;
 
+import com.sun.imageio.plugins.jpeg.JPEG;
 import javacard.framework.*;
 import javacard.security.KeyBuilder;
 import javacard.security.KeyPair;
@@ -131,9 +132,12 @@ public class Cryptography extends Applet implements ICryptography
         byte[] encryptedMessage = JCSystem.makeTransientByteArray((short) 128, JCSystem.CLEAR_ON_DESELECT);
 
         rsaCipher.init(otherPartyRsaPublicKey, Cipher.MODE_ENCRYPT);
-        rsaCipher.doFinal(message, (short) 0, (short) message.length, encryptedMessage, (short) 0);
+        short encryptedMessageLength = rsaCipher.doFinal(message, (short) 0, (short) message.length, encryptedMessage, (short) 0);
 
-        return encryptedMessage;
+        byte[] response = JCSystem.makeTransientByteArray(encryptedMessageLength, JCSystem.CLEAR_ON_DESELECT);
+        Util.arrayCopy(encryptedMessage, (short) 0, response, (short) 0, encryptedMessageLength);
+
+        return response;
     }
 
     public byte[] decrypt(byte[] message)
@@ -141,9 +145,12 @@ public class Cryptography extends Applet implements ICryptography
         byte[] decryptedMessage = JCSystem.makeTransientByteArray((short) 128, JCSystem.CLEAR_ON_DESELECT);
 
         rsaCipher.init(rsaPrivateKey, Cipher.MODE_DECRYPT);
-        rsaCipher.doFinal(message, (short) 0, (short) message.length, decryptedMessage, (short) 0);
+        short decryptedMessageLength = rsaCipher.doFinal(message, (short) 0, (short) message.length, decryptedMessage, (short) 0);
 
-        return decryptedMessage;
+        byte[] response = JCSystem.makeTransientByteArray(decryptedMessageLength, JCSystem.CLEAR_ON_DESELECT);
+        Util.arrayCopy(decryptedMessage, (short) 0, response, (short) 0, decryptedMessageLength);
+
+        return response;
     }
 
     @Override
