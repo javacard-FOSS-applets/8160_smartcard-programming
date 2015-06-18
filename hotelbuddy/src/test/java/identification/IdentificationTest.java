@@ -3,21 +3,9 @@ package identification;
 import com.licel.jcardsim.base.Simulator;
 import common.CryptographyMock;
 import common.TestHelper;
-import cryptography.Cryptography;
-import cryptography.ICryptography;
 import javacard.framework.AID;
-import javacard.framework.JCSystem;
 import org.junit.Assert;
 import org.junit.Test;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import java.math.BigInteger;
-import java.security.*;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.RSAPublicKeySpec;
 
 public class IdentificationTest
 {

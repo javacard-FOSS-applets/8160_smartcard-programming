@@ -1,8 +1,8 @@
 package cryptography;
 
+import com.licel.jcardsim.base.Simulator;
 import common.TestHelper;
 import identification.Identification;
-import com.licel.jcardsim.base.Simulator;
 import javacard.framework.AID;
 import javacard.framework.JCSystem;
 import org.junit.Assert;
@@ -28,7 +28,7 @@ public class CryptographyTest
     private static final byte CryptographySecret = 42;
 
     @Test
-    public void Test_Encryption() throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException
+    public void Test_Encryption() throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException, SignatureException
     {
         String message = "abc";
 

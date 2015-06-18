@@ -1,6 +1,5 @@
 package cryptography;
 
-import com.sun.imageio.plugins.jpeg.JPEG;
 import javacard.framework.*;
 import javacard.security.KeyBuilder;
 import javacard.security.KeyPair;
@@ -16,6 +15,7 @@ public class Cryptography extends Applet implements ICryptography
 
     // Clients
     private static final byte[] IDENTIFICATION_AID = {0x69, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e};
+    private static final byte[] CRYPTOGRAPHY_AID = {0x63, 0x72, 0x79, 0x70, 0x74, 0x6f, 0x67, 0x72, 0x61, 0x70, 0x68, 0x79};
 
     // Instructions
     private final static byte EXPORT_RSA_PUBLIC_MOD = (byte) 0xF0;
@@ -45,10 +45,7 @@ public class Cryptography extends Applet implements ICryptography
         rsaPrivateKey = (RSAPrivateCrtKey) keyPair.getPrivate();
         rsaPublicKey = (RSAPublicKey) keyPair.getPublic();
 
-        otherPartyRsaPublicKey =
-                (RSAPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_RSA_PUBLIC,
-                        KeyBuilder.LENGTH_RSA_1024,
-                        false);
+        otherPartyRsaPublicKey = (RSAPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_RSA_PUBLIC, KeyBuilder.LENGTH_RSA_1024, false);
 
         this.rsaCipher = Cipher.getInstance(Cipher.ALG_RSA_PKCS1, false);
     }
@@ -60,35 +57,39 @@ public class Cryptography extends Applet implements ICryptography
 
     public void process(APDU apdu)
     {
-        byte[] buf = apdu.getBuffer();
-        short lc = (short) (buf[ISO7816.OFFSET_LC] & (short) 0x00FF);
-        switch (buf[ISO7816.OFFSET_CLA])
+        if (selectingApplet())
         {
-            case CRYPTOGRAPHY_CLA:
-                switch (buf[ISO7816.OFFSET_INS])
-                {
-                    case EXPORT_RSA_PUBLIC_MOD:
-                        exportPublicModulus(apdu);
-                        break;
-                    case EXPORT_RSA_PUBLIC_EXP:
-                        exportPublicExponent(apdu);
-                        break;
-                    case IMPORT_RSA_PUBLIC_MOD:
-                        importPublicModulus(apdu, lc);
-                        break;
-                    case IMPORT_RSA_PUBLIC_EXP:
-                        importPublicExponent(apdu, lc);
-                        break;
-                    case ISO7816.CLA_ISO7816:
-                        if (selectingApplet())
-                        {
-                            ISOException.throwIt(ISO7816.SW_NO_ERROR);
-                        }
-                        break;
-                    default:
-                        ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
-                }
+            ISOException.throwIt(ISO7816.SW_NO_ERROR);
+            return;
+        }
+
+        byte[] buf = apdu.getBuffer();
+
+        if (buf[ISO7816.OFFSET_CLA] != CRYPTOGRAPHY_CLA)
+        {
+            ISOException.throwIt(ISO7816.SW_CLA_NOT_SUPPORTED);
+            return;
+        }
+
+        short messageLength;
+        switch (buf[ISO7816.OFFSET_INS])
+        {
+            case EXPORT_RSA_PUBLIC_MOD:
+                exportPublicModulus(apdu);
                 break;
+            case EXPORT_RSA_PUBLIC_EXP:
+                exportPublicExponent(apdu);
+                break;
+            case IMPORT_RSA_PUBLIC_MOD:
+                messageLength = (short) (buf[ISO7816.OFFSET_LC] & 0xFF);
+                importPublicModulus(apdu, messageLength);
+                break;
+            case IMPORT_RSA_PUBLIC_EXP:
+                messageLength = (short) (buf[ISO7816.OFFSET_LC] & 0xFF);
+                importPublicExponent(apdu, messageLength);
+                break;
+            default:
+                ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
         }
     }
 
@@ -132,12 +133,9 @@ public class Cryptography extends Applet implements ICryptography
         byte[] encryptedMessage = JCSystem.makeTransientByteArray((short) 128, JCSystem.CLEAR_ON_DESELECT);
 
         rsaCipher.init(otherPartyRsaPublicKey, Cipher.MODE_ENCRYPT);
-        short encryptedMessageLength = rsaCipher.doFinal(message, (short) 0, (short) message.length, encryptedMessage, (short) 0);
+        rsaCipher.doFinal(message, (short) 0, (short) message.length, encryptedMessage, (short) 0);
 
-        byte[] response = JCSystem.makeTransientByteArray(encryptedMessageLength, JCSystem.CLEAR_ON_DESELECT);
-        Util.arrayCopy(encryptedMessage, (short) 0, response, (short) 0, encryptedMessageLength);
-
-        return response;
+        return encryptedMessage;
     }
 
     public byte[] decrypt(byte[] message)
