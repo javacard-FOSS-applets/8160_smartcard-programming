@@ -52,6 +52,7 @@ public class CryptographyTest
         System.out.println("\nSelecting Applet...");
         boolean isAppletSelected = sim.selectApplet(CryptographyAID);
         System.out.println(isAppletSelected);
+        Assert.assertTrue(isAppletSelected);
 
         byte[] answer;
         System.out.println("\nImporting Public EXP...");
@@ -72,9 +73,9 @@ public class CryptographyTest
 
         Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(Cipher.DECRYPT_MODE, myPrivateKey);
-        String decryptMessage = new String(cipher.doFinal(encryptedMessage));
+        String decryptMessage = new String(cipher.doFinal(encryptedMessage)).trim();
 
-        Assert.assertEquals(message, decryptMessage.trim());
+        Assert.assertEquals(message, decryptMessage);
     }
 
     @Test
@@ -95,6 +96,7 @@ public class CryptographyTest
         System.out.println("\nSelecting Applet...");
         boolean isAppletSelected = sim.selectApplet(CryptographyAID);
         System.out.println(isAppletSelected);
+        Assert.assertTrue(isAppletSelected);
 
         byte[] answer;
         System.out.println("\nExporting Public EXP...");
@@ -124,6 +126,6 @@ public class CryptographyTest
         System.out.println("Decrypting...");
         byte[] decryptedMessage = cryptoApp.decrypt(encryptMessage);
 
-        Assert.assertEquals(message, new String(decryptedMessage).trim());
+        Assert.assertEquals(message, new String(decryptedMessage));
     }
 }
