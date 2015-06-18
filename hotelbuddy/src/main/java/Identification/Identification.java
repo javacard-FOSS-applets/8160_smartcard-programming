@@ -4,7 +4,7 @@ import cryptography.ICryptography;
 import javacard.framework.*;
 
 /**
- * Created by Patrick on 16.06.2015.
+ * Created by Georg on 16.06.2015.
  */
 public class Identification extends Applet {
     // Java Card
@@ -57,6 +57,11 @@ public class Identification extends Applet {
     @Override
     public void process(APDU apdu) throws ISOException {
         byte[] buf = apdu.getBuffer();
+
+        if (selectingApplet()) {
+            return;
+        }
+
         if (buf[ISO7816.OFFSET_CLA] == IDENTIFICATION_CLA) {
             switch (buf[ISO7816.OFFSET_INS]) {
                 case SET_NAME:
@@ -82,11 +87,6 @@ public class Identification extends Applet {
                     break;
                 case CHECK_SAFEPIN:
                     checkSafePin(apdu);
-                    break;
-                case ISO7816.CLA_ISO7816:
-                    if (selectingApplet()) {
-                        ISOException.throwIt(ISO7816.SW_NO_ERROR);
-                    }
                     break;
                 default:
                     ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
@@ -142,7 +142,7 @@ public class Identification extends Applet {
             return;
         }
 
-        Util.arrayCopy(message, ISO7816.OFFSET_CDATA, name, (short) 0, (short) message.length);
+        Util.arrayCopy(message, (short) 0, name, (short) 0, (short) message.length);
     }
 
     private byte[] decryptMessage(APDU apdu) {
@@ -154,5 +154,14 @@ public class Identification extends Applet {
         ICryptography cryptoApp = (ICryptography) JCSystem.getAppletShareableInterfaceObject(cryptogrphyAid, CRYPTOGRAPHY_SECRET);
 
         return cryptoApp.decrypt(message);
+    }
+
+    public boolean select()
+    {
+        return true;
+    }
+
+    public void deselect()
+    {
     }
 }

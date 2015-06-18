@@ -10,7 +10,7 @@ import javacardx.crypto.Cipher;
 public class Cryptography extends Applet implements ICryptography
 {
     // Applet
-    private static final short CRYPTOGRAPHY_CLA = (byte) 0x49;
+    private static final short CRYPTOGRAPHY_CLA = (byte) 0x43;
     private static final byte CRYPTOGRAPHY_SECRET = 0x2A;
 
     // Clients

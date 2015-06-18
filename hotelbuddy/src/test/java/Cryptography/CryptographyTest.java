@@ -55,11 +55,11 @@ public class CryptographyTest
 
         byte[] answer;
         System.out.println("\nImporting Public EXP...");
-        answer = TestHelper.ExecuteCommand(sim, (byte) 0x49, (byte) 0xE2, myPublicKey.getPublicExponent().toByteArray(), (byte) 0x00);
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xE2, myPublicKey.getPublicExponent().toByteArray(), (byte) 0x00);
         TestHelper.EnsureStatusBytes(answer);
 
         System.out.println("\nImporting Public MOD...");
-        answer = TestHelper.ExecuteCommand(sim, (byte) 0x49, (byte) 0xE0, myPublicKey.getModulus().toByteArray(), (byte) 0x00);
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xE0, myPublicKey.getModulus().toByteArray(), (byte) 0x00);
         TestHelper.EnsureStatusBytes(answer);
 
         // Selecting other applet
@@ -98,12 +98,12 @@ public class CryptographyTest
 
         byte[] answer;
         System.out.println("\nExporting Public EXP...");
-        answer = TestHelper.ExecuteCommand(sim, (byte) 0x49, (byte) 0xF2, new byte[0], (byte) 0x04);
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF2, new byte[0], (byte) 0x04);
         byte[] otherExp = TestHelper.GetAnswerWithoutStatus(answer);
         TestHelper.EnsureStatusBytes(answer);
 
         System.out.println("\nExporting Public MOD...");
-        answer = TestHelper.ExecuteCommand(sim, (byte) 0x49, (byte) 0xF0, new byte[0], (byte) 0x04);
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF0, new byte[0], (byte) 0x04);
         byte[] otherMod = TestHelper.GetAnswerWithoutStatus(answer);
         TestHelper.EnsureStatusBytes(answer);
 
