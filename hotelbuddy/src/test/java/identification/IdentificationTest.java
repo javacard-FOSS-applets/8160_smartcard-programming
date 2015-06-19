@@ -9,11 +9,10 @@ import org.junit.Test;
 
 public class IdentificationTest
 {
-    private static final byte[] CryptographyAIDBytes = "cryptography".getBytes();
-    private static final byte[] IdentificationAIDBytes = "identification".getBytes();
+    private static final byte[] CryptographyAIDBytes = "Cryptography".getBytes();
+    private static final byte[] IdentificationAIDBytes = "Identification".getBytes();
     private static final AID CryptographyAID = new AID(CryptographyAIDBytes, (short) 0, (byte) CryptographyAIDBytes.length);
     private static final AID IdentificationAID = new AID(IdentificationAIDBytes, (short) 0, (byte) IdentificationAIDBytes.length);
-    private static final byte CryptographySecret = 42;
 
     @Test
     public void Test_Name()
@@ -47,6 +46,44 @@ public class IdentificationTest
 
         String answerString = new String(answer, 0, answer.length - 2);
         Assert.assertEquals(name, answerString);
+
+        CryptographyMock.reset();
+    }
+
+    @Test
+    public void Test_GetName_Called_Before_SetName_Throws_()
+    {
+        String name = "asd";
+
+        Simulator sim = new Simulator();
+
+        sim.installApplet(CryptographyAID, CryptographyMock.class);
+        sim.installApplet(IdentificationAID, Identification.class);
+
+        System.out.println("Getting ATR...");
+        byte[] atr = sim.getATR();
+        System.out.println(new String(atr));
+        System.out.println(TestHelper.ToHexString(atr));
+
+        System.out.println("\nSelecting Applet...");
+        boolean isAppletSelected = sim.selectApplet(IdentificationAID);
+        System.out.println(isAppletSelected);
+
+        byte[] answer;
+        System.out.println("\nSetting Name");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x49, (byte) 0xA0, name.getBytes(), (byte) 0x00);
+        TestHelper.EnsureStatusBytes(answer);
+        Assert.assertTrue(CryptographyMock.decryptWasCalled());
+
+        System.out.println("\nGetting Name...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x49, (byte) 0xA1, new byte[0], (byte) 0xFF);
+        TestHelper.EnsureStatusBytes(answer);
+        Assert.assertTrue(CryptographyMock.encryptWasCalled());
+
+        String answerString = new String(answer, 0, answer.length - 2);
+        Assert.assertEquals(name, answerString);
+
+        CryptographyMock.reset();
     }
 
 //    @Test

@@ -26,7 +26,7 @@ public class Identification extends Applet
     private static final byte CHECK_SAFEPIN = (byte) 0xD1;
 
     // Other Applets
-    private static final byte[] CRYPTOGRAPHY_AID = {0x63, 0x72, 0x79, 0x70, 0x74, 0x6f, 0x67, 0x72, 0x61, 0x70, 0x68, 0x79};
+    private static final byte[] CRYPTOGRAPHY_AID = {0x43, 0x72, 0x79, 0x70, 0x74, 0x6f, 0x67, 0x72, 0x61, 0x70, 0x68, 0x79};
     private static final byte CRYPTOGRAPHY_SECRET = 0x2A;
 
     // Data
@@ -57,7 +57,6 @@ public class Identification extends Applet
         new Identification();
     }
 
-    @Override
     public void process(APDU apdu) throws ISOException
     {
         if (selectingApplet())
@@ -146,6 +145,11 @@ public class Identification extends Applet
 
     private void getName(APDU apdu)
     {
+        if (Util.arrayCompare(name, (short) 0x00, new byte[name.length], (short) 0x00, (short) name.length) == 0)
+        {
+            ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
+        }
+
         byte[] message = encryptMessage(name);
 
         Util.arrayCopy(message, (short) 0, apdu.getBuffer(), (short) 0, (short) message.length);
