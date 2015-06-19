@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>HotelBuddyGui</groupId>
+    <artifactId>HotelBuddy</artifactId>
+    <packaging>pom</packaging>
+    <version>0.1</version>
+    <modules>
+        <module>opencard</module>
+    </modules>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+        </dependency>
+        <dependency>
+            <groupId>base-core</groupId>
+            <artifactId>base-core</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/base-core.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>base-opt</groupId>
+            <artifactId>base-opt</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/base-opt.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>offcard</groupId>
+            <artifactId>offcardc</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/offcard.jar</systemPath>
+        </dependency>
+    </dependencies>
+</project>

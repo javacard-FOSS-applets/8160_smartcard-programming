@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>HotelBuddy</artifactId>
+        <groupId>HotelBuddyGui</groupId>
+        <version>0.1</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>opencard</artifactId>
+    <dependencies>
+        <dependency>
+            <groupId>apduio</groupId>
+            <artifactId>apduio</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/src/main/java/lib/apduio.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>ocf-cc</groupId>
+            <artifactId>ocf-cc</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/src/main/java/lib/ocf-cc.jar</systemPath>
+        </dependency>
+    </dependencies>
+</project>
