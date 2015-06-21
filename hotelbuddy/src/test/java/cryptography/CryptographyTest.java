@@ -21,8 +21,8 @@ import java.security.spec.RSAPublicKeySpec;
 
 public class CryptographyTest
 {
-    private static final byte[] CryptographyAIDBytes = "cryptography".getBytes();
-    private static final byte[] IdentificationAIDBytes = "identification".getBytes();
+    private static final byte[] CryptographyAIDBytes = "Cryptography".getBytes();
+    private static final byte[] IdentificationAIDBytes = "Identification".getBytes();
     private static final AID CryptographyAID = new AID(CryptographyAIDBytes, (short) 0, (byte) CryptographyAIDBytes.length);
     private static final AID IdentificationAID = new AID(IdentificationAIDBytes, (short) 0, (byte) IdentificationAIDBytes.length);
     private static final byte CryptographySecret = 42;
@@ -57,11 +57,12 @@ public class CryptographyTest
         byte[] answer;
         System.out.println("\nImporting Public EXP...");
         answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xE2, myPublicKey.getPublicExponent().toByteArray(), (byte) 0x00);
-        TestHelper.EnsureStatusBytes(answer);
+        TestHelper.EnsureStatusBytesNoError(answer);
 
         System.out.println("\nImporting Public MOD...");
         answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xE0, myPublicKey.getModulus().toByteArray(), (byte) 0x00);
-        TestHelper.EnsureStatusBytes(answer);
+        TestHelper.EnsureStatusBytesNoError(answer);
+
 
         // Selecting other applet
         // getShareableInterfaceObject() checks the caller id
@@ -102,12 +103,12 @@ public class CryptographyTest
         System.out.println("\nExporting Public EXP...");
         answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF2, new byte[0], (byte) 0x04);
         byte[] otherExp = TestHelper.GetAnswerWithoutStatus(answer);
-        TestHelper.EnsureStatusBytes(answer);
+        TestHelper.EnsureStatusBytesNoError(answer);
 
         System.out.println("\nExporting Public MOD...");
         answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF0, new byte[0], (byte) 0x04);
         byte[] otherMod = TestHelper.GetAnswerWithoutStatus(answer);
-        TestHelper.EnsureStatusBytes(answer);
+        TestHelper.EnsureStatusBytesNoError(answer);
 
         // Creating PublicKey for other party
         RSAPublicKeySpec spec = new RSAPublicKeySpec(new BigInteger(otherMod), new BigInteger(otherExp));

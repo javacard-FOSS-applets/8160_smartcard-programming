@@ -93,13 +93,17 @@ public class TestHelper
         return command;
     }
 
-    public static void EnsureStatusBytes(byte[] message)
+    public static void EnsureStatusBytes(byte[] message, byte[] expected)
     {
         byte[] status = new byte[2];
         System.arraycopy(message, message.length - 2, status, 0, status.length);
 
-        byte[] expected = {(byte) 0x90, 0x00};
         Assert.assertEquals(expected[0], status[0]);
         Assert.assertEquals(expected[1], status[1]);
+    }
+
+    public static void EnsureStatusBytesNoError(byte[] message)
+    {
+        EnsureStatusBytes(message, new byte[]{(byte) 0x90, (byte) 0x00});
     }
 }
