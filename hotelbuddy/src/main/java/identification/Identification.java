@@ -33,7 +33,7 @@ public class Identification extends Applet
     private short MAX_NAME_LENGTH = 50;
     private byte[] name;
 
-    private short MAX_BIRTHDAY_LENGTH = 10;
+    private short BIRTHDAY_LENGTH = 4;
     private byte[] birthDay;
 
     private short MAX_CARID_LENGTH = 8;
@@ -47,7 +47,7 @@ public class Identification extends Applet
         register();
 
         name = new byte[MAX_NAME_LENGTH];
-        birthDay = new byte[MAX_BIRTHDAY_LENGTH];
+        birthDay = new byte[BIRTHDAY_LENGTH];
         carId = new byte[MAX_CARID_LENGTH];
         safePin = new byte[MAX_SAFEPIN_LENGTH];
     }
@@ -140,7 +140,45 @@ public class Identification extends Applet
 
     private void setBirthday(APDU apdu)
     {
+        byte[] message = decryptMessage(apdu);
 
+        if (message.length != BIRTHDAY_LENGTH)
+        {
+            ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
+            return;
+        }
+
+        if (!checkDate(message))
+        {
+            ISOException.throwIt(ISO7816.SW_DATA_INVALID);
+            return;
+        }
+
+        Util.arrayCopy(message, (short) 0, birthDay, (short) 0, (short) message.length);
+    }
+
+    private boolean checkDate(byte[] message)
+    {
+        if (message[0] < 1 || message[0] > 31)
+        {
+            return false;
+        }
+
+        if (message[1] < 1 || message[1] > 12)
+        {
+            return false;
+        }
+
+        if (message[2] < 19 || message[2] > 20)
+        {
+            return false;
+        }
+
+        if (message[3] < 0 || message[3] > 99)
+        {
+            return false;
+        }
+        return true;
     }
 
     private void getName(APDU apdu)
@@ -160,7 +198,7 @@ public class Identification extends Applet
     {
         byte[] message = decryptMessage(apdu);
 
-        if (message.length > MAX_NAME_LENGTH)
+        if (message.length > MAX_NAME_LENGTH || message.length == 0)
         {
             ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
             return;
