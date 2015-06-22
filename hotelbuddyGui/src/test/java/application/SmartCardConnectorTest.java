@@ -12,6 +12,6 @@ public class SmartCardConnectorTest
     public void testConnect() throws Exception
     {
         SmartCardConnector card = new SmartCardConnector();
-        card.Connect();
+        card.connect();
     }
 }

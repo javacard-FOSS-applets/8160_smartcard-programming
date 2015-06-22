@@ -13,7 +13,7 @@ public class MainController
     @FXML
     Button connectButton;
 
-    SmartCardConnector connector;
+    SmartCardConnector card;
 
     public MainController()
     {
@@ -27,7 +27,12 @@ public class MainController
 
     private void connectSmartCard()
     {
-        this.connector = new SmartCardConnector();
-        connector.Connect();
+        this.card = new SmartCardConnector();
+        if (!card.connect())
+        {
+            return;
+        }
+
+        card.selectApplet("Identification");
     }
 }
