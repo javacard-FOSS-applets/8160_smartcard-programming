@@ -1,5 +1,6 @@
 package application;
 
+import application.card.SmartCardConnector;
 import org.junit.Test;
 
 /**

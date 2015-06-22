@@ -16,10 +16,37 @@
                     <tabs>
                       <Tab text="Konfiguration">
                         <content>
-                          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                                 <children>
-                                    <Button fx:id="connectButton" layoutX="14.0" layoutY="14.0" mnemonicParsing="false" text="Button" />
-                                 </children></AnchorPane>
+                              <TitledPane animated="false" collapsible="false" text="Identifikation">
+                                 <content>
+                                    <GridPane>
+                                      <columnConstraints>
+                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="125.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                      </columnConstraints>
+                                      <rowConstraints>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                      </rowConstraints>
+                                       <children>
+                                          <Button fx:id="setIdentificationButton" mnemonicParsing="false" text="Setzen" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                          <Label styleClass="fieldLabel" text="Name" />
+                                          <TextField fx:id="nameTextField" maxWidth="250.0" GridPane.columnIndex="1" />
+                                          <Label styleClass="fieldLabel" text="Geburtstag" GridPane.rowIndex="1" />
+                                          <DatePicker fx:id="birthDateDatePicker" maxWidth="250.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                          <Label styleClass="fieldLabel" text="Autokennzeichen" GridPane.rowIndex="2" />
+                                          <TextField fx:id="carIdTextField" maxWidth="250.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                          <Label styleClass="fieldLabel" text="Safe-Pin" GridPane.rowIndex="3" />
+                                          <TextField fx:id="safePinTextField" maxWidth="250.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                       </children>
+                                    </GridPane>
+                                 </content>
+                                 <padding>
+                                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                                 </padding>
+                              </TitledPane>
                         </content>
                       </Tab>
                       <Tab text="Identifikation">

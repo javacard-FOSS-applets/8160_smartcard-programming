@@ -1,4 +1,4 @@
-package application;
+package application.card;
 
 import application.log.LogHelper;
 import application.log.LogLevel;
@@ -105,13 +105,51 @@ public class SmartCardConnector implements CTListener
         }
     }
 
+    public CommandResult sendCommand(byte classByte, byte instruction, byte[] content, byte answerLength)
+    {
+        if (card == null)
+        {
+            LogHelper.log(LogLevel.WARNING, "No card available");
+            return new CommandResult(false, new byte[0]);
+        }
+
+        ISOCommandAPDU commandApdu;
+        ResponseAPDU responseApdu;
+        PassThruCardService passThru;
+
+        try
+        {
+            passThru = (PassThruCardService) card.getCardService(PassThruCardService.class, true);
+            commandApdu = ApduHelper.getCommand(classByte, instruction, content, answerLength);
+
+            responseApdu = passThru.sendCommandAPDU(commandApdu);
+
+            String status = HexString.hexifyShort(responseApdu.sw1(), responseApdu.sw2());
+            if (!status.equals("9000"))
+            {
+                LogHelper.log(LogLevel.FAILURE, "Answer incorrect: %s", status);
+                return new CommandResult(false, new byte[0]);
+            }
+
+            return new CommandResult(true, responseApdu.data());
+        }
+        catch (Exception ex)
+        {
+            LogHelper.logException(ex);
+            return new CommandResult(false, new byte[0]);
+        }
+    }
+
+
     public void cardInserted(CardTerminalEvent cardTerminalEvent)
     {
+        // TODO rausfinden wann das event stattfindet
         LogHelper.log(LogLevel.INFO, "Smartcard inserted");
     }
 
     public void cardRemoved(CardTerminalEvent cardTerminalEvent) throws CardTerminalException
     {
+        // TODO rausfinden wann das event stattfindet
         LogHelper.log(LogLevel.INFO, "Smartcard removed");
     }
 }
