@@ -24,6 +24,5 @@ public class Main extends Application
         stage.setTitle("SimuLeo");
         stage.setScene(scene);
         stage.show();
-        stage.setOnCloseRequest(event -> System.exit(0));
     }
 }
