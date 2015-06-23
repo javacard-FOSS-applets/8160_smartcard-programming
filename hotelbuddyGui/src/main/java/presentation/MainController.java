@@ -1,11 +1,8 @@
 package presentation;
 
-import application.card.CommandResult;
-import application.card.SmartCardConnector;
-import application.crypto.EncryptResult;
-import application.crypto.RSACryptographyHelper;
-import application.log.LogHelper;
-import application.log.LogLevel;
+import application.card.JavaCard;
+import application.hotelbuddy.CryptographyApplet;
+import application.hotelbuddy.IdentificationApplet;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -29,8 +26,6 @@ public class MainController
     public TextField safePinTextField;
 
     private MainModel model;
-    private SmartCardConnector card;
-    private RSACryptographyHelper crypto;
 
     public MainController()
     {
@@ -52,38 +47,17 @@ public class MainController
 
     private void initCard()
     {
-        this.card = new SmartCardConnector();
-        if (!card.connect())
+        if (!JavaCard.current().connect().isSuccess())
         {
+            // TODO show alert
             return;
         }
 
-        card.selectApplet("Cryptography");
-        CommandResult modResult = card.sendCommand((byte) 0x43, (byte) 0xF0, new byte[0], (byte) 0x04);
-        CommandResult expResult = card.sendCommand((byte) 0x43, (byte) 0xF2, new byte[0], (byte) 0x04);
-
-        if (modResult.isSuccess() && expResult.isSuccess())
-        {
-            this.crypto = new RSACryptographyHelper();
-            this.crypto.initialize();
-            this.crypto.importPublicKey(modResult.getData(), expResult.getData());
-        }
+        CryptographyApplet.setupRSACryptographyHelper();
     }
 
     private void setIdentificationData()
     {
-        card.selectApplet("Identification");
-
-        EncryptResult encryptedName = crypto.encrypt(this.model.getName());
-
-        if (encryptedName.isSuccess())
-        {
-            CommandResult expResult = card.sendCommand((byte) 0x49, (byte) 0xA0, encryptedName.getDate(), (byte) 0x04);
-
-            if (expResult.isSuccess())
-            {
-                LogHelper.log(LogLevel.INFO, "Name success");
-            }
-        }
+        IdentificationApplet.setName(this.model.getName());
     }
 }

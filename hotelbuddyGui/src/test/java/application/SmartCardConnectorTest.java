@@ -1,6 +1,5 @@
 package application;
 
-import application.card.SmartCardConnector;
 import org.junit.Test;
 
 /**
@@ -12,7 +11,5 @@ public class SmartCardConnectorTest
     @Test
     public void testConnect() throws Exception
     {
-        SmartCardConnector card = new SmartCardConnector();
-        card.connect();
     }
 }

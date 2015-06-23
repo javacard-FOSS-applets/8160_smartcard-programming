@@ -23,14 +23,14 @@ public class MainModel
         return name.get();
     }
 
-    public StringProperty nameProperty()
-    {
-        return name;
-    }
-
     public void setName(String name)
     {
         this.name.set(name);
+    }
+
+    public StringProperty nameProperty()
+    {
+        return name;
     }
 
     public String getCarId()
@@ -38,14 +38,14 @@ public class MainModel
         return carId.get();
     }
 
-    public StringProperty carIdProperty()
-    {
-        return carId;
-    }
-
     public void setCarId(String carId)
     {
         this.carId.set(carId);
+    }
+
+    public StringProperty carIdProperty()
+    {
+        return carId;
     }
 
     public LocalDate getBirthDate()
@@ -53,14 +53,14 @@ public class MainModel
         return birthDate.get();
     }
 
-    public ObjectProperty<LocalDate> birthDateProperty()
-    {
-        return birthDate;
-    }
-
     public void setBirthDate(LocalDate birthDate)
     {
         this.birthDate.set(birthDate);
+    }
+
+    public ObjectProperty<LocalDate> birthDateProperty()
+    {
+        return birthDate;
     }
 
     public String getSafePin()
@@ -68,13 +68,13 @@ public class MainModel
         return safePin.get();
     }
 
-    public StringProperty safePinProperty()
-    {
-        return safePin;
-    }
-
     public void setSafePin(String safePin)
     {
         this.safePin.set(safePin);
+    }
+
+    public StringProperty safePinProperty()
+    {
+        return safePin;
     }
 }

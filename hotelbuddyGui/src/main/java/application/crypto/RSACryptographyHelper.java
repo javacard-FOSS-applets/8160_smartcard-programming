@@ -3,6 +3,9 @@ package application.crypto;
 
 import application.log.LogHelper;
 import application.log.LogLevel;
+import common.ErrorResult;
+import common.Result;
+import common.SuccessResult;
 import sun.security.rsa.RSAPrivateCrtKeyImpl;
 import sun.security.rsa.RSAPublicKeyImpl;
 
@@ -17,14 +20,22 @@ import java.security.spec.RSAPublicKeySpec;
 /**
  * Created by Patrick on 22.06.2015.
  */
-public class RSACryptographyHelper
+public class RSACryptographyHelper implements IRSACryptographyHelper
 {
+    private static IRSACryptographyHelper instance;
     private Cipher rsaCipher;
-
     private RSAPrivateCrtKeyImpl myPrivateKey;
     private RSAPublicKeyImpl myPublicKey;
-
     private PublicKey otherPublicKey;
+
+    private RSACryptographyHelper()
+    {
+    }
+
+    public static IRSACryptographyHelper current()
+    {
+        return instance == null ? (instance = new RSACryptographyHelper()) : instance;
+    }
 
     public void initialize()
     {
@@ -69,31 +80,31 @@ public class RSACryptographyHelper
         LogHelper.log(LogLevel.INFO, "RSACryptographyHelper imported other public key");
     }
 
-    public EncryptResult encrypt(String message)
+    public Result<byte[]> encrypt(String message)
     {
         try
         {
             rsaCipher.init(Cipher.ENCRYPT_MODE, this.otherPublicKey);
-            return new EncryptResult(true, rsaCipher.doFinal(message.getBytes()));
+            return new SuccessResult<>(rsaCipher.doFinal(message.getBytes()));
         }
         catch (Exception ex)
         {
             LogHelper.logException(ex);
-            return new EncryptResult(false, new byte[0]);
+            return new ErrorResult<>("Encryption failed");
         }
     }
 
-    public DecryptResult decrypt(byte[] message)
+    public Result<String> decrypt(byte[] message)
     {
         try
         {
             rsaCipher.init(Cipher.DECRYPT_MODE, this.myPrivateKey);
-            return new DecryptResult(true, new String(rsaCipher.doFinal(message)).trim());
+            return new SuccessResult<>(new String(rsaCipher.doFinal(message)).trim());
         }
         catch (Exception ex)
         {
             LogHelper.logException(ex);
-            return new DecryptResult(false, "");
+            return new ErrorResult<>("Decryption failed");
         }
     }
 
