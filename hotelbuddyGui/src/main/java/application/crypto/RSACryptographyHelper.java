@@ -50,9 +50,13 @@ public class RSACryptographyHelper
 
     public void importPublicKey(byte[] otherMod, byte[] otherExp)
     {
+        byte[] mod = new byte[otherMod.length + 1];
+        mod[0] = 0;
+        System.arraycopy(otherMod, 0, mod, 1, otherMod.length);
+
         try
         {
-            RSAPublicKeySpec spec = new RSAPublicKeySpec(new BigInteger(otherMod), new BigInteger(otherExp));
+            RSAPublicKeySpec spec = new RSAPublicKeySpec(new BigInteger(mod), new BigInteger(otherExp));
             KeyFactory factory = KeyFactory.getInstance("RSA");
             otherPublicKey = factory.generatePublic(spec);
         }
@@ -69,9 +73,8 @@ public class RSACryptographyHelper
     {
         try
         {
-            Cipher cipher = Cipher.getInstance("RSA");
-            cipher.init(Cipher.ENCRYPT_MODE, this.otherPublicKey);
-            return new EncryptResult(true, cipher.doFinal(message.getBytes()));
+            rsaCipher.init(Cipher.ENCRYPT_MODE, this.otherPublicKey);
+            return new EncryptResult(true, rsaCipher.doFinal(message.getBytes()));
         }
         catch (Exception ex)
         {

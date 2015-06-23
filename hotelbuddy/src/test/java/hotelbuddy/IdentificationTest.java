@@ -1,8 +1,9 @@
-package identification;
+package hotelbuddy;
 
 import com.licel.jcardsim.base.Simulator;
 import common.CryptographyMock;
 import common.TestHelper;
+import hotelbuddy.Identification;
 import javacard.framework.AID;
 import org.junit.Assert;
 import org.junit.Test;

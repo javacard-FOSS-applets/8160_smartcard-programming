@@ -2,6 +2,7 @@ package application.card;
 
 import application.log.LogHelper;
 import application.log.LogLevel;
+import common.ByteHelper;
 import opencard.core.event.CTListener;
 import opencard.core.event.CardTerminalEvent;
 import opencard.core.event.EventGenerator;
@@ -44,7 +45,7 @@ public class SmartCardConnector implements CTListener
         try
         {
             CardRequest cardRequest = new CardRequest(CardRequest.ANYCARD, null, PassThruCardService.class);
-            cardRequest.setTimeout(15);
+            cardRequest.setTimeout(15000);
             card = SmartCard.waitForCard(cardRequest);
 
             if (card == null)
@@ -121,6 +122,8 @@ public class SmartCardConnector implements CTListener
         {
             passThru = (PassThruCardService) card.getCardService(PassThruCardService.class, true);
             commandApdu = ApduHelper.getCommand(classByte, instruction, content, answerLength);
+
+            LogHelper.log(LogLevel.INFO, "Sending %s", ByteHelper.ToHexString(commandApdu.getBuffer()));
 
             responseApdu = passThru.sendCommandAPDU(commandApdu);
 

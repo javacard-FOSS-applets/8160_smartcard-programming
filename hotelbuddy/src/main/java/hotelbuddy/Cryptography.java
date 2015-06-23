@@ -1,4 +1,4 @@
-package cryptography;
+package hotelbuddy;
 
 import javacard.framework.*;
 import javacard.security.KeyBuilder;
@@ -47,7 +47,7 @@ public class Cryptography extends Applet implements ICryptography
 
         otherPartyRsaPublicKey = (RSAPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_RSA_PUBLIC, KeyBuilder.LENGTH_RSA_1024, false);
 
-        this.rsaCipher = Cipher.getInstance(Cipher.ALG_RSA_PKCS1, false);
+        rsaCipher = Cipher.getInstance(Cipher.ALG_RSA_PKCS1, false);
     }
 
     public static void install(byte[] bArray, short bOffset, byte bLength)

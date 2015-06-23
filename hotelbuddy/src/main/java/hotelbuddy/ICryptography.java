@@ -1,4 +1,4 @@
-package cryptography;
+package hotelbuddy;
 
 import javacard.framework.Shareable;
 

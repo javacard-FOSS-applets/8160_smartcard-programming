@@ -78,22 +78,12 @@ public class MainController
 
         if (encryptedName.isSuccess())
         {
-            CommandResult expResult = card.sendCommand((byte) 0x43, (byte) 0xF0, encryptedName.getDate(), (byte) 0x04);
+            CommandResult expResult = card.sendCommand((byte) 0x49, (byte) 0xA0, encryptedName.getDate(), (byte) 0x04);
 
             if (expResult.isSuccess())
             {
                 LogHelper.log(LogLevel.INFO, "Name success");
             }
         }
-    }
-
-    public static String ToHexString(byte[] b)
-    {
-        final StringBuilder builder = new StringBuilder();
-        for (byte by : b)
-        {
-            builder.append(String.format("%02x ", by));
-        }
-        return builder.toString();
     }
 }

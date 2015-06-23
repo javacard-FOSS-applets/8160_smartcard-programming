@@ -1,6 +1,6 @@
 package common;
 
-import cryptography.ICryptography;
+import hotelbuddy.ICryptography;
 import javacard.framework.*;
 
 /**

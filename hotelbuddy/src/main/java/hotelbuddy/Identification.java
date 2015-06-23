@@ -1,6 +1,5 @@
-package identification;
+package hotelbuddy;
 
-import cryptography.ICryptography;
 import javacard.framework.*;
 
 /**
