@@ -6,8 +6,6 @@ import javacard.framework.AID;
 import javacard.framework.JCSystem;
 import org.junit.Assert;
 import org.junit.Test;
-import sun.security.rsa.RSAPrivateCrtKeyImpl;
-import sun.security.rsa.RSAPublicKeyImpl;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -15,6 +13,8 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import java.math.BigInteger;
 import java.security.*;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
 
@@ -29,17 +29,23 @@ public class CryptographyTest
     @Test
     public void Test_Encryption() throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException, SignatureException
     {
-        String message = "abc";
+        // Arrange
+        String message = "This is my test-message!";
 
-        final KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
         keyGen.initialize(1024);
-        final KeyPair key = keyGen.generateKeyPair();
 
-        RSAPrivateCrtKeyImpl myPrivateKey = (RSAPrivateCrtKeyImpl) key.getPrivate();
-        RSAPublicKeyImpl myPublicKey = (RSAPublicKeyImpl) key.getPublic();
+        KeyPair key = keyGen.generateKeyPair();
+        RSAPrivateKey terminalPrivateKey = (RSAPrivateKey) key.getPrivate();
+        RSAPublicKey terminalPublicKey = (RSAPublicKey) key.getPublic();
+
+        key = keyGen.generateKeyPair();
+        RSAPrivateKey cardPrivateKey = (RSAPrivateKey) key.getPrivate();
+        RSAPublicKey cardPublicKey = (RSAPublicKey) key.getPublic();
 
         Simulator sim = new Simulator();
 
+        // Act
         sim.installApplet(CryptographyAID, Cryptography.class);
         sim.installApplet(IdentificationAID, Identification.class);
 
@@ -54,14 +60,30 @@ public class CryptographyTest
         Assert.assertTrue(isAppletSelected);
 
         byte[] answer;
-        System.out.println("\nImporting Public EXP...");
-        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xE2, myPublicKey.getPublicExponent().toByteArray(), (byte) 0x00);
+
+        System.out.println("\nSetting private modulus of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF0, cardPrivateKey.getModulus().toByteArray(), (byte) 0x00);
         TestHelper.EnsureStatusBytesNoError(answer);
 
-        System.out.println("\nImporting Public MOD...");
-        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xE0, myPublicKey.getModulus().toByteArray(), (byte) 0x00);
+        System.out.println("\nSetting private exponent of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF1, cardPrivateKey.getPrivateExponent().toByteArray(), (byte) 0x00);
         TestHelper.EnsureStatusBytesNoError(answer);
 
+        System.out.println("\nSetting public modulus of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF2, cardPublicKey.getModulus().toByteArray(), (byte) 0x00);
+        TestHelper.EnsureStatusBytesNoError(answer);
+
+        System.out.println("\nSetting public exponent of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF3, cardPublicKey.getPublicExponent().toByteArray(), (byte) 0x00);
+        TestHelper.EnsureStatusBytesNoError(answer);
+
+        System.out.println("\nSetting public modulus of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xE0, terminalPublicKey.getModulus().toByteArray(), (byte) 0x00);
+        TestHelper.EnsureStatusBytesNoError(answer);
+
+        System.out.println("\nSetting public exponent of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xE1, terminalPublicKey.getPublicExponent().toByteArray(), (byte) 0x00);
+        TestHelper.EnsureStatusBytesNoError(answer);
 
         // Selecting other applet
         // getShareableInterfaceObject() checks the caller id
@@ -72,7 +94,7 @@ public class CryptographyTest
         byte[] encryptedMessage = cryptoApp.encrypt(message.getBytes());
 
         Cipher cipher = Cipher.getInstance("RSA");
-        cipher.init(Cipher.DECRYPT_MODE, myPrivateKey);
+        cipher.init(Cipher.DECRYPT_MODE, terminalPrivateKey);
         String decryptMessage = new String(cipher.doFinal(encryptedMessage)).trim();
 
         Assert.assertEquals(message, decryptMessage);
@@ -81,10 +103,23 @@ public class CryptographyTest
     @Test
     public void Test_Decryption() throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException
     {
-        String message = "abc";
+        // Arrange
+        String message = "This is my test-message!";
+
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+        keyGen.initialize(1024);
+
+        KeyPair key = keyGen.generateKeyPair();
+        RSAPrivateKey terminalPrivateKey = (RSAPrivateKey) key.getPrivate();
+        RSAPublicKey terminalPublicKey = (RSAPublicKey) key.getPublic();
+
+        key = keyGen.generateKeyPair();
+        RSAPrivateKey cardPrivateKey = (RSAPrivateKey) key.getPrivate();
+        RSAPublicKey cardPublicKey = (RSAPublicKey) key.getPublic();
 
         Simulator sim = new Simulator();
 
+        // Act
         sim.installApplet(CryptographyAID, Cryptography.class);
         sim.installApplet(IdentificationAID, Identification.class);
 
@@ -99,14 +134,39 @@ public class CryptographyTest
         Assert.assertTrue(isAppletSelected);
 
         byte[] answer;
-        System.out.println("\nExporting Public EXP...");
-        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF2, new byte[0], (byte) 0x04);
-        byte[] otherExp = TestHelper.GetAnswerWithoutStatus(answer);
+
+        System.out.println("\nSetting private modulus of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF0, cardPrivateKey.getModulus().toByteArray(), (byte) 0x00);
         TestHelper.EnsureStatusBytesNoError(answer);
 
-        System.out.println("\nExporting Public MOD...");
-        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF0, new byte[0], (byte) 0x04);
+        System.out.println("\nSetting private exponent of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF1, cardPrivateKey.getPrivateExponent().toByteArray(), (byte) 0x00);
+        TestHelper.EnsureStatusBytesNoError(answer);
+
+        System.out.println("\nSetting public modulus of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF2, cardPublicKey.getModulus().toByteArray(), (byte) 0x00);
+        TestHelper.EnsureStatusBytesNoError(answer);
+
+        System.out.println("\nSetting public exponent of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF3, cardPublicKey.getPublicExponent().toByteArray(), (byte) 0x00);
+        TestHelper.EnsureStatusBytesNoError(answer);
+
+        System.out.println("\nSetting public modulus of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xE0, terminalPublicKey.getModulus().toByteArray(), (byte) 0x00);
+        TestHelper.EnsureStatusBytesNoError(answer);
+
+        System.out.println("\nSetting public exponent of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xE1, terminalPublicKey.getPublicExponent().toByteArray(), (byte) 0x00);
+        TestHelper.EnsureStatusBytesNoError(answer);
+
+        System.out.println("\nExporting public modulus of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF4, new byte[0], (byte) 0x04);
         byte[] otherMod = TestHelper.GetAnswerWithoutStatus(answer);
+        TestHelper.EnsureStatusBytesNoError(answer);
+
+        System.out.println("\nExporting public exponent of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF5, new byte[0], (byte) 0x04);
+        byte[] otherExp = TestHelper.GetAnswerWithoutStatus(answer);
         TestHelper.EnsureStatusBytesNoError(answer);
 
         // Creating PublicKey for other party

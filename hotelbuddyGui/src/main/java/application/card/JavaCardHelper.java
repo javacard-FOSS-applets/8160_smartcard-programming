@@ -12,8 +12,6 @@ public class JavaCardHelper
 {
     public static Result<byte[]> selectApplet(String appletId)
     {
-        LogHelper.log(LogLevel.INFO, "Selecting applet: %s", appletId);
-
         ISOCommandAPDU command = ApduHelper.getSelectCommand(appletId);
         Result<byte[]> selectResult = JavaCard.current().sendCommand(command);
 
@@ -23,7 +21,7 @@ public class JavaCardHelper
             return selectResult;
         }
 
-        LogHelper.log(LogLevel.INFO, "Applet selected");
+        LogHelper.log(LogLevel.INFO, "Applet %s selected", appletId);
         return selectResult;
     }
 

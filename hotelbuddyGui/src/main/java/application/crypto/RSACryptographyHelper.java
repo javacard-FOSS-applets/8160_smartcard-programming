@@ -3,17 +3,14 @@ package application.crypto;
 
 import application.log.LogHelper;
 import application.log.LogLevel;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import common.ErrorResult;
 import common.Result;
 import common.SuccessResult;
-import sun.security.rsa.RSAPrivateCrtKeyImpl;
 
 import javax.crypto.Cipher;
 import java.math.BigInteger;
 import java.security.KeyFactory;
 import java.security.PublicKey;
-import java.security.interfaces.RSAPrivateCrtKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.RSAPrivateKeySpec;
@@ -34,15 +31,6 @@ public class RSACryptographyHelper implements IRSACryptographyHelper
 
     private RSACryptographyHelper()
     {
-    }
-
-    public static IRSACryptographyHelper current()
-    {
-        return instance == null ? (instance = new RSACryptographyHelper()) : instance;
-    }
-
-    public void initialize()
-    {
         try
         {
             rsaCipher = Cipher.getInstance("RSA");
@@ -54,6 +42,11 @@ public class RSACryptographyHelper implements IRSACryptographyHelper
         }
 
         LogHelper.log(LogLevel.INFO, "RSACryptographyHelper initialized");
+    }
+
+    public static IRSACryptographyHelper current()
+    {
+        return instance == null ? (instance = new RSACryptographyHelper()) : instance;
     }
 
     public void setCardPublicKey(BigInteger modulus, BigInteger exponent)
@@ -72,10 +65,16 @@ public class RSACryptographyHelper implements IRSACryptographyHelper
 
     public Result<byte[]> encrypt(String message)
     {
+        return encrypt(message.getBytes());
+    }
+
+    @Override
+    public Result<byte[]> encrypt(byte[] message)
+    {
         try
         {
             rsaCipher.init(Cipher.ENCRYPT_MODE, this.cardPublicKey);
-            return new SuccessResult<>(rsaCipher.doFinal(message.getBytes()));
+            return new SuccessResult<>(rsaCipher.doFinal(message));
         }
         catch (Exception ex)
         {

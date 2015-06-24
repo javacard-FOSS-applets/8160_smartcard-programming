@@ -5,10 +5,10 @@ package common;
  */
 public class ErrorResult<T> extends Result<T>
 {
-    public ErrorResult(String errorMessage)
+    public ErrorResult(String errorMessage, Object... args)
     {
         super();
         this.setSuccess(false);
-        this.setErrorMessage(errorMessage);
+        this.setErrorMessage(String.format(errorMessage, args));
     }
 }

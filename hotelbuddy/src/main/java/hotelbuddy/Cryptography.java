@@ -1,7 +1,9 @@
 package hotelbuddy;
 
 import javacard.framework.*;
-import javacard.security.*;
+import javacard.security.KeyBuilder;
+import javacard.security.RSAPrivateKey;
+import javacard.security.RSAPublicKey;
 import javacardx.crypto.Cipher;
 
 public class Cryptography extends Applet implements ICryptography
@@ -25,6 +27,8 @@ public class Cryptography extends Applet implements ICryptography
     private static final byte INS_ImportTerminalPublicMod = (byte) 0xE0;
     private static final byte INS_ImportTerminalPublicExp = (byte) 0xE1;
 
+    private static final byte INS_RESET = (byte) 0xFF;
+
     // Crypto
     private RSAPrivateKey cardPrivateKey;
     private RSAPublicKey cardPublicKey;
@@ -32,19 +36,28 @@ public class Cryptography extends Applet implements ICryptography
 
     private Cipher rsaCipher = null;
 
-    private final static short BYTE_SIZE = 8;
-    private final static short ARRAY_SIZE = 128;
-    private final static short ARRAY_SIZE_BITS = BYTE_SIZE * ARRAY_SIZE;
+    /**
+     * Key Flags
+     * 0x00 means nothing is set
+     * 0x0F means modulus is set
+     * 0xF0 means exponent is set
+     * 0xFF means modulus and exponent is set
+     */
+    private byte cardPrivateKeyFlag;
+    private byte cardPublicKeyFlag;
+    private byte terminalPublicKeyFlag;
 
     protected Cryptography()
     {
         register();
 
-        KeyPair keyPair = new KeyPair(KeyPair.ALG_RSA_CRT, ARRAY_SIZE_BITS);
-        keyPair.genKeyPair();
-
+        cardPrivateKeyFlag = 0x00;
         cardPrivateKey = (RSAPrivateKey) KeyBuilder.buildKey(KeyBuilder.TYPE_RSA_PRIVATE, KeyBuilder.LENGTH_RSA_1024, false);
+
+        cardPublicKeyFlag = 0x00;
         cardPublicKey = (RSAPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_RSA_PUBLIC, KeyBuilder.LENGTH_RSA_1024, false);
+
+        terminalPublicKeyFlag = 0x00;
         terminalPublicKey = (RSAPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_RSA_PUBLIC, KeyBuilder.LENGTH_RSA_1024, false);
 
         rsaCipher = Cipher.getInstance(Cipher.ALG_RSA_PKCS1, false);
@@ -104,6 +117,9 @@ public class Cryptography extends Applet implements ICryptography
                 messageLength = (short) (buf[ISO7816.OFFSET_LC] & 0xFF);
                 importCardPublicExponent(apdu, messageLength);
                 break;
+            case INS_RESET:
+                reset();
+                break;
             default:
                 ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
         }
@@ -118,56 +134,176 @@ public class Cryptography extends Applet implements ICryptography
     {
     }
 
+    private void reset()
+    {
+        terminalPublicKeyFlag = 0x00;
+        terminalPublicKey = (RSAPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_RSA_PUBLIC, KeyBuilder.LENGTH_RSA_1024, false);
+    }
+
+    /**
+     * Sets the public modulus from the card into the APDU.
+     * If the public modulus is not set, ISO7816.SW_COMMAND_NOT_ALLOWED is thrown.
+     *
+     * @param apdu APDU
+     */
     private void exportPublicModulus(APDU apdu)
     {
+        if ((cardPublicKeyFlag & 0x0F) != 0x0F)
+        {
+            ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
+            return;
+        }
+
         byte buffer[] = apdu.getBuffer();
         short modLen = cardPublicKey.getModulus(buffer, (short) 0);
         apdu.setOutgoingAndSend((short) 0, modLen);
     }
 
+    /**
+     * Sets the public exponent from the card into the APDU.
+     * If the public exponent is not set, ISO7816.SW_COMMAND_NOT_ALLOWED is thrown.
+     *
+     * @param apdu APDU
+     */
     private void exportPublicExponent(APDU apdu)
     {
+        if ((cardPublicKeyFlag & 0xF0) != 0xF0)
+        {
+            ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
+            return;
+        }
+
         byte buffer[] = apdu.getBuffer();
         short expLen = cardPublicKey.getExponent(buffer, (short) 0);
         apdu.setOutgoingAndSend((short) 0, expLen);
     }
 
-    private void importTerminalPublicModulus(APDU apdu, short lc)
-    {
-        byte[] buffer = apdu.getBuffer();
-        terminalPublicKey.setModulus(buffer, ISO7816.OFFSET_CDATA, lc);
-    }
-
-    private void importTerminalPublicExponent(APDU apdu, short lc)
-    {
-        byte[] buffer = apdu.getBuffer();
-        terminalPublicKey.setExponent(buffer, ISO7816.OFFSET_CDATA, lc);
-    }
-
+    /**
+     * Sets the passed private modulus to the private key of the card
+     * If the private modulus is already set, ISO7816.SW_COMMAND_NOT_ALLOWED is thrown.
+     *
+     * @param apdu APDU
+     */
     private void importCardPrivateModulus(APDU apdu, short lc)
     {
+        if ((cardPrivateKeyFlag & 0x0F) == 0x0F)
+        {
+            ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
+            return;
+        }
+
         byte[] buffer = apdu.getBuffer();
         cardPrivateKey.setModulus(buffer, ISO7816.OFFSET_CDATA, lc);
+
+        cardPrivateKeyFlag = (byte) (cardPrivateKeyFlag | 0x0F);
     }
 
+    /**
+     * Sets the passed private exponent to the private key of the card
+     * If the private exponent is already set, ISO7816.SW_COMMAND_NOT_ALLOWED is thrown.
+     *
+     * @param apdu APDU
+     */
     private void importCardPrivateExponent(APDU apdu, short lc)
     {
+        if ((cardPrivateKeyFlag & 0xF0) == 0xF0)
+        {
+            ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
+            return;
+        }
+
         byte[] buffer = apdu.getBuffer();
         cardPrivateKey.setExponent(buffer, ISO7816.OFFSET_CDATA, lc);
+
+        cardPrivateKeyFlag = (byte) (cardPrivateKeyFlag | 0xF0);
     }
 
+    /**
+     * Sets the passed public modulus to the public key of the card
+     * If the public modulus is already set, ISO7816.SW_COMMAND_NOT_ALLOWED is thrown.
+     *
+     * @param apdu APDU
+     */
     private void importCardPublicModulus(APDU apdu, short lc)
     {
+        if ((cardPublicKeyFlag & 0x0F) == 0x0F)
+        {
+            ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
+            return;
+        }
+
         byte[] buffer = apdu.getBuffer();
         cardPublicKey.setModulus(buffer, ISO7816.OFFSET_CDATA, lc);
+
+        cardPublicKeyFlag = (byte) (cardPublicKeyFlag | 0x0F);
     }
 
+    /**
+     * Sets the passed public exponent to the public key of the card
+     * If the public exponent is already set, ISO7816.SW_COMMAND_NOT_ALLOWED is thrown.
+     *
+     * @param apdu APDU
+     */
     private void importCardPublicExponent(APDU apdu, short lc)
     {
+        if ((cardPublicKeyFlag & 0xF0) == 0xF0)
+        {
+            ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
+            return;
+        }
+
         byte[] buffer = apdu.getBuffer();
         cardPublicKey.setExponent(buffer, ISO7816.OFFSET_CDATA, lc);
+
+        cardPublicKeyFlag = (byte) (cardPublicKeyFlag | 0xF0);
     }
 
+    /**
+     * Sets the passed public modulus to the public key of the terminal
+     * If the public modulus is already set, ISO7816.SW_COMMAND_NOT_ALLOWED is thrown.
+     *
+     * @param apdu APDU
+     */
+    private void importTerminalPublicModulus(APDU apdu, short lc)
+    {
+        if ((terminalPublicKeyFlag & 0x0F) == 0x0F)
+        {
+            ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
+            return;
+        }
+
+        byte[] buffer = apdu.getBuffer();
+        terminalPublicKey.setModulus(buffer, ISO7816.OFFSET_CDATA, lc);
+
+        terminalPublicKeyFlag = (byte) (terminalPublicKeyFlag | 0x0F);
+    }
+
+    /**
+     * Sets the passed public exponent to the public key of the terminal
+     * If the public exponent is already set, ISO7816.SW_COMMAND_NOT_ALLOWED is thrown.
+     *
+     * @param apdu APDU
+     */
+    private void importTerminalPublicExponent(APDU apdu, short lc)
+    {
+        if ((terminalPublicKeyFlag & 0xF0) == 0xF0)
+        {
+            ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
+            return;
+        }
+
+        byte[] buffer = apdu.getBuffer();
+        terminalPublicKey.setExponent(buffer, ISO7816.OFFSET_CDATA, lc);
+
+        terminalPublicKeyFlag = (byte) (terminalPublicKeyFlag | 0xF0);
+    }
+
+    /**
+     * Encrypts the passed message with terminalPublicKey
+     *
+     * @param message message to encrypt
+     * @return encrypted message (128 Byte)
+     */
     public byte[] encrypt(byte[] message)
     {
         byte[] encryptedMessage = JCSystem.makeTransientByteArray((short) 128, JCSystem.CLEAR_ON_DESELECT);
@@ -178,6 +314,12 @@ public class Cryptography extends Applet implements ICryptography
         return encryptedMessage;
     }
 
+    /**
+     * Decrypts the passed message with cardPrivateKey
+     *
+     * @param message message to decrypt (128 Byte)
+     * @return trimmed decrypted message
+     */
     public byte[] decrypt(byte[] message)
     {
         byte[] decryptedMessage = JCSystem.makeTransientByteArray((short) 128, JCSystem.CLEAR_ON_DESELECT);
@@ -191,6 +333,13 @@ public class Cryptography extends Applet implements ICryptography
         return response;
     }
 
+    /**
+     * Called when other applets requesting this applet
+     *
+     * @param client_aid AID of the caller
+     * @param parameter  secret
+     * @return this applet
+     */
     public Shareable getShareableInterfaceObject(AID client_aid, byte parameter)
     {
         if (!client_aid.equals(IDENTIFICATION_AID, (short) 0, (byte) IDENTIFICATION_AID.length))

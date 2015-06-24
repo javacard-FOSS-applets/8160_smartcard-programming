@@ -10,13 +10,13 @@ import java.security.PublicKey;
  */
 public interface IRSACryptographyHelper
 {
-    void initialize();
-
     Result<Boolean> setTerminalKeys(BigInteger privateMod, BigInteger privateExp, BigInteger publicMod, BigInteger publicExp);
 
     void setCardPublicKey(BigInteger modulus, BigInteger exponent);
 
     Result<byte[]> encrypt(String message);
+
+    Result<byte[]> encrypt(byte[] message);
 
     Result<String> decrypt(byte[] message);
 
