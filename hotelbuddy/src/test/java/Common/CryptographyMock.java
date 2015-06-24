@@ -47,7 +47,7 @@ public class CryptographyMock extends Applet implements ICryptography
     public byte[] encrypt(byte[] message)
     {
         encrypted = true;
-        return trim(message);
+        return message;
     }
 
     public byte[] decrypt(byte[] message)

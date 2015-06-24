@@ -106,4 +106,11 @@ public class TestHelper
     {
         EnsureStatusBytes(message, new byte[]{(byte) 0x90, (byte) 0x00});
     }
+
+    public static void compareWithoutStatusBytes(byte[] birthday, byte[] answer, int length)
+    {
+        byte[] receivedBirthday = new byte[length];
+        System.arraycopy(answer, 0, receivedBirthday, 0, length);
+        Assert.assertArrayEquals(birthday, receivedBirthday);
+    }
 }

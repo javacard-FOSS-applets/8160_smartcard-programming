@@ -16,7 +16,8 @@ public class Identification extends Applet
     private static final byte GET_NAME = (byte) 0xA1;
 
     private static final byte SET_BIRTHDAY = (byte) 0xB0;
-    private static final byte CHECK_AGE = (byte) 0xB1;
+    private static final byte GET_BIRTHDAY = (byte) 0xB1;
+    private static final byte CHECK_AGE = (byte) 0xB2;
 
     private static final byte SET_CARID = (byte) 0xC0;
     private static final byte GET_CARID = (byte) 0xC1;
@@ -24,21 +25,26 @@ public class Identification extends Applet
     private static final byte SET_SAFEPIN = (byte) 0xD0;
     private static final byte CHECK_SAFEPIN = (byte) 0xD1;
 
+    private static final byte RESET = (byte) 0xFF;
+
     // Other Applets
     private static final byte[] CRYPTOGRAPHY_AID = {0x43, 0x72, 0x79, 0x70, 0x74, 0x6f, 0x67, 0x72, 0x61, 0x70, 0x68, 0x79};
     private static final byte CRYPTOGRAPHY_SECRET = 0x2A;
 
     // Data
-    private short MAX_NAME_LENGTH = 50;
+    private final byte MAX_NAME_LENGTH = 50;
+    private byte nameLength = 0;
     private byte[] name;
 
-    private short BIRTHDAY_LENGTH = 4;
+    private final byte DATE_LENGTH = 4;
     private byte[] birthDay;
 
-    private short MAX_CARID_LENGTH = 8;
+    private final byte MAX_CARID_LENGTH = 8;
+    private short carIdLength = 0;
     private byte[] carId;
 
-    private short MAX_SAFEPIN_LENGTH = 4;
+    private final byte SAFEPIN_LENGTH = 4;
+    private boolean safePinIsSet = false;
     private byte[] safePin;
 
     protected Identification()
@@ -46,9 +52,9 @@ public class Identification extends Applet
         register();
 
         name = new byte[MAX_NAME_LENGTH];
-        birthDay = new byte[BIRTHDAY_LENGTH];
+        birthDay = new byte[DATE_LENGTH];
         carId = new byte[MAX_CARID_LENGTH];
-        safePin = new byte[MAX_SAFEPIN_LENGTH];
+        safePin = new byte[SAFEPIN_LENGTH];
     }
 
     public static void install(byte[] bArray, short bOffset, byte bLength)
@@ -83,6 +89,9 @@ public class Identification extends Applet
             case SET_BIRTHDAY:
                 setBirthday(apdu);
                 break;
+            case GET_BIRTHDAY:
+                getBirthday(apdu);
+                break;
             case CHECK_AGE:
                 checkAge(apdu);
                 break;
@@ -98,9 +107,32 @@ public class Identification extends Applet
             case CHECK_SAFEPIN:
                 checkSafePin(apdu);
                 break;
+            case RESET:
+                reset();
+                break;
             default:
                 ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
         }
+    }
+
+    private void reset()
+    {
+        nameLength = 0;
+        birthDay[0] = 0x00;
+        carIdLength = 0;
+        safePinIsSet = false;
+    }
+
+    private void getBirthday(APDU apdu)
+    {
+        if (birthDay[0] == 0x00)
+        {
+            // Birthday not set yet, because day can not be 0x00
+            ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
+            return;
+        }
+
+        send(apdu, birthDay);
     }
 
     public boolean select()
@@ -134,60 +166,83 @@ public class Identification extends Applet
 
     private void checkAge(APDU apdu)
     {
+        if (birthDay[0] == 0x00)
+        {
+            // Birthday not set yet, because day can not be 0x00
+            ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
+            return;
+        }
 
-    }
-
-    private void setBirthday(APDU apdu)
-    {
         byte[] message = decryptMessage(apdu);
 
-        if (message.length != BIRTHDAY_LENGTH)
+        if (message.length != (DATE_LENGTH + 1))
         {
             ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
             return;
         }
 
-        if (!checkDate(message))
+        byte[] today = JCSystem.makeTransientByteArray(DATE_LENGTH, JCSystem.CLEAR_ON_DESELECT);
+        Util.arrayCopy(message, (short) 0, today, (short) 0, DATE_LENGTH);
+
+        byte minimumAge = message[message.length - 1];
+
+        if (!DateHelper.checkDate(today))
         {
             ISOException.throwIt(ISO7816.SW_DATA_INVALID);
             return;
         }
 
-        Util.arrayCopy(message, (short) 0, birthDay, (short) 0, (short) message.length);
+        byte[] result = JCSystem.makeTransientByteArray((short) 1, JCSystem.CLEAR_ON_DESELECT);
+        result[0] = DateHelper.yearDifference(today, birthDay) < minimumAge ? (byte) 0x00 : (byte) 0x01;
+
+        send(apdu, result);
     }
 
-    private boolean checkDate(byte[] message)
+    private void setBirthday(APDU apdu)
     {
-        if (message[0] < 1 || message[0] > 31)
+        if (birthDay[0] != 0x00)
         {
-            return false;
+            // Birthday already set yet
+            ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
+            return;
         }
 
-        if (message[1] < 1 || message[1] > 12)
+        byte[] message = decryptMessage(apdu);
+
+        if (message.length != DATE_LENGTH)
         {
-            return false;
+            // Data doesnt have the length of a date
+            ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
+            return;
         }
 
-        if (message[2] < 19 || message[2] > 20)
+        if (!DateHelper.checkDate(message))
         {
-            return false;
+            // Data is not valid date
+            ISOException.throwIt(ISO7816.SW_DATA_INVALID);
+            return;
         }
 
-        if (message[3] < 0 || message[3] > 99)
-        {
-            return false;
-        }
-        return true;
+        Util.arrayCopy(message, (short) 0, birthDay, (short) 0, DATE_LENGTH);
     }
 
     private void getName(APDU apdu)
     {
-        if (Util.arrayCompare(name, (short) 0x00, new byte[name.length], (short) 0x00, (short) name.length) == 0)
+        if (nameLength == 0)
         {
+            // Name not set yet
             ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
         }
 
-        byte[] message = encryptMessage(name);
+        byte[] trimmedName = JCSystem.makeTransientByteArray(nameLength, JCSystem.CLEAR_ON_DESELECT);
+        Util.arrayCopy(name, (byte) 0x00, trimmedName, (byte) 0x00, nameLength);
+
+        send(apdu, trimmedName);
+    }
+
+    private void send(APDU apdu, byte[] content)
+    {
+        byte[] message = encryptMessage(content);
 
         Util.arrayCopy(message, (short) 0, apdu.getBuffer(), (short) 0, (short) message.length);
         apdu.setOutgoingAndSend((short) 0, (short) message.length);
@@ -195,15 +250,24 @@ public class Identification extends Applet
 
     private void setName(APDU apdu)
     {
+        if (nameLength != 0)
+        {
+            // Name already set yet
+            ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
+            return;
+        }
+
         byte[] message = decryptMessage(apdu);
 
         if (message.length > MAX_NAME_LENGTH || message.length == 0)
         {
+            // Data doesnt have a correct length
             ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
             return;
         }
 
         Util.arrayCopy(message, (short) 0, name, (short) 0, (short) message.length);
+        nameLength = (byte) message.length;
     }
 
     private byte[] encryptMessage(byte[] messsage)
