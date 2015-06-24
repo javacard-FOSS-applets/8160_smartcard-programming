@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import java.lang.*?>
-<?import javafx.geometry.*?>
 <?import javafx.scene.text.*?>
-<?import javafx.geometry.Insets?>
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
@@ -16,86 +15,111 @@
                     <tabs>
                         <Tab text="Connection">
                             <content>
-                        <GridPane>
-                           <columnConstraints>
-                              <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="125.0" />
-                              <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                           </columnConstraints>
-                           <rowConstraints>
-                              <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="30.0" vgrow="SOMETIMES" />
-                              <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                           </rowConstraints>
-                           <children>
-                              <Label styleClass="fieldLabel" text="Status" />
-                              <Label fx:id="con_statusLabel" text="status" GridPane.columnIndex="1" />
-                              <Button fx:id="con_connectButton" mnemonicParsing="false" text="Connect" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                           </children>
-                           <padding>
-                              <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                           </padding>
-                        </GridPane>
+                                <GridPane>
+                                    <columnConstraints>
+                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="125.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                    </columnConstraints>
+                                    <rowConstraints>
+                                        <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="30.0" vgrow="SOMETIMES" />
+                                        <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    </rowConstraints>
+                                    <children>
+                                        <Label styleClass="fieldLabel" text="Status" />
+                                        <Label fx:id="con_statusLabel" text="status" GridPane.columnIndex="1" />
+                                        <Button fx:id="con_connectButton" mnemonicParsing="false" text="Connect" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                    </children>
+                                    <padding>
+                                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                                    </padding>
+                                </GridPane>
                             </content>
                         </Tab>
                         <Tab text="Configuration">
                             <content>
-                                <TitledPane animated="false" collapsible="false" text="Identification">
-                                    <content>
-                                        <GridPane>
-                                            <columnConstraints>
-                                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="125.0" />
-                                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                                            </columnConstraints>
-                                            <rowConstraints>
-                                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                            </rowConstraints>
-                                            <children>
-                                                <Button fx:id="conf_setIdentificationButton" mnemonicParsing="false" text="Apply" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                                                <Label styleClass="fieldLabel" text="Name" />
-                                                <TextField fx:id="conf_nameTextField" maxWidth="250.0" GridPane.columnIndex="1" />
-                                                <Label styleClass="fieldLabel" text="Date of Birth" GridPane.rowIndex="1" />
-                                                <DatePicker fx:id="conf_birthDateDatePicker" maxWidth="250.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                                                <Label styleClass="fieldLabel" text="License-Plate (Car)" GridPane.rowIndex="2" />
-                                                <TextField fx:id="conf_carIdTextField" maxWidth="250.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                                                <Label styleClass="fieldLabel" text="Safe-Pin" GridPane.rowIndex="3" />
-                                                <TextField fx:id="conf_safePinTextField" maxWidth="250.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                                            </children>
-                                        </GridPane>
-                                    </content>
-                                    <padding>
-                                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                                    </padding>
-                                </TitledPane>
+                                <VBox>
+                                    <children>
+                                        <TitledPane animated="false" collapsible="false" text="Cryptography">
+                                            <content>
+                                    <GridPane>
+                                       <columnConstraints>
+                                          <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="125.0" />
+                                          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                       </columnConstraints>
+                                       <rowConstraints>
+                                          <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="30.0" vgrow="SOMETIMES" />
+                                          <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                       </rowConstraints>
+                                       <children>
+                                          <Button fx:id="conf_setupCardKeysButton" mnemonicParsing="false" text="Setup Card Keys" GridPane.columnIndex="1" />
+                                          <Button fx:id="conf_exchangePublicKeys" mnemonicParsing="false" text="Exchange Public Keys" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                       </children>
+                                    </GridPane>
+                                            </content>
+                                            <padding>
+                                                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                                            </padding>
+                                        </TitledPane>
+                                        <TitledPane animated="false" collapsible="false" text="Identification">
+                                            <content>
+                                                <GridPane>
+                                                    <columnConstraints>
+                                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="125.0" />
+                                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                                    </columnConstraints>
+                                                    <rowConstraints>
+                                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                                    </rowConstraints>
+                                                    <children>
+                                                        <Button fx:id="conf_setIdentificationButton" mnemonicParsing="false" text="Apply" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                                        <Label styleClass="fieldLabel" text="Name" />
+                                                        <TextField fx:id="conf_nameTextField" maxWidth="250.0" GridPane.columnIndex="1" />
+                                                        <Label styleClass="fieldLabel" text="Date of Birth" GridPane.rowIndex="1" />
+                                                        <DatePicker fx:id="conf_birthDateDatePicker" maxWidth="250.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                                        <Label styleClass="fieldLabel" text="License-Plate (Car)" GridPane.rowIndex="2" />
+                                                        <TextField fx:id="conf_carIdTextField" maxWidth="250.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                                        <Label styleClass="fieldLabel" text="Safe-Pin" GridPane.rowIndex="3" />
+                                                        <TextField fx:id="conf_safePinTextField" maxWidth="250.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                                    </children>
+                                                </GridPane>
+                                            </content>
+                                            <padding>
+                                                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                                            </padding>
+                                        </TitledPane>
+                                    </children>
+                                </VBox>
                             </content>
                         </Tab>
                         <Tab text="Identification">
                             <content>
-                        <GridPane>
-                           <columnConstraints>
-                              <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="125.0" />
-                              <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                           </columnConstraints>
-                           <rowConstraints>
-                              <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="30.0" vgrow="SOMETIMES" />
-                              <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                              <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                              <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-                           </rowConstraints>
-                           <padding>
-                              <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                           </padding>
-                           <children>
-                              <Label styleClass="fieldLabel" text="Name" />
-                              <Label fx:id="id_nameLabel" text="name" GridPane.columnIndex="1" />
-                              <Label styleClass="fieldLabel" text="Date of Birth" GridPane.rowIndex="1" />
-                              <Label fx:id="id_birthDateLabel" text="date" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                              <Button fx:id="id_getButton" mnemonicParsing="false" text="Get" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                           </children>
-                        </GridPane>
+                                <GridPane>
+                                    <columnConstraints>
+                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="125.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                    </columnConstraints>
+                                    <rowConstraints>
+                                        <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="30.0" vgrow="SOMETIMES" />
+                                        <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                        <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                        <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+                                    </rowConstraints>
+                                    <padding>
+                                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                                    </padding>
+                                    <children>
+                                        <Label styleClass="fieldLabel" text="Name" />
+                                        <Label fx:id="id_nameLabel" text="name" GridPane.columnIndex="1" />
+                                        <Label styleClass="fieldLabel" text="Date of Birth" GridPane.rowIndex="1" />
+                                        <Label fx:id="id_birthDateLabel" text="date" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                        <Button fx:id="id_getButton" mnemonicParsing="false" text="Get" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                    </children>
+                                </GridPane>
                             </content>
                         </Tab>
                         <Tab text="Access-Control">

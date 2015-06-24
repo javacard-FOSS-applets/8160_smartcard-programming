@@ -3,18 +3,20 @@ package application.crypto;
 
 import application.log.LogHelper;
 import application.log.LogLevel;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import common.ErrorResult;
 import common.Result;
 import common.SuccessResult;
 import sun.security.rsa.RSAPrivateCrtKeyImpl;
-import sun.security.rsa.RSAPublicKeyImpl;
 
 import javax.crypto.Cipher;
 import java.math.BigInteger;
 import java.security.KeyFactory;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.security.PublicKey;
+import java.security.interfaces.RSAPrivateCrtKey;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
+import java.security.spec.RSAPrivateKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 
 /**
@@ -24,9 +26,11 @@ public class RSACryptographyHelper implements IRSACryptographyHelper
 {
     private static IRSACryptographyHelper instance;
     private Cipher rsaCipher;
-    private RSAPrivateCrtKeyImpl myPrivateKey;
-    private RSAPublicKeyImpl myPublicKey;
-    private PublicKey otherPublicKey;
+
+    private RSAPrivateKey terminalPrivateKey;
+    private RSAPublicKey terminalPublicKey;
+
+    private PublicKey cardPublicKey;
 
     private RSACryptographyHelper()
     {
@@ -42,13 +46,6 @@ public class RSACryptographyHelper implements IRSACryptographyHelper
         try
         {
             rsaCipher = Cipher.getInstance("RSA");
-
-            final KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-            keyGen.initialize(1024);
-            final KeyPair key = keyGen.generateKeyPair();
-
-            myPrivateKey = (RSAPrivateCrtKeyImpl) key.getPrivate();
-            myPublicKey = (RSAPublicKeyImpl) key.getPublic();
         }
         catch (Exception ex)
         {
@@ -59,32 +56,25 @@ public class RSACryptographyHelper implements IRSACryptographyHelper
         LogHelper.log(LogLevel.INFO, "RSACryptographyHelper initialized");
     }
 
-    public void importPublicKey(byte[] otherMod, byte[] otherExp)
+    public void setCardPublicKey(BigInteger modulus, BigInteger exponent)
     {
-        byte[] mod = new byte[otherMod.length + 1];
-        mod[0] = 0;
-        System.arraycopy(otherMod, 0, mod, 1, otherMod.length);
-
         try
         {
-            RSAPublicKeySpec spec = new RSAPublicKeySpec(new BigInteger(mod), new BigInteger(otherExp));
-            KeyFactory factory = KeyFactory.getInstance("RSA");
-            otherPublicKey = factory.generatePublic(spec);
+            KeyFactory rsaKeyFactory = KeyFactory.getInstance("RSA");
+            RSAPublicKeySpec spec = new RSAPublicKeySpec(modulus, exponent);
+            cardPublicKey = rsaKeyFactory.generatePublic(spec);
         }
         catch (Exception ex)
         {
             LogHelper.logException(ex);
-            return;
         }
-
-        LogHelper.log(LogLevel.INFO, "RSACryptographyHelper imported other public key");
     }
 
     public Result<byte[]> encrypt(String message)
     {
         try
         {
-            rsaCipher.init(Cipher.ENCRYPT_MODE, this.otherPublicKey);
+            rsaCipher.init(Cipher.ENCRYPT_MODE, this.cardPublicKey);
             return new SuccessResult<>(rsaCipher.doFinal(message.getBytes()));
         }
         catch (Exception ex)
@@ -98,7 +88,7 @@ public class RSACryptographyHelper implements IRSACryptographyHelper
     {
         try
         {
-            rsaCipher.init(Cipher.DECRYPT_MODE, this.myPrivateKey);
+            rsaCipher.init(Cipher.DECRYPT_MODE, this.terminalPrivateKey);
             return new SuccessResult<>(new String(rsaCipher.doFinal(message)).trim());
         }
         catch (Exception ex)
@@ -108,13 +98,37 @@ public class RSACryptographyHelper implements IRSACryptographyHelper
         }
     }
 
+    @Override
     public byte[] getPublicMod()
     {
-        return myPublicKey.getModulus().toByteArray();
+        return terminalPublicKey.getModulus().toByteArray();
     }
 
+    @Override
     public byte[] getPublicExp()
     {
-        return myPublicKey.getPublicExponent().toByteArray();
+        return terminalPublicKey.getPublicExponent().toByteArray();
+    }
+
+    @Override
+    public Result<Boolean> setTerminalKeys(BigInteger privateMod, BigInteger privateExp, BigInteger publicMod, BigInteger publicExp)
+    {
+        try
+        {
+            KeyFactory rsaKeyFactory = KeyFactory.getInstance("RSA");
+
+            RSAPrivateKeySpec keySpec = new RSAPrivateKeySpec(privateMod, privateExp);
+            terminalPrivateKey = (RSAPrivateKey) rsaKeyFactory.generatePrivate(keySpec);
+
+            RSAPublicKeySpec spec = new RSAPublicKeySpec(publicMod, publicExp);
+            terminalPublicKey = (RSAPublicKey) rsaKeyFactory.generatePublic(spec);
+        }
+        catch (Exception ex)
+        {
+            LogHelper.logException(ex);
+            return new ErrorResult<>("");
+        }
+
+        return new SuccessResult<>(true);
     }
 }

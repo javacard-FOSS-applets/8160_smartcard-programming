@@ -1,7 +1,9 @@
 package presentation.models;
 
 import javafx.beans.property.*;
+import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
+
 
 /**
  * Created by Patrick on 24.06.2015.
@@ -10,7 +12,7 @@ public class ConnectionModel
 {
     private BooleanProperty isConnectionEstablished = new SimpleBooleanProperty(false);
     private StringProperty connectionStatus = new SimpleStringProperty("Disconnected");
-    private ObjectProperty<Paint> connectionStatusColor = new SimpleObjectProperty<>();
+    private ObjectProperty<Paint> connectionStatusColor = new SimpleObjectProperty<>(Color.RED);
 
     public boolean getIsConnectionEstablished()
     {

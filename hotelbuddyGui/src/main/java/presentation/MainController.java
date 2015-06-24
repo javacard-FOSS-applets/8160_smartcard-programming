@@ -4,6 +4,7 @@ import application.card.JavaCard;
 import application.hotelbuddy.CryptographyApplet;
 import application.hotelbuddy.IdentificationApplet;
 import application.log.LogHelper;
+import application.log.LogLevel;
 import common.AlertHelper;
 import common.Result;
 import javafx.application.Platform;
@@ -24,7 +25,7 @@ public class MainController
     public Button con_connectButton;
     public Label con_statusLabel;
 
-    public Button conf_setIdentificationButton;
+    public Button conf_setIdentificationButton, conf_setupCardKeysButton, conf_exchangePublicKeys;
     public DatePicker conf_birthDateDatePicker;
     public TextField conf_carIdTextField, conf_safePinTextField, conf_nameTextField;
 
@@ -50,6 +51,8 @@ public class MainController
     public void initialize()
     {
         conf_setIdentificationButton.addEventHandler(ActionEvent.ACTION, e -> setIdentificationData());
+        conf_setupCardKeysButton.addEventHandler(ActionEvent.ACTION, e -> setupCardKeys());
+        conf_exchangePublicKeys.addEventHandler(ActionEvent.ACTION, e -> exportTerminalKey());
         con_connectButton.addEventHandler(ActionEvent.ACTION, e -> connectToSmartCardAsync(true));
         id_getButton.addEventHandler(ActionEvent.ACTION, e -> getIdentificationData());
 
@@ -68,7 +71,19 @@ public class MainController
 
         LogHelper.setOnNewLogEntry(this::onNewLog);
 
+        initializeTerminalCryptography();
         connectToSmartCardAsync(false);
+    }
+
+    private void exportTerminalKey()
+    {
+        CryptographyApplet.exportTerminalPublicKeyToCard();
+        CryptographyApplet.importCardPublicKey();
+    }
+
+    private void setupCardKeys()
+    {
+        CryptographyApplet.setupCardKey();
     }
 
     private void getIdentificationData()
@@ -112,19 +127,40 @@ public class MainController
             return;
         }
 
-        Result<Boolean> setupCryptoResult = CryptographyApplet.setupRSACryptographyHelper();
-        if (!setupCryptoResult.isSuccess())
+        Result<Boolean> exportTerminalPublicKeyResult = CryptographyApplet.exportTerminalPublicKeyToCard();
+        if (!exportTerminalPublicKeyResult.isSuccess())
         {
-            setConnectionStatus(false, "Disconnected", Color.ORANGERED);
+            setConnectionStatus(false, "Cryptography failure", Color.ORANGE);
 
             if (showMessage)
             {
-                AlertHelper.showErrorAlert(setupCryptoResult.getErrorMessage());
+                AlertHelper.showErrorAlert(exportTerminalPublicKeyResult.getErrorMessage());
+            }
+            return;
+        }
+
+        Result<Boolean> importCardPublicKeyResult = CryptographyApplet.importCardPublicKey();
+        if (!importCardPublicKeyResult.isSuccess())
+        {
+            setConnectionStatus(false, "Cryptography failure", Color.ORANGE);
+
+            if (showMessage)
+            {
+                AlertHelper.showErrorAlert(importCardPublicKeyResult.getErrorMessage());
             }
             return;
         }
 
         setConnectionStatus(true, "Connected", Color.GREEN);
+    }
+
+    private void initializeTerminalCryptography()
+    {
+        Result<Boolean> setupTerminalKey = CryptographyApplet.loadTerminalKeys();
+        if (!setupTerminalKey.isSuccess())
+        {
+            AlertHelper.showErrorAlert(setupTerminalKey.getErrorMessage());
+        }
     }
 
     private void setConnectionStatus(boolean isConnectionEstablished, String statusText, Color color)
