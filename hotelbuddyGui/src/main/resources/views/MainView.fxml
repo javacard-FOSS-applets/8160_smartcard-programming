@@ -1,123 +1,130 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.text.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<BorderPane xmlns:fx="http://javafx.com/fxml/1" minHeight="400.0" minWidth="400.0" prefHeight="500.0"
-            prefWidth="700.0" xmlns="http://javafx.com/javafx/8.0.40"
-            fx:controller="presentation.MainController">
+<?import javafx.scene.text.Font?>
+
+<BorderPane minHeight="400.0" minWidth="400.0" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="presentation.MainController">
     <center>
-        <SplitPane dividerPositions="0.665016501650165" orientation="VERTICAL">
-            <items>
-                <ScrollPane fitToHeight="true" fitToWidth="true" minViewportHeight="150.0">
-                    <content>
-                        <TabPane prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE">
-                            <tabs>
-                                <Tab text="Konfiguration">
+        <ScrollPane fitToHeight="true" fitToWidth="true" minViewportHeight="150.0">
+            <content>
+                <TabPane prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE">
+                    <tabs>
+                        <Tab text="Connection">
+                            <content>
+                        <GridPane>
+                           <columnConstraints>
+                              <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="125.0" />
+                              <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                           </columnConstraints>
+                           <rowConstraints>
+                              <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="30.0" vgrow="SOMETIMES" />
+                              <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                           </rowConstraints>
+                           <children>
+                              <Label styleClass="fieldLabel" text="Status" />
+                              <Label fx:id="statusLabel" text="status" GridPane.columnIndex="1" />
+                              <Button fx:id="connectButton" mnemonicParsing="false" text="Connect" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                           </children>
+                           <padding>
+                              <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                           </padding>
+                        </GridPane>
+                            </content>
+                        </Tab>
+                        <Tab text="Configuration">
+                            <content>
+                                <TitledPane animated="false" collapsible="false" text="Identification">
                                     <content>
-                                        <TitledPane animated="false" collapsible="false" text="Identifikation">
-                                            <content>
-                                                <GridPane>
-                                                    <columnConstraints>
-                                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity"
-                                                                           minWidth="-Infinity" prefWidth="125.0"/>
-                                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0"
-                                                                           prefWidth="100.0"/>
-                                                    </columnConstraints>
-                                                    <rowConstraints>
-                                                        <RowConstraints minHeight="10.0" prefHeight="30.0"
-                                                                        vgrow="SOMETIMES"/>
-                                                        <RowConstraints minHeight="10.0" prefHeight="30.0"
-                                                                        vgrow="SOMETIMES"/>
-                                                        <RowConstraints minHeight="10.0" prefHeight="30.0"
-                                                                        vgrow="SOMETIMES"/>
-                                                        <RowConstraints minHeight="10.0" prefHeight="30.0"
-                                                                        vgrow="SOMETIMES"/>
-                                                        <RowConstraints minHeight="10.0" prefHeight="30.0"
-                                                                        vgrow="SOMETIMES"/>
-                                                    </rowConstraints>
-                                                    <children>
-                                                        <Button fx:id="setIdentificationButton" mnemonicParsing="false"
-                                                                text="Setzen" GridPane.columnIndex="1"
-                                                                GridPane.rowIndex="4"/>
-                                                        <Label styleClass="fieldLabel" text="Name"/>
-                                                        <TextField fx:id="nameTextField" maxWidth="250.0"
-                                                                   GridPane.columnIndex="1"/>
-                                                        <Label styleClass="fieldLabel" text="Geburtstag"
-                                                               GridPane.rowIndex="1"/>
-                                                        <DatePicker fx:id="birthDateDatePicker" maxWidth="250.0"
-                                                                    GridPane.columnIndex="1" GridPane.rowIndex="1"/>
-                                                        <Label styleClass="fieldLabel" text="Autokennzeichen"
-                                                               GridPane.rowIndex="2"/>
-                                                        <TextField fx:id="carIdTextField" maxWidth="250.0"
-                                                                   GridPane.columnIndex="1" GridPane.rowIndex="2"/>
-                                                        <Label styleClass="fieldLabel" text="Safe-Pin"
-                                                               GridPane.rowIndex="3"/>
-                                                        <TextField fx:id="safePinTextField" maxWidth="250.0"
-                                                                   GridPane.columnIndex="1" GridPane.rowIndex="3"/>
-                                                    </children>
-                                                </GridPane>
-                                            </content>
-                                            <padding>
-                                                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
-                                            </padding>
-                                        </TitledPane>
+                                        <GridPane>
+                                            <columnConstraints>
+                                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="125.0" />
+                                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                            </columnConstraints>
+                                            <rowConstraints>
+                                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                            </rowConstraints>
+                                            <children>
+                                                <Button fx:id="setIdentificationButton" mnemonicParsing="false" text="Apply" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                                <Label styleClass="fieldLabel" text="Name" />
+                                                <TextField fx:id="nameTextField" maxWidth="250.0" GridPane.columnIndex="1" />
+                                                <Label styleClass="fieldLabel" text="Geburtstag" GridPane.rowIndex="1" />
+                                                <DatePicker fx:id="birthDateDatePicker" maxWidth="250.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                                <Label styleClass="fieldLabel" text="Autokennzeichen" GridPane.rowIndex="2" />
+                                                <TextField fx:id="carIdTextField" maxWidth="250.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                                <Label styleClass="fieldLabel" text="Safe-Pin" GridPane.rowIndex="3" />
+                                                <TextField fx:id="safePinTextField" maxWidth="250.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                            </children>
+                                        </GridPane>
                                     </content>
-                                </Tab>
-                                <Tab text="Identifikation">
-                                    <content>
-                                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0"
-                                                    prefWidth="200.0"/>
-                                    </content>
-                                </Tab>
-                                <Tab text="Zugangsberechtigung">
-                                    <content>
-                                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0"
-                                                    prefWidth="200.0"/>
-                                    </content>
-                                </Tab>
-                                <Tab text="Safe-Pin">
-                                    <content>
-                                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0"
-                                                    prefWidth="200.0"/>
-                                    </content>
-                                </Tab>
-                            </tabs>
-                        </TabPane>
-                    </content>
-                </ScrollPane>
-                <GridPane>
-                    <columnConstraints>
-                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0"/>
-                    </columnConstraints>
-                    <rowConstraints>
-                        <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="30.0"
-                                        vgrow="SOMETIMES"/>
-                        <RowConstraints maxHeight="1.7976931348623157E308" minHeight="-Infinity" vgrow="SOMETIMES"/>
-                    </rowConstraints>
-                    <children>
-                        <Label styleClass="fieldLabel" text="Log"/>
-                        <TextArea maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefRowCount="5"
-                                  GridPane.rowIndex="1"/>
-                    </children>
-                    <padding>
-                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
-                    </padding>
-                </GridPane>
-            </items>
-        </SplitPane>
+                                    <padding>
+                                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                                    </padding>
+                                </TitledPane>
+                            </content>
+                        </Tab>
+                        <Tab text="Identification">
+                            <content>
+                                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+                            </content>
+                        </Tab>
+                        <Tab text="Access-Control">
+                            <content>
+                                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+                            </content>
+                        </Tab>
+                        <Tab text="Safe-Pin">
+                            <content>
+                                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+                            </content>
+                        </Tab>
+                        <Tab text="Log">
+                            <content>
+                                <GridPane>
+                                    <columnConstraints>
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+                                    </columnConstraints>
+                                    <rowConstraints>
+                                        <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+                                    </rowConstraints>
+                                    <children>
+                                        <TextArea fx:id="logTextArea" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefRowCount="5">
+                                            <font>
+                                                <Font name="Monospaced Regular" size="12.0" />
+                                            </font>
+                                        </TextArea>
+                                    </children>
+                                    <padding>
+                                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                                    </padding>
+                                </GridPane>
+                            </content>
+                        </Tab>
+                    </tabs>
+                </TabPane>
+            </content>
+        </ScrollPane>
     </center>
     <top>
         <HBox prefWidth="692.0" styleClass="splitpane" BorderPane.alignment="CENTER">
             <children>
-                <Label styleClass="h1" text="HotelBuddy"/>
+                <Label styleClass="h1" text="HotelBuddy" />
             </children>
             <padding>
-                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
             </padding>
         </HBox>
     </top>
     <padding>
-        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
     </padding>
 </BorderPane>

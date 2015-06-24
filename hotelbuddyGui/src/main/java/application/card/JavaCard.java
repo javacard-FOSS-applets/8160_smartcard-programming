@@ -34,6 +34,8 @@ public class JavaCard implements IJavaCard
     @Override
     public Result<Boolean> connect()
     {
+        LogHelper.log(LogLevel.INFO, "Setting up connection to smartcard");
+
         try
         {
             SmartCard.start();
@@ -50,7 +52,7 @@ public class JavaCard implements IJavaCard
         }
 
         CardRequest cardRequest = new CardRequest(CardRequest.ANYCARD, null, PassThruCardService.class);
-        cardRequest.setTimeout(15000);
+        cardRequest.setTimeout(1);
 
         try
         {
@@ -59,11 +61,16 @@ public class JavaCard implements IJavaCard
         catch (Exception ex)
         {
             LogHelper.logException(ex);
-            return new ErrorResult<>("No Smartcard found.");
+            return new ErrorResult<>("No smartcard found.");
+        }
+
+        if (card == null)
+        {
+            LogHelper.log(LogLevel.WARNING, "No smartcard found");
+            return new ErrorResult<>("No smartcard found.");
         }
 
         LogHelper.log(LogLevel.INFO, "Connection to smartcard established");
-
         return new SuccessResult<>(true);
     }
 
