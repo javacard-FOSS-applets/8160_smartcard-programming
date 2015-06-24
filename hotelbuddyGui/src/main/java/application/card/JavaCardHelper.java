@@ -1,5 +1,7 @@
 package application.card;
 
+import application.log.LogHelper;
+import application.log.LogLevel;
 import common.Result;
 import opencard.opt.terminal.ISOCommandAPDU;
 
@@ -8,15 +10,31 @@ import opencard.opt.terminal.ISOCommandAPDU;
  */
 public class JavaCardHelper
 {
-    public static void selectApplet(String appletId)
+    public static Result<byte[]> selectApplet(String appletId)
     {
+        LogHelper.log(LogLevel.INFO, "Selecting applet: %s", appletId);
+
         ISOCommandAPDU command = ApduHelper.getSelectCommand(appletId);
-        JavaCard.current().sendCommand(command);
+        Result<byte[]> selectResult = JavaCard.current().sendCommand(command);
+
+        if (!selectResult.isSuccess())
+        {
+            LogHelper.log(LogLevel.FAILURE, "Could not select applet: %s", appletId);
+            return selectResult;
+        }
+
+        LogHelper.log(LogLevel.INFO, "Applet selected");
+        return selectResult;
     }
 
     public static Result<byte[]> sendCommand(byte cla, byte ins, byte[] content, byte answerLength)
     {
         ISOCommandAPDU command = ApduHelper.getCommand(cla, ins, content, answerLength);
         return JavaCard.current().sendCommand(command);
+    }
+
+    public static Result<byte[]> sendCommand(byte cla, byte ins)
+    {
+        return sendCommand(cla, ins, new byte[0], (byte) 0x00);
     }
 }

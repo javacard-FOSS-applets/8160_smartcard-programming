@@ -12,4 +12,10 @@ public interface IRSACryptographyHelper
     void importPublicKey(byte[] otherMod, byte[] otherExp);
 
     Result<byte[]> encrypt(String message);
+
+    Result<String> decrypt(byte[] message);
+
+    byte[] getPublicMod();
+
+    byte[] getPublicExp();
 }

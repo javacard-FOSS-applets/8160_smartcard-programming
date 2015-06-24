@@ -11,47 +11,78 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.paint.Color;
+import presentation.models.ConfigurationModel;
+import presentation.models.ConnectionModel;
+import presentation.models.IdentificationModel;
+import presentation.models.LogModel;
 
 /**
  * Created by Patrick on 19.06.2015.
  */
 public class MainController
 {
-    @FXML
-    public Button setIdentificationButton, connectButton;
-    @FXML
-    public DatePicker birthDateDatePicker;
-    @FXML
-    public TextField carIdTextField, safePinTextField, nameTextField;
-    @FXML
-    public TextArea logTextArea;
-    @FXML
-    public Label statusLabel;
+    public Button con_connectButton;
+    public Label con_statusLabel;
 
-    private MainModel model;
+    public Button conf_setIdentificationButton;
+    public DatePicker conf_birthDateDatePicker;
+    public TextField conf_carIdTextField, conf_safePinTextField, conf_nameTextField;
+
+    public Label id_nameLabel, id_birthDateLabel;
+    public Button id_getButton;
+
+    public TextArea log_logTextArea;
+
+    private ConnectionModel connectionModel;
+    private ConfigurationModel configurationModel;
+    private IdentificationModel identificationModel;
+    private LogModel logModel;
 
     public MainController()
     {
-        this.model = new MainModel();
+        this.configurationModel = new ConfigurationModel();
+        this.connectionModel = new ConnectionModel();
+        this.identificationModel = new IdentificationModel();
+        this.logModel = new LogModel();
     }
 
     @FXML
     public void initialize()
     {
-        setIdentificationButton.addEventHandler(ActionEvent.ACTION, e -> setIdentificationData());
-        connectButton.addEventHandler(ActionEvent.ACTION, e -> connectToSmartCardAsync(true));
+        conf_setIdentificationButton.addEventHandler(ActionEvent.ACTION, e -> setIdentificationData());
+        con_connectButton.addEventHandler(ActionEvent.ACTION, e -> connectToSmartCardAsync(true));
+        id_getButton.addEventHandler(ActionEvent.ACTION, e -> getIdentificationData());
 
-        nameTextField.textProperty().bindBidirectional(this.model.nameProperty());
-        carIdTextField.textProperty().bindBidirectional(this.model.carIdProperty());
-        safePinTextField.textProperty().bindBidirectional(this.model.safePinProperty());
-        birthDateDatePicker.valueProperty().bindBidirectional(this.model.birthDateProperty());
-        logTextArea.textProperty().bind(this.model.logMessageProperty());
-        statusLabel.textProperty().bind(this.model.connectionStatusProperty());
-        statusLabel.textFillProperty().bind(this.model.connectionStatusColorProperty());
+        conf_nameTextField.textProperty().bindBidirectional(this.configurationModel.nameProperty());
+        conf_carIdTextField.textProperty().bindBidirectional(this.configurationModel.carIdProperty());
+        conf_safePinTextField.textProperty().bindBidirectional(this.configurationModel.safePinProperty());
+        conf_birthDateDatePicker.valueProperty().bindBidirectional(this.configurationModel.birthDateProperty());
+
+        id_nameLabel.textProperty().bind(this.identificationModel.nameProperty());
+        id_birthDateLabel.textProperty().bind(this.identificationModel.birthDateProperty());
+
+        log_logTextArea.textProperty().bind(this.logModel.logMessageProperty());
+
+        con_statusLabel.textProperty().bind(this.connectionModel.connectionStatusProperty());
+        con_statusLabel.textFillProperty().bind(this.connectionModel.connectionStatusColorProperty());
 
         LogHelper.setOnNewLogEntry(this::onNewLog);
 
         connectToSmartCardAsync(false);
+    }
+
+    private void getIdentificationData()
+    {
+        Result<String> nameResult = IdentificationApplet.getName();
+
+        if (!nameResult.isSuccess())
+        {
+            this.identificationModel.setName("");
+            AlertHelper.showErrorAlert(nameResult.getErrorMessage());
+            return;
+        }
+
+        this.identificationModel.setName(nameResult.getData());
     }
 
     private void connectToSmartCardAsync(boolean showMessage)
@@ -61,13 +92,13 @@ public class MainController
 
     private void onNewLog(String s)
     {
-        String m = this.model.getLogMessage() + s + "\n";
-        this.model.setLogMessage(m);
+        String m = this.logModel.getLogMessage() + s + "\n";
+        this.logModel.setLogMessage(m);
     }
 
     private void initCard(boolean showMessage)
     {
-        setConnectionStatus(false, "Connecting...", Color.GREEN);
+        setConnectionStatus(false, "Connecting...", Color.ORANGE);
 
         Result<Boolean> connectResult = JavaCard.current().connect();
         if (!connectResult.isSuccess())
@@ -93,20 +124,20 @@ public class MainController
             return;
         }
 
-        setConnectionStatus(true, "Connected", Color.ORANGE);
+        setConnectionStatus(true, "Connected", Color.GREEN);
     }
 
     private void setConnectionStatus(boolean isConnectionEstablished, String statusText, Color color)
     {
         Platform.runLater(() -> {
-            this.model.setIsConnectionEstablished(isConnectionEstablished);
-            this.model.setConnectionStatus(statusText);
-            this.model.setConnectionStatusColor(color);
+            this.connectionModel.setIsConnectionEstablished(isConnectionEstablished);
+            this.connectionModel.setConnectionStatus(statusText);
+            this.connectionModel.setConnectionStatusColor(color);
         });
     }
 
     private void setIdentificationData()
     {
-        IdentificationApplet.setName(this.model.getName());
+        IdentificationApplet.setName(this.configurationModel.getName());
     }
 }
