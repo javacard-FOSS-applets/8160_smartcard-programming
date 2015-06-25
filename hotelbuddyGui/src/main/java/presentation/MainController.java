@@ -31,7 +31,7 @@ public class MainController
     public Button con_connectButton, con_generateKeyButton;
     public Label con_statusLabel, con_terminalKeyStatus, con_cardKeyStatus;
 
-    public Button conf_setIdentificationButton, con_initializeCardButton, conf_resetCryptography, conf_resetIdentification;
+    public Button conf_setIdentificationButton, con_initializeCardButton, conf_restAccessControl, conf_resetIdentification;
     public DatePicker conf_birthDateDatePicker;
     public TextField conf_carIdTextField, conf_safePinTextField, conf_nameTextField;
 
@@ -290,15 +290,6 @@ public class MainController
         }
     }
 
-    private void resetCryptography()
-    {
-        Result<Boolean> result = CryptographyApplet.reset();
-        if (!result.isSuccess())
-        {
-            AlertHelper.showErrorAlert(result.getErrorMessage());
-        }
-    }
-
     private void initializeBindings()
     {
         con_connectButton.addEventHandler(ActionEvent.ACTION, e -> connectToSmartCardAsync(true));
@@ -311,7 +302,6 @@ public class MainController
         con_initializeCardButton.disableProperty().bind(this.connectionModel.isConnectionEstablishedProperty());
 
         conf_setIdentificationButton.addEventHandler(ActionEvent.ACTION, e -> setIdentificationData());
-        conf_resetCryptography.addEventHandler(ActionEvent.ACTION, e -> resetCryptography());
         conf_resetIdentification.addEventHandler(ActionEvent.ACTION, e -> resetIdentification());
 
         id_getButton.addEventHandler(ActionEvent.ACTION, e -> getIdentificationData());

@@ -91,13 +91,15 @@ public class CryptographyTest
 
         ICryptography cryptoApp = (ICryptography) JCSystem.getAppletShareableInterfaceObject(CryptographyAID, CryptographySecret);
         System.out.println("Encrypting...");
-        byte[] encryptedMessage = cryptoApp.encrypt(message.getBytes());
+        byte[] buffer = new byte[128];
+        short len = cryptoApp.encrypt(buffer, message.getBytes());
 
         Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(Cipher.DECRYPT_MODE, terminalPrivateKey);
-        String decryptMessage = new String(cipher.doFinal(encryptedMessage)).trim();
+        String decryptMessage = new String(cipher.doFinal(buffer)).trim();
 
         Assert.assertEquals(message, decryptMessage);
+        Assert.assertEquals(len, 128);
     }
 
     @Test
@@ -110,7 +112,6 @@ public class CryptographyTest
         keyGen.initialize(1024);
 
         KeyPair key = keyGen.generateKeyPair();
-        RSAPrivateKey terminalPrivateKey = (RSAPrivateKey) key.getPrivate();
         RSAPublicKey terminalPublicKey = (RSAPublicKey) key.getPublic();
 
         key = keyGen.generateKeyPair();
@@ -176,7 +177,7 @@ public class CryptographyTest
 
         Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(Cipher.ENCRYPT_MODE, otherPublicKey);
-        byte[] encryptMessage = cipher.doFinal(message.getBytes());
+        byte[] buffer = cipher.doFinal(message.getBytes());
 
         // Selecting other applet
         // getShareableInterfaceObject() checks the caller id
@@ -184,8 +185,178 @@ public class CryptographyTest
 
         ICryptography cryptoApp = (ICryptography) JCSystem.getAppletShareableInterfaceObject(CryptographyAID, CryptographySecret);
         System.out.println("Decrypting...");
-        byte[] decryptedMessage = cryptoApp.decrypt(encryptMessage);
+        short len = cryptoApp.decrypt(buffer, (byte) 0x00);
+        byte[] decryptedMessage = new byte[len];
+        System.arraycopy(buffer, 0, decryptedMessage, 0, len);
 
         Assert.assertEquals(message, new String(decryptedMessage));
+        Assert.assertEquals(len, 24);
+    }
+
+    @Test
+    public void Test_Set_Private_Mod_Of_Card_Twice_Throws_Error() throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException
+    {
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+        keyGen.initialize(1024);
+
+        KeyPair key = keyGen.generateKeyPair();
+        RSAPrivateKey cardPrivateKey = (RSAPrivateKey) key.getPrivate();
+
+        Simulator sim = new Simulator();
+
+        // Act
+        sim.installApplet(CryptographyAID, Cryptography.class);
+
+        boolean isAppletSelected = sim.selectApplet(CryptographyAID);
+        Assert.assertTrue(isAppletSelected);
+
+        byte[] answer;
+
+        System.out.println("\nSetting private modulus of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF0, cardPrivateKey.getModulus().toByteArray(), (byte) 0x00);
+        TestHelper.EnsureStatusBytesNoError(answer);
+
+        System.out.println("\nSetting private modulus of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF0, cardPrivateKey.getModulus().toByteArray(), (byte) 0x00);
+        TestHelper.EnsureStatusBytes(answer, new byte[]{(byte) 0x69, (byte) 0x86});
+    }
+
+    @Test
+    public void Test_Set_Private_Exp_Of_Card_Twice_Throws_Error() throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException
+    {
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+        keyGen.initialize(1024);
+
+        KeyPair key = keyGen.generateKeyPair();
+        RSAPrivateKey cardPrivateKey = (RSAPrivateKey) key.getPrivate();
+
+        Simulator sim = new Simulator();
+
+        // Act
+        sim.installApplet(CryptographyAID, Cryptography.class);
+
+        boolean isAppletSelected = sim.selectApplet(CryptographyAID);
+        Assert.assertTrue(isAppletSelected);
+
+        byte[] answer;
+        System.out.println("\nSetting private exponent of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF1, cardPrivateKey.getPrivateExponent().toByteArray(), (byte) 0x00);
+        TestHelper.EnsureStatusBytesNoError(answer);
+
+        System.out.println("\nSetting private exponent of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF1, cardPrivateKey.getPrivateExponent().toByteArray(), (byte) 0x00);
+        TestHelper.EnsureStatusBytes(answer, new byte[]{(byte) 0x69, (byte) 0x86});
+    }
+
+    @Test
+    public void Test_Set_Public_Mod_Of_Card_Twice_Throws_Error() throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException
+    {
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+        keyGen.initialize(1024);
+
+        KeyPair key = keyGen.generateKeyPair();
+        RSAPublicKey cardPublicKey = (RSAPublicKey) key.getPublic();
+
+        Simulator sim = new Simulator();
+
+        // Act
+        sim.installApplet(CryptographyAID, Cryptography.class);
+
+        boolean isAppletSelected = sim.selectApplet(CryptographyAID);
+        Assert.assertTrue(isAppletSelected);
+
+        byte[] answer;
+
+        System.out.println("\nSetting public modulus of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF2, cardPublicKey.getModulus().toByteArray(), (byte) 0x00);
+        TestHelper.EnsureStatusBytesNoError(answer);
+
+        System.out.println("\nSetting public modulus of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF2, cardPublicKey.getModulus().toByteArray(), (byte) 0x00);
+        TestHelper.EnsureStatusBytes(answer, new byte[]{(byte) 0x69, (byte) 0x86});
+    }
+
+    @Test
+    public void Test_Set_Public_Exp_Of_Card_Twice_Throws_Error() throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException
+    {
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+        keyGen.initialize(1024);
+
+        KeyPair key = keyGen.generateKeyPair();
+        RSAPublicKey cardPublicKey = (RSAPublicKey) key.getPublic();
+
+        Simulator sim = new Simulator();
+
+        // Act
+        sim.installApplet(CryptographyAID, Cryptography.class);
+
+        boolean isAppletSelected = sim.selectApplet(CryptographyAID);
+        Assert.assertTrue(isAppletSelected);
+
+        byte[] answer;
+
+        System.out.println("\nSetting public exponent of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF3, cardPublicKey.getPublicExponent().toByteArray(), (byte) 0x00);
+        TestHelper.EnsureStatusBytesNoError(answer);
+
+        System.out.println("\nSetting public exponent of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF3, cardPublicKey.getPublicExponent().toByteArray(), (byte) 0x00);
+        TestHelper.EnsureStatusBytes(answer, new byte[]{(byte) 0x69, (byte) 0x86});
+    }
+
+    @Test
+    public void Test_Set_Public_Mod_Of_Terminal_Twice_Throws_Error() throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException
+    {
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+        keyGen.initialize(1024);
+
+        KeyPair key = keyGen.generateKeyPair();
+        RSAPublicKey terminalPublicKey = (RSAPublicKey) key.getPublic();
+
+        Simulator sim = new Simulator();
+
+        // Act
+        sim.installApplet(CryptographyAID, Cryptography.class);
+
+        boolean isAppletSelected = sim.selectApplet(CryptographyAID);
+        Assert.assertTrue(isAppletSelected);
+
+        byte[] answer;
+
+        System.out.println("\nSetting public modulus of the terminal...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xE0, terminalPublicKey.getModulus().toByteArray(), (byte) 0x00);
+        TestHelper.EnsureStatusBytesNoError(answer);
+
+        System.out.println("\nSetting public modulus of the terminal...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xE0, terminalPublicKey.getModulus().toByteArray(), (byte) 0x00);
+        TestHelper.EnsureStatusBytes(answer, new byte[]{(byte) 0x69, (byte) 0x86});
+    }
+
+    @Test
+    public void Test_Set_Public_Exp_Of_Terminal_Twice_Throws_Error() throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException
+    {
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+        keyGen.initialize(1024);
+
+        KeyPair key = keyGen.generateKeyPair();
+        RSAPublicKey terminalPublicKey = (RSAPublicKey) key.getPublic();
+
+        Simulator sim = new Simulator();
+
+        // Act
+        sim.installApplet(CryptographyAID, Cryptography.class);
+
+        boolean isAppletSelected = sim.selectApplet(CryptographyAID);
+        Assert.assertTrue(isAppletSelected);
+
+        byte[] answer;
+
+        System.out.println("\nSetting public exponent of the terminal...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xE1, terminalPublicKey.getPublicExponent().toByteArray(), (byte) 0x00);
+        TestHelper.EnsureStatusBytesNoError(answer);
+
+        System.out.println("\nSetting public exponent of the terminal...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xE1, terminalPublicKey.getPublicExponent().toByteArray(), (byte) 0x00);
+        TestHelper.EnsureStatusBytes(answer, new byte[]{(byte) 0x69, (byte) 0x86});
     }
 }
