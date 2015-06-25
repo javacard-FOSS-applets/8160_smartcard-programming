@@ -43,7 +43,13 @@ public class IdentificationApplet
 
     public static Result<String> getName()
     {
-        return getValue(INS_GetName, "Name");
+        Result<byte[]> result = getValue(INS_GetName, "Name");
+        if (!result.isSuccess())
+        {
+            return new ErrorResult<>(result.getErrorMessage());
+        }
+
+        return new SuccessResult<>(new String(result.getData()));
     }
 
     public static Result<Boolean> setBirthDay(LocalDate date)
@@ -52,14 +58,24 @@ public class IdentificationApplet
         d[0] = (byte) date.getDayOfMonth();
         d[1] = (byte) date.getMonth().getValue();
         d[2] = (byte) (date.getYear() / 100);
-        d[3] = (byte) (date.getYear() % 10);
+        d[3] = (byte) (date.getYear() % 100);
 
         return setValue(d, INS_SetBirthDay, "Birthday");
     }
 
     public static Result<String> getBirthDay()
     {
-        return getValue(INS_GetBirthDay, "BirthDay");
+        Result<byte[]> result = getValue(INS_GetBirthDay, "BirthDay");
+        if (!result.isSuccess())
+        {
+            return new ErrorResult<>(result.getErrorMessage());
+        }
+
+        int day = result.getData()[0];
+        int month = result.getData()[1];
+        int year = (result.getData()[2] * 100) + result.getData()[3];
+
+        return new SuccessResult<>(String.format("%02d.%02d.%d", day, month, year));
     }
 
     private static Result<Boolean> setValue(byte[] d, byte ins, String field)
@@ -85,7 +101,7 @@ public class IdentificationApplet
         return new SuccessResult<>(true);
     }
 
-    private static Result<String> getValue(byte ins, String field)
+    private static Result<byte[]> getValue(byte ins, String field)
     {
         JavaCardHelper.selectApplet("Identification");
 
@@ -99,7 +115,7 @@ public class IdentificationApplet
 
         LogHelper.log(LogLevel.INFO, "%s successfull received", field);
 
-        Result<String> decryptedMessage = RSACryptographyHelper.current().decrypt(encryptedMessage.getData());
+        Result<byte[]> decryptedMessage = RSACryptographyHelper.current().decrypt(encryptedMessage.getData());
         if (!decryptedMessage.isSuccess())
         {
             LogHelper.log(LogLevel.FAILURE, "Decryption of %s failed", field);

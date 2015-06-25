@@ -18,7 +18,7 @@ public interface IRSACryptographyHelper
 
     Result<byte[]> encrypt(byte[] message);
 
-    Result<String> decrypt(byte[] message);
+    Result<byte[]> decrypt(byte[] message);
 
     byte[] getPublicMod();
 

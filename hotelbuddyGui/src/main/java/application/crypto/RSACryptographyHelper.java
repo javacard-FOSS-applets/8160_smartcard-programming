@@ -83,12 +83,12 @@ public class RSACryptographyHelper implements IRSACryptographyHelper
         }
     }
 
-    public Result<String> decrypt(byte[] message)
+    public Result<byte[]> decrypt(byte[] message)
     {
         try
         {
             rsaCipher.init(Cipher.DECRYPT_MODE, this.terminalPrivateKey);
-            return new SuccessResult<>(new String(rsaCipher.doFinal(message)).trim());
+            return new SuccessResult<>(rsaCipher.doFinal(message));
         }
         catch (Exception ex)
         {

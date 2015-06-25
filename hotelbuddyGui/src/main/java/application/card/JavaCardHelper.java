@@ -21,7 +21,7 @@ public class JavaCardHelper
             return selectResult;
         }
 
-        LogHelper.log(LogLevel.INFO, "Applet %s selected", appletId);
+        LogHelper.log(LogLevel.INFO, "%s Applet selected", appletId);
         return selectResult;
     }
 

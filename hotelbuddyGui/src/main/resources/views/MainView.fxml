@@ -63,7 +63,6 @@
                                        </rowConstraints>
                                        <children>
                                           <Button fx:id="conf_setupCardKeysButton" mnemonicParsing="false" text="Setup Card Keys" GridPane.columnIndex="1" />
-                                          <Button fx:id="conf_exchangePublicKeys" mnemonicParsing="false" text="Exchange Public Keys" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                        </children>
                                     </GridPane>
                                             </content>

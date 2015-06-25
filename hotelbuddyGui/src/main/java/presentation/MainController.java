@@ -31,7 +31,7 @@ public class MainController
     public Button con_connectButton, con_generateKeyButton;
     public Label con_statusLabel, con_terminalKeyStatus, con_cardKeyStatus;
 
-    public Button conf_setIdentificationButton, conf_setupCardKeysButton, conf_exchangePublicKeys;
+    public Button conf_setIdentificationButton, conf_setupCardKeysButton;
     public DatePicker conf_birthDateDatePicker;
     public TextField conf_carIdTextField, conf_safePinTextField, conf_nameTextField;
 
@@ -203,22 +203,15 @@ public class MainController
 
         return new SuccessResult<>(checkRsaKeyFiles().getData());
     }
-
-    /**
-     * Exchanges the public key with the card
-     */
-    private void exportTerminalKey()
-    {
-        CryptographyApplet.exportTerminalPublicKeyToCard();
-        CryptographyApplet.importPublicKeyFromCard();
-    }
-
     /**
      * Setups the private and public key for the card
+     * Exchanges the public key with the card
      */
     private void setupCardKeys()
     {
         CryptographyApplet.initializeCardKeys();
+        CryptographyApplet.exportTerminalPublicKeyToCard();
+        CryptographyApplet.importPublicKeyFromCard();
     }
 
     /**
@@ -290,7 +283,6 @@ public class MainController
         con_generateKeyButton.addEventHandler(ActionEvent.ACTION, e -> generateRsaKeys());
         conf_setIdentificationButton.addEventHandler(ActionEvent.ACTION, e -> setIdentificationData());
         conf_setupCardKeysButton.addEventHandler(ActionEvent.ACTION, e -> setupCardKeys());
-        conf_exchangePublicKeys.addEventHandler(ActionEvent.ACTION, e -> exportTerminalKey());
         id_getButton.addEventHandler(ActionEvent.ACTION, e -> getIdentificationData());
 
         con_statusLabel.textProperty().bind(this.connectionModel.connectionStatusProperty());
