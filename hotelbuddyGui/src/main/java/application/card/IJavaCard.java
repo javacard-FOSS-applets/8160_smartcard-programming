@@ -11,4 +11,6 @@ public interface IJavaCard
     Result<Boolean> connect();
 
     Result<byte[]> sendCommand(ISOCommandAPDU command);
+
+    void shutdown();
 }

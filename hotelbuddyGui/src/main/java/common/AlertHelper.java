@@ -16,4 +16,11 @@ public class AlertHelper
             a.show();
         });
     }
+    public static void showSuccessAlert(String content)
+    {
+        Platform.runLater(() -> {
+            Alert a = new Alert(Alert.AlertType.INFORMATION, content, ButtonType.OK);
+            a.show();
+        });
+    }
 }

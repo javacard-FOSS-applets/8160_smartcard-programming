@@ -2,7 +2,7 @@ package presentation;
 
 import application.card.JavaCard;
 import application.crypto.KeyFileGenerator;
-import application.crypto.TerminalCryptographyHelper;
+import application.crypto.RSACryptographyHelper;
 import application.hotelbuddy.CryptographyApplet;
 import application.hotelbuddy.IdentificationApplet;
 import application.log.LogHelper;
@@ -31,7 +31,7 @@ public class MainController
     public Button con_connectButton, con_generateKeyButton;
     public Label con_statusLabel, con_terminalKeyStatus, con_cardKeyStatus;
 
-    public Button conf_setIdentificationButton, conf_setupCardKeysButton;
+    public Button conf_setIdentificationButton, con_initializeCardButton, conf_resetCryptography, conf_resetIdentification;
     public DatePicker conf_birthDateDatePicker;
     public TextField conf_carIdTextField, conf_safePinTextField, conf_nameTextField;
 
@@ -70,7 +70,7 @@ public class MainController
         LogHelper.setOnNewLogEntry(this::onNewLog);
 
         Result<Boolean> checkRsaKeyFilesResult = checkRsaKeyFiles();
-        if (!checkRsaKeyFilesResult.isSuccess() || !checkRsaKeyFilesResult.getData())
+        if (!checkRsaKeyFilesResult.isSuccess() || !checkRsaKeyFilesResult.get())
         {
             LogHelper.log(LogLevel.INFO, "Key files missing");
             return;
@@ -105,7 +105,7 @@ public class MainController
      */
     private Result<Boolean> initializeTerminalCryptography()
     {
-        Result<Boolean> setupTerminalKey = TerminalCryptographyHelper.initializeTerminalKeys();
+        Result<Boolean> setupTerminalKey = RSACryptographyHelper.current().importTerminalKeyFromFile();
         if (!setupTerminalKey.isSuccess())
         {
             AlertHelper.showErrorAlert(setupTerminalKey.getErrorMessage());
@@ -146,22 +146,10 @@ public class MainController
             return;
         }
 
-        Result<Boolean> exportTerminalPublicKeyResult = CryptographyApplet.exportTerminalPublicKeyToCard();
-        if (!exportTerminalPublicKeyResult.isSuccess())
-        {
-            setConnectionStatus(false, "Cryptography failure", Color.ORANGE);
-
-            if (showMessage)
-            {
-                AlertHelper.showErrorAlert(exportTerminalPublicKeyResult.getErrorMessage());
-            }
-            return;
-        }
-
         Result<Boolean> importCardPublicKeyResult = CryptographyApplet.importPublicKeyFromCard();
         if (!importCardPublicKeyResult.isSuccess())
         {
-            setConnectionStatus(false, "Cryptography failure", Color.ORANGE);
+            setConnectionStatus(false, "Cryptography failure, please initalize your card", Color.ORANGE);
 
             if (showMessage)
             {
@@ -176,6 +164,7 @@ public class MainController
     /**
      * Generates the rsa key files
      * if the terminal key file is generated, it get's loaded
+     *
      * @return
      */
     private Result<Boolean> generateRsaKeys()
@@ -201,17 +190,37 @@ public class MainController
             }
         }
 
-        return new SuccessResult<>(checkRsaKeyFiles().getData());
+        return new SuccessResult<>(checkRsaKeyFiles().get());
     }
+
     /**
      * Setups the private and public key for the card
      * Exchanges the public key with the card
      */
     private void setupCardKeys()
     {
-        CryptographyApplet.initializeCardKeys();
-        CryptographyApplet.exportTerminalPublicKeyToCard();
-        CryptographyApplet.importPublicKeyFromCard();
+        Result<Boolean> result = CryptographyApplet.loadAndExportCardKeysFromFile();
+        if (!result.isSuccess())
+        {
+            AlertHelper.showErrorAlert(result.getErrorMessage());
+            return;
+        }
+
+        result = CryptographyApplet.exportTerminalPublicKeyToCard();
+        if (!result.isSuccess())
+        {
+            AlertHelper.showErrorAlert(result.getErrorMessage());
+            return;
+        }
+
+        result = CryptographyApplet.importPublicKeyFromCard();
+        if (!result.isSuccess())
+        {
+            AlertHelper.showErrorAlert(result.getErrorMessage());
+            return;
+        }
+
+        setConnectionStatus(true, "Connected", Color.GREEN);
     }
 
     /**
@@ -222,13 +231,13 @@ public class MainController
         Result<String> nameResult = IdentificationApplet.getName();
         if (nameResult.isSuccess())
         {
-            this.identificationModel.setName(nameResult.getData());
+            this.identificationModel.setName(nameResult.get());
         }
 
         Result<String> birthDateResult = IdentificationApplet.getBirthDay();
         if (birthDateResult.isSuccess())
         {
-            this.identificationModel.setBirthDate(birthDateResult.getData());
+            this.identificationModel.setBirthDate(birthDateResult.get());
         }
 
     }
@@ -255,14 +264,7 @@ public class MainController
 
     private void setIdentificationData()
     {
-        Result<Boolean> result = IdentificationApplet.reset();
-        if (!result.isSuccess())
-        {
-            AlertHelper.showErrorAlert(result.getErrorMessage());
-            return;
-        }
-
-        result = IdentificationApplet.setName(this.configurationModel.getName());
+        Result<Boolean> result = IdentificationApplet.setName(this.configurationModel.getName());
         if (!result.isSuccess())
         {
             AlertHelper.showErrorAlert(result.getErrorMessage());
@@ -275,14 +277,43 @@ public class MainController
             AlertHelper.showErrorAlert(result.getErrorMessage());
             return;
         }
+
+        AlertHelper.showSuccessAlert("Data successfully set.");
+    }
+
+    private void resetIdentification()
+    {
+        Result<Boolean> result = IdentificationApplet.reset();
+        if (!result.isSuccess())
+        {
+            AlertHelper.showErrorAlert(result.getErrorMessage());
+        }
+    }
+
+    private void resetCryptography()
+    {
+        Result<Boolean> result = CryptographyApplet.reset();
+        if (!result.isSuccess())
+        {
+            AlertHelper.showErrorAlert(result.getErrorMessage());
+        }
     }
 
     private void initializeBindings()
     {
         con_connectButton.addEventHandler(ActionEvent.ACTION, e -> connectToSmartCardAsync(true));
+        con_connectButton.disableProperty().bind(this.connectionModel.isConnectionEstablishedProperty());
+
         con_generateKeyButton.addEventHandler(ActionEvent.ACTION, e -> generateRsaKeys());
+        con_generateKeyButton.disableProperty().bind(this.connectionModel.isTerminalKeyFileAvailableProperty().and(this.connectionModel.isTerminalKeyFileAvailableProperty()));
+
+        con_initializeCardButton.addEventHandler(ActionEvent.ACTION, e -> setupCardKeys());
+        con_initializeCardButton.disableProperty().bind(this.connectionModel.isConnectionEstablishedProperty());
+
         conf_setIdentificationButton.addEventHandler(ActionEvent.ACTION, e -> setIdentificationData());
-        conf_setupCardKeysButton.addEventHandler(ActionEvent.ACTION, e -> setupCardKeys());
+        conf_resetCryptography.addEventHandler(ActionEvent.ACTION, e -> resetCryptography());
+        conf_resetIdentification.addEventHandler(ActionEvent.ACTION, e -> resetIdentification());
+
         id_getButton.addEventHandler(ActionEvent.ACTION, e -> getIdentificationData());
 
         con_statusLabel.textProperty().bind(this.connectionModel.connectionStatusProperty());

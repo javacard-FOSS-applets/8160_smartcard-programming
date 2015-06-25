@@ -4,8 +4,6 @@ import application.log.LogHelper;
 import common.ErrorResult;
 import common.Result;
 import common.SuccessResult;
-import sun.security.rsa.RSAPrivateCrtKeyImpl;
-import sun.security.rsa.RSAPublicKeyImpl;
 
 import java.io.PrintWriter;
 import java.nio.file.Path;
@@ -30,8 +28,8 @@ public class KeyFileGenerator
             keyGen.initialize(1024);
             final KeyPair key = keyGen.generateKeyPair();
 
-            privateKey = (RSAPrivateCrtKeyImpl) key.getPrivate();
-            publicKey = (RSAPublicKeyImpl) key.getPublic();
+            privateKey = (RSAPrivateKey) key.getPrivate();
+            publicKey = (RSAPublicKey) key.getPublic();
 
             PrintWriter writer = new PrintWriter(filePath.toString());
             writer.println(privateKey.getModulus());
@@ -42,7 +40,7 @@ public class KeyFileGenerator
         }
         catch (Exception ex)
         {
-            LogHelper.logException(ex);
+            LogHelper.log(ex);
             return new ErrorResult<>("Key file %s not generated", filePath.toString());
         }
 

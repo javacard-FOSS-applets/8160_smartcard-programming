@@ -10,11 +10,9 @@ import java.security.PublicKey;
  */
 public interface IRSACryptographyHelper
 {
-    Result<Boolean> setTerminalKeys(BigInteger privateMod, BigInteger privateExp, BigInteger publicMod, BigInteger publicExp);
+    Result<Boolean> importTerminalKeyFromFile();
 
     void setCardPublicKey(BigInteger modulus, BigInteger exponent);
-
-    Result<byte[]> encrypt(String message);
 
     Result<byte[]> encrypt(byte[] message);
 

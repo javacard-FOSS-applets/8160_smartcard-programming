@@ -16,7 +16,7 @@ public class LogHelper
         logInternal(level, message, args);
     }
 
-    public static void logException(Exception ex)
+    public static void log(Exception ex)
     {
         logInternal(LogLevel.ERROR, "%s: %s", ex.getClass().getName(), ex.getLocalizedMessage());
     }

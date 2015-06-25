@@ -8,18 +8,20 @@ import javacard.framework.Shareable;
 public interface ICryptography extends Shareable
 {
     /**
-     * Encrypts the message with the imported key
+     * Encrypts the passed message with terminalPublicKey and writes it into the buffer
      *
+     * @param buffer  apdu buffer
      * @param message message to encrypt
-     * @return encrypted message
+     * @return length of encrypted message (usually 128 Byte)
      */
-    byte[] encrypt(byte[] message);
+    short encrypt(byte[] buffer, byte[] message);
 
     /**
-     * Decrypts the message with the imported key
+     * Decrypts the passed message with cardPrivateKey and writes it into the buffer
      *
-     * @param message message to decrypt
-     * @return decrypted message
+     * @param buffer  apdu buffer
+     * @param offset message to decrypt (128 Byte)
+     * @return trimmed decrypted message
      */
-    byte[] decrypt(byte[] message);
+    short decrypt(byte[] buffer, byte offset);
 }

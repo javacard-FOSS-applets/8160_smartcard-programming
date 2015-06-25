@@ -6,9 +6,11 @@ import application.log.LogLevel;
 import common.ErrorResult;
 import common.Result;
 import common.SuccessResult;
+import common.TerminalPaths;
 
 import javax.crypto.Cipher;
 import java.math.BigInteger;
+import java.nio.file.Path;
 import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.security.interfaces.RSAPrivateKey;
@@ -21,6 +23,8 @@ import java.security.spec.RSAPublicKeySpec;
  */
 public class RSACryptographyHelper implements IRSACryptographyHelper
 {
+    private static final Path TerminalKeyPath = TerminalPaths.TerminalKeyPath;
+
     private static IRSACryptographyHelper instance;
     private Cipher rsaCipher;
 
@@ -37,7 +41,7 @@ public class RSACryptographyHelper implements IRSACryptographyHelper
         }
         catch (Exception ex)
         {
-            LogHelper.logException(ex);
+            LogHelper.log(ex);
             return;
         }
 
@@ -59,13 +63,46 @@ public class RSACryptographyHelper implements IRSACryptographyHelper
         }
         catch (Exception ex)
         {
-            LogHelper.logException(ex);
+            LogHelper.log(ex);
         }
     }
 
-    public Result<byte[]> encrypt(String message)
+    /**
+     * loads the card keys from TerminalKeyPath
+     * and sets them into the RSACryptographyHelper
+     *
+     * @return result of the operation
+     */
+    @Override
+    public Result<Boolean> importTerminalKeyFromFile()
     {
-        return encrypt(message.getBytes());
+        Result<ImportedKeys> readResult = CryptographyHelper.readKeysFromFile(TerminalKeyPath);
+        if (!readResult.isSuccess())
+        {
+            return new ErrorResult<>(readResult.getErrorMessage());
+        }
+
+        try
+        {
+            KeyFactory rsaKeyFactory = KeyFactory.getInstance("RSA");
+
+            RSAPrivateKeySpec keySpec = new RSAPrivateKeySpec(
+                    readResult.get().getPrivateMod(),
+                    readResult.get().getPrivateExp());
+            terminalPrivateKey = (RSAPrivateKey) rsaKeyFactory.generatePrivate(keySpec);
+
+            RSAPublicKeySpec spec = new RSAPublicKeySpec(
+                    readResult.get().getPublicMod(),
+                    readResult.get().getPublicExp());
+            terminalPublicKey = (RSAPublicKey) rsaKeyFactory.generatePublic(spec);
+        }
+        catch (Exception ex)
+        {
+            LogHelper.log(ex);
+            return new ErrorResult<>("Couldn't set terminal keys.");
+        }
+
+        return new SuccessResult<>(true);
     }
 
     @Override
@@ -78,11 +115,12 @@ public class RSACryptographyHelper implements IRSACryptographyHelper
         }
         catch (Exception ex)
         {
-            LogHelper.logException(ex);
+            LogHelper.log(ex);
             return new ErrorResult<>("Encryption failed");
         }
     }
 
+    @Override
     public Result<byte[]> decrypt(byte[] message)
     {
         try
@@ -92,7 +130,7 @@ public class RSACryptographyHelper implements IRSACryptographyHelper
         }
         catch (Exception ex)
         {
-            LogHelper.logException(ex);
+            LogHelper.log(ex);
             return new ErrorResult<>("Decryption failed");
         }
     }
@@ -107,27 +145,5 @@ public class RSACryptographyHelper implements IRSACryptographyHelper
     public byte[] getPublicExp()
     {
         return terminalPublicKey.getPublicExponent().toByteArray();
-    }
-
-    @Override
-    public Result<Boolean> setTerminalKeys(BigInteger privateMod, BigInteger privateExp, BigInteger publicMod, BigInteger publicExp)
-    {
-        try
-        {
-            KeyFactory rsaKeyFactory = KeyFactory.getInstance("RSA");
-
-            RSAPrivateKeySpec keySpec = new RSAPrivateKeySpec(privateMod, privateExp);
-            terminalPrivateKey = (RSAPrivateKey) rsaKeyFactory.generatePrivate(keySpec);
-
-            RSAPublicKeySpec spec = new RSAPublicKeySpec(publicMod, publicExp);
-            terminalPublicKey = (RSAPublicKey) rsaKeyFactory.generatePublic(spec);
-        }
-        catch (Exception ex)
-        {
-            LogHelper.logException(ex);
-            return new ErrorResult<>("");
-        }
-
-        return new SuccessResult<>(true);
     }
 }

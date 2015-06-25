@@ -242,10 +242,11 @@ public class Identification extends Applet
 
     private void send(APDU apdu, byte[] content)
     {
-        byte[] message = encryptMessage(content);
+        byte[] buffer = apdu.getBuffer();
+        short len = encryptMessage(buffer, content);
 
-        Util.arrayCopy(message, (short) 0, apdu.getBuffer(), (short) 0, (short) message.length);
-        apdu.setOutgoingAndSend((short) 0, (short) message.length);
+        // Util.arrayCopy(message, (short) 0, apdu.getBuffer(), (short) 0, (short) message.length);
+        apdu.setOutgoingAndSend((short) 0, len);
     }
 
     private void setName(APDU apdu)
@@ -270,23 +271,25 @@ public class Identification extends Applet
         nameLength = (byte) message.length;
     }
 
-    private byte[] encryptMessage(byte[] messsage)
+    private short encryptMessage(byte[] buffer, byte[] messsage)
     {
         AID cryptogrphyAid = JCSystem.lookupAID(CRYPTOGRAPHY_AID, (short) 0, (byte) CRYPTOGRAPHY_AID.length);
         ICryptography cryptoApp = (ICryptography) JCSystem.getAppletShareableInterfaceObject(cryptogrphyAid, CRYPTOGRAPHY_SECRET);
 
-        return cryptoApp.encrypt(messsage);
+        return cryptoApp.encrypt(buffer, messsage);
     }
 
     private byte[] decryptMessage(APDU apdu)
     {
-        short messageLength = 128;
-        byte[] message = JCSystem.makeTransientByteArray(messageLength, JCSystem.CLEAR_ON_DESELECT);
-        Util.arrayCopy(apdu.getBuffer(), ISO7816.OFFSET_CDATA, message, (short) 0, messageLength);
+        byte[] buffer = apdu.getBuffer();
 
         AID cryptogrphyAid = JCSystem.lookupAID(CRYPTOGRAPHY_AID, (short) 0, (byte) CRYPTOGRAPHY_AID.length);
         ICryptography cryptoApp = (ICryptography) JCSystem.getAppletShareableInterfaceObject(cryptogrphyAid, CRYPTOGRAPHY_SECRET);
 
-        return cryptoApp.decrypt(message);
+        short len = cryptoApp.decrypt(buffer, ISO7816.OFFSET_CDATA);
+        byte[] decryptedMessage = JCSystem.makeTransientByteArray(len, JCSystem.CLEAR_ON_DESELECT);
+        Util.arrayCopy(buffer, (short) 0, decryptedMessage, (short) 0, len);
+
+        return decryptedMessage;
     }
 }

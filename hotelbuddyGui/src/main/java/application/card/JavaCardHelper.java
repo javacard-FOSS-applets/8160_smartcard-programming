@@ -2,7 +2,9 @@ package application.card;
 
 import application.log.LogHelper;
 import application.log.LogLevel;
+import common.ErrorResult;
 import common.Result;
+import common.SuccessResult;
 import opencard.opt.terminal.ISOCommandAPDU;
 
 /**
@@ -10,7 +12,7 @@ import opencard.opt.terminal.ISOCommandAPDU;
  */
 public class JavaCardHelper
 {
-    public static Result<byte[]> selectApplet(String appletId)
+    public static Result<Boolean> selectApplet(String appletId)
     {
         ISOCommandAPDU command = ApduHelper.getSelectCommand(appletId);
         Result<byte[]> selectResult = JavaCard.current().sendCommand(command);
@@ -18,11 +20,11 @@ public class JavaCardHelper
         if (!selectResult.isSuccess())
         {
             LogHelper.log(LogLevel.FAILURE, "Could not select applet: %s", appletId);
-            return selectResult;
+            return new ErrorResult<>(selectResult.getErrorMessage());
         }
 
         LogHelper.log(LogLevel.INFO, "%s Applet selected", appletId);
-        return selectResult;
+        return new SuccessResult<>(true);
     }
 
     public static Result<byte[]> sendCommand(byte cla, byte ins, byte[] content, byte answerLength)

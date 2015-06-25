@@ -1,3 +1,4 @@
+import application.card.JavaCard;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -21,8 +22,14 @@ public class Main extends Application
         Scene scene = new Scene(root);
         scene.getStylesheets().add(getClass().getResource("/app.css").toString());
         Stage stage = new Stage();
-        stage.setTitle("SimuLeo");
+        stage.setTitle("hotelbuddy");
         stage.setScene(scene);
         stage.show();
+        stage.setOnCloseRequest(e -> close());
+    }
+
+    private void close()
+    {
+        JavaCard.current().shutdown();
     }
 }

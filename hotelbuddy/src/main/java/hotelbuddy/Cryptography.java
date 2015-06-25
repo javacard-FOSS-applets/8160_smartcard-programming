@@ -299,38 +299,29 @@ public class Cryptography extends Applet implements ICryptography
     }
 
     /**
-     * Encrypts the passed message with terminalPublicKey
+     * Encrypts the passed message with terminalPublicKey and writes it into the buffer
      *
+     * @param buffer  apdu buffer
      * @param message message to encrypt
-     * @return encrypted message (128 Byte)
+     * @return length of encrypted message (usually 128 Byte)
      */
-    public byte[] encrypt(byte[] message)
+    public short encrypt(byte[] buffer, byte[] message)
     {
-        byte[] encryptedMessage = JCSystem.makeTransientByteArray((short) 128, JCSystem.CLEAR_ON_DESELECT);
-
         rsaCipher.init(terminalPublicKey, Cipher.MODE_ENCRYPT);
-        rsaCipher.doFinal(message, (short) 0, (short) message.length, encryptedMessage, (short) 0);
-
-        return encryptedMessage;
+        return rsaCipher.doFinal(message, (short) 0, (short) message.length, buffer, (short) 0);
     }
 
     /**
-     * Decrypts the passed message with cardPrivateKey
+     * Decrypts the passed message with cardPrivateKey and writes it into the buffer
      *
-     * @param message message to decrypt (128 Byte)
+     * @param buffer  apdu buffer
+     * @param offset message to decrypt (128 Byte)
      * @return trimmed decrypted message
      */
-    public byte[] decrypt(byte[] message)
+    public short decrypt(byte[] buffer, byte offset)
     {
-        byte[] decryptedMessage = JCSystem.makeTransientByteArray((short) 128, JCSystem.CLEAR_ON_DESELECT);
-
         rsaCipher.init(cardPrivateKey, Cipher.MODE_DECRYPT);
-        short decryptedMessageLength = rsaCipher.doFinal(message, (short) 0, (short) message.length, decryptedMessage, (short) 0);
-
-        byte[] response = JCSystem.makeTransientByteArray(decryptedMessageLength, JCSystem.CLEAR_ON_DESELECT);
-        Util.arrayCopy(decryptedMessage, (short) 0, response, (short) 0, decryptedMessageLength);
-
-        return response;
+        return rsaCipher.doFinal(buffer, (short) offset, (short) 128, buffer, (short) 0);
     }
 
     /**

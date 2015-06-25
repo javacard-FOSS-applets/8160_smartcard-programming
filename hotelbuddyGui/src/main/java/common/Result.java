@@ -22,7 +22,7 @@ public abstract class Result<T>
         this.success = success;
     }
 
-    public T getData()
+    public T get()
     {
         return data;
     }

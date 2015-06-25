@@ -6,8 +6,12 @@ import common.ByteHelper;
 import common.ErrorResult;
 import common.Result;
 import common.SuccessResult;
+import opencard.core.event.CTListener;
+import opencard.core.event.CardTerminalEvent;
+import opencard.core.event.EventGenerator;
 import opencard.core.service.CardRequest;
 import opencard.core.service.SmartCard;
+import opencard.core.terminal.CardTerminalException;
 import opencard.core.terminal.ResponseAPDU;
 import opencard.core.util.HexString;
 import opencard.opt.terminal.ISOCommandAPDU;
@@ -16,7 +20,7 @@ import opencard.opt.util.PassThruCardService;
 /**
  * Created by Patrick on 23.06.2015.
  */
-public class JavaCard implements IJavaCard
+public class JavaCard implements IJavaCard, CTListener
 {
     private static IJavaCard instance = null;
 
@@ -34,22 +38,30 @@ public class JavaCard implements IJavaCard
     @Override
     public Result<Boolean> connect()
     {
-        LogHelper.log(LogLevel.INFO, "Setting up connection to smartcard");
+        if (card != null)
+        {
+            return new SuccessResult<>(true);
+        }
 
         try
         {
             SmartCard.start();
+            EventGenerator.getGenerator().addCTListener(this);
         }
         catch (ClassNotFoundException ex)
         {
-            LogHelper.logException(ex);
+            LogHelper.log(ex);
+            shutdown();
             return new ErrorResult<>("Terminal not available. Please check your opencard.properties file.");
         }
         catch (Exception ex)
         {
-            LogHelper.logException(ex);
+            LogHelper.log(ex);
+            shutdown();
             return new ErrorResult<>("SmartCard couldn't be started.");
         }
+
+        LogHelper.log(LogLevel.INFO, "Setting up connection to smartcard");
 
         CardRequest cardRequest = new CardRequest(CardRequest.ANYCARD, null, PassThruCardService.class);
         cardRequest.setTimeout(1);
@@ -60,13 +72,15 @@ public class JavaCard implements IJavaCard
         }
         catch (Exception ex)
         {
-            LogHelper.logException(ex);
+            LogHelper.log(ex);
+            shutdown();
             return new ErrorResult<>("No smartcard found.");
         }
 
         if (card == null)
         {
             LogHelper.log(LogLevel.WARNING, "No smartcard found");
+            shutdown();
             return new ErrorResult<>("No smartcard found.");
         }
 
@@ -97,7 +111,22 @@ public class JavaCard implements IJavaCard
             responseApdu = passThru.sendCommandAPDU(commandApdu);
 
             String status = HexString.hexifyShort(responseApdu.sw1(), responseApdu.sw2());
-            if (!status.equals("9000"))
+            if (status.equals("6E00"))
+            {
+                LogHelper.log(LogLevel.FAILURE, "Unknown class byte %02x", commandApdu.getCLA());
+                return new ErrorResult<>("Unknown class byte. Please check your command.");
+            }
+            else if (status.equals("6d00"))
+            {
+                LogHelper.log(LogLevel.FAILURE, "Unknown instruction byte %02x", commandApdu.getINS());
+                return new ErrorResult<>("Incorrect instruction byte. Please check your command.");
+            }
+            else if (status.equals("6986"))
+            {
+                LogHelper.log(LogLevel.FAILURE, "Data already set or not available");
+                return new ErrorResult<>("The data is already set. If you want to set new data, please reset the applet.");
+            }
+            else if (!status.equals("9000"))
             {
                 LogHelper.log(LogLevel.FAILURE, "Answer incorrect: %s", status);
                 return new ErrorResult<>("Incorrect answer. Please check your command.");
@@ -107,8 +136,42 @@ public class JavaCard implements IJavaCard
         }
         catch (Exception ex)
         {
-            LogHelper.logException(ex);
+            LogHelper.log(ex);
             return new ErrorResult<>("");
         }
+    }
+
+    @Override
+    public void shutdown()
+    {
+        LogHelper.log(LogLevel.INFO, "Shutdown initiated");
+
+        try
+        {
+            if (card != null)
+            {
+                card.close();
+                card = null;
+            }
+
+            SmartCard.shutdown();
+        }
+        catch (CardTerminalException ex)
+        {
+            LogHelper.log(ex);
+        }
+    }
+
+    @Override
+    public void cardInserted(CardTerminalEvent cardTerminalEvent) throws CardTerminalException
+    {
+        LogHelper.log(LogLevel.INFO, "Card inserted");
+    }
+
+    @Override
+    public void cardRemoved(CardTerminalEvent cardTerminalEvent) throws CardTerminalException
+    {
+        LogHelper.log(LogLevel.INFO, "Card removed");
+
     }
 }
