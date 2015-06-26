@@ -27,8 +27,6 @@ public class Cryptography extends Applet implements ICryptography
     private static final byte INS_ImportTerminalPublicMod = (byte) 0xE0;
     private static final byte INS_ImportTerminalPublicExp = (byte) 0xE1;
 
-    private static final byte INS_RESET = (byte) 0xFF;
-
     // Crypto
     private RSAPrivateKey cardPrivateKey;
     private RSAPublicKey cardPublicKey;
@@ -117,9 +115,6 @@ public class Cryptography extends Applet implements ICryptography
                 messageLength = (short) (buf[ISO7816.OFFSET_LC] & 0xFF);
                 importCardPublicExponent(apdu, messageLength);
                 break;
-            case INS_RESET:
-                reset();
-                break;
             default:
                 ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
         }
@@ -132,12 +127,6 @@ public class Cryptography extends Applet implements ICryptography
 
     public void deselect()
     {
-    }
-
-    private void reset()
-    {
-        terminalPublicKeyFlag = 0x00;
-        terminalPublicKey = (RSAPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_RSA_PUBLIC, KeyBuilder.LENGTH_RSA_1024, false);
     }
 
     /**

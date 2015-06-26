@@ -32,8 +32,6 @@ public class CryptographyApplet
     private static final byte INS_ImportTerminalPublicMod = (byte) 0xE0;
     private static final byte INS_ImportTerminalPublicExp = (byte) 0xE1;
 
-    private static final byte INS_Reset = (byte) 0xFF;
-
     private static final Path CardKeyFilePath = TerminalPaths.CardKeyPath;
 
     /**
@@ -124,23 +122,5 @@ public class CryptographyApplet
                 INS_ImportCardPublicMod,
                 readResult.get().getPublicExp().toByteArray(),
                 INS_ImportCardPublicExp);
-    }
-
-    public static Result<Boolean> reset()
-    {
-        Result<Boolean> selectResult = JavaCardHelper.selectApplet(AppletName);
-        if (!selectResult.isSuccess())
-        {
-            return selectResult;
-        }
-
-        Result<byte[]> resetResult = JavaCardHelper.sendCommand(CLA, INS_Reset);
-        if (!resetResult.isSuccess())
-        {
-            LogHelper.log(LogLevel.FAILURE, "Reset of cryptography applet failed");
-            return new ErrorResult<>(resetResult.getErrorMessage());
-        }
-
-        return new SuccessResult<>(true);
     }
 }

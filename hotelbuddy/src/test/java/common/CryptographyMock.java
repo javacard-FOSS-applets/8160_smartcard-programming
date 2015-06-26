@@ -44,16 +44,18 @@ public class CryptographyMock extends Applet implements ICryptography
     {
     }
 
-    public byte[] encrypt(byte[] message)
+    public short encrypt(byte[] buffer, byte[] message)
     {
         encrypted = true;
-        return message;
+        System.arraycopy(message, 0, buffer, 0, message.length);
+        return (short) message.length;
     }
 
-    public byte[] decrypt(byte[] message)
+    public short decrypt(byte[] message, byte offset)
     {
         decrypted = true;
-        return trim(message);
+        System.arraycopy(trim(message, offset), 0, message, 0, DataLength);
+        return DataLength;
     }
 
     public static boolean encryptWasCalled()
@@ -84,10 +86,10 @@ public class CryptographyMock extends Applet implements ICryptography
         return this;
     }
 
-    private byte[] trim(byte[] message)
+    private byte[] trim(byte[] message, byte offset)
     {
         byte[] shortenedMessage = new byte[DataLength];
-        Util.arrayCopy(message, (byte) 0x00, shortenedMessage, (byte) 0x00, (byte) DataLength);
+        Util.arrayCopy(message, offset, shortenedMessage, (byte) 0x00, (byte) DataLength);
 
         return shortenedMessage;
     }
