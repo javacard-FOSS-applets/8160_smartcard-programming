@@ -271,20 +271,20 @@ public class Identification extends Applet
         nameLength = (byte) message.length;
     }
 
-    private short encryptMessage(byte[] buffer, byte[] messsage)
+    private short encryptMessage(byte[] buffer, byte[] message)
     {
-        AID cryptogrphyAid = JCSystem.lookupAID(CRYPTOGRAPHY_AID, (short) 0, (byte) CRYPTOGRAPHY_AID.length);
-        ICryptography cryptoApp = (ICryptography) JCSystem.getAppletShareableInterfaceObject(cryptogrphyAid, CRYPTOGRAPHY_SECRET);
+        AID cryptographyAid = JCSystem.lookupAID(CRYPTOGRAPHY_AID, (short) 0, (byte) CRYPTOGRAPHY_AID.length);
+        ICryptography cryptoApp = (ICryptography) JCSystem.getAppletShareableInterfaceObject(cryptographyAid, CRYPTOGRAPHY_SECRET);
 
-        return cryptoApp.encrypt(buffer, messsage);
+        return cryptoApp.encrypt(buffer, message);
     }
 
     private byte[] decryptMessage(APDU apdu)
     {
         byte[] buffer = apdu.getBuffer();
 
-        AID cryptogrphyAid = JCSystem.lookupAID(CRYPTOGRAPHY_AID, (short) 0, (byte) CRYPTOGRAPHY_AID.length);
-        ICryptography cryptoApp = (ICryptography) JCSystem.getAppletShareableInterfaceObject(cryptogrphyAid, CRYPTOGRAPHY_SECRET);
+        AID cryptographyAid = JCSystem.lookupAID(CRYPTOGRAPHY_AID, (short) 0, (byte) CRYPTOGRAPHY_AID.length);
+        ICryptography cryptoApp = (ICryptography) JCSystem.getAppletShareableInterfaceObject(cryptographyAid, CRYPTOGRAPHY_SECRET);
 
         short len = cryptoApp.decrypt(buffer, ISO7816.OFFSET_CDATA);
         byte[] decryptedMessage = JCSystem.makeTransientByteArray(len, JCSystem.CLEAR_ON_DESELECT);
