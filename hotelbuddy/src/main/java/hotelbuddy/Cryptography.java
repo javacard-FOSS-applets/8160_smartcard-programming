@@ -14,6 +14,7 @@ public class Cryptography extends Applet implements ICryptography
 
     // Clients
     private static final byte[] IDENTIFICATION_AID = {0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e};
+    private static final byte[] ACCESS_AID = {0x41, 0x63, 0x63, 0x65, 0x73, 0x73};
     private static final byte[] CRYPTOGRAPHY_AID = {0x43, 0x72, 0x79, 0x70, 0x74, 0x6f, 0x67, 0x72, 0x61, 0x70, 0x68, 0x79};
 
     // Instructions
@@ -322,7 +323,8 @@ public class Cryptography extends Applet implements ICryptography
      */
     public Shareable getShareableInterfaceObject(AID client_aid, byte parameter)
     {
-        if (!client_aid.equals(IDENTIFICATION_AID, (short) 0, (byte) IDENTIFICATION_AID.length))
+        if (!client_aid.equals(IDENTIFICATION_AID, (short) 0, (byte) IDENTIFICATION_AID.length)
+                && !client_aid.equals(ACCESS_AID, (short) 0, (byte) ACCESS_AID.length))
         {
             return null;
         }
