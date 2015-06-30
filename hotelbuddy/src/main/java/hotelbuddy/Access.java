@@ -9,12 +9,12 @@ public class Access extends Applet
 {
     // Java Card
     // Applet
-    private static final byte ACCESS_CLA = 0x42;
+    private static final byte ACCESS_CLA = 0x41;
 
     // Instructions
     private static final byte INIT_ACCESS_MEMORY = (byte) 0xA0;
 
-    private static final byte SET_ACCESS_RIGHT = (byte) 0xC1;
+    private static final byte SET_ACCESS_RIGHTS = (byte) 0xC1;
     private static final byte GET_ACCESS_RIGHT = (byte) 0xC2;
 
     private static final byte RESET = (byte) 0xF0;
@@ -37,6 +37,7 @@ public class Access extends Applet
     private static byte nextFreeIndex;
 
     private static boolean initExecuted;
+    private static boolean accessRightsAlreadySet;
 
     /**
      * Initializes the applet.
@@ -47,6 +48,7 @@ public class Access extends Applet
 
         nextFreeIndex = 0;
         initExecuted = false;
+        accessRightsAlreadySet = false;
     }
 
     /**
@@ -82,8 +84,8 @@ public class Access extends Applet
             case INIT_ACCESS_MEMORY:
                 initAccessMemory(apdu);
                 break;
-            case SET_ACCESS_RIGHT:
-                setAccessRight(apdu);
+            case SET_ACCESS_RIGHTS:
+                setAccessRights(apdu);
                 break;
             case GET_ACCESS_RIGHT:
                 getAccessRight(apdu);
@@ -108,6 +110,7 @@ public class Access extends Applet
 
         nextFreeIndex = 0;
         initExecuted = false;
+        accessRightsAlreadySet = false;
 
         Util.arrayFillNonAtomic(permissionDictionary, (short) 0, (short) permissionDictionary.length, (byte) 0);
     }
@@ -152,10 +155,10 @@ public class Access extends Applet
     /**
      * Sets the access right for the key received from the APDU message.
      * The message is expected to have the following pattern:
-     * [key bytes][value bytes] combined as one byte array.
+     * [number of entries following](1 byte)[key value bytes][key value bytes]...
      * @param apdu the APDU received by the card
      */
-    private void setAccessRight(APDU apdu)
+    private void setAccessRights(APDU apdu)
     {
         if (!initExecuted)
         {
@@ -163,35 +166,73 @@ public class Access extends Applet
             ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
         }
 
+        if (accessRightsAlreadySet)
+        {
+            ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
+        }
+
         byte[] message = decryptMessage(apdu);
 
-        if (message.length != KEY_LENGTH + VALUE_LENGTH)
+        if (message.length < KEY_LENGTH + VALUE_LENGTH + 1)
         {
-            // Data has invalid length.
+            // Data has invalid length. Minimum is one byte + bytes for one key value pair.
             ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
             return;
         }
 
-        byte[] key = new byte[KEY_LENGTH];
-        System.arraycopy(message, 0, key, 0, key.length);
-
-        // Check for allowed values?
-
-        if (keyExists(key))
+        if (message[0] * (KEY_LENGTH + VALUE_LENGTH) > permissionDictionary.length)
         {
-            // Data already set, command invalid
-            ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
+            // Initialized memory would be exceeded.
+            ISOException.throwIt(ISO7816.SW_DATA_INVALID);
         }
 
-        if (nextFreeIndex > permissionDictionary.length - (KEY_LENGTH + VALUE_LENGTH))
+        // Key value pairs start after first byte of message, hence index for the pairs start from 1.
+        for (int bufferIndex = 1; bufferIndex < message[0] * (KEY_LENGTH + VALUE_LENGTH); bufferIndex += (KEY_LENGTH + VALUE_LENGTH))
         {
-            // Initialized memory used up.
-            // Setting new values not allowed after initial setup.
-            ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
+            byte[] key = new byte[KEY_LENGTH];
+            System.arraycopy(message, bufferIndex, key, 0, key.length);
+
+            byte[] value = new byte[VALUE_LENGTH];
+            System.arraycopy(message, (byte) (bufferIndex + KEY_LENGTH), value, 0, value.length);
+
+            if (!valueAllowed(value))
+            {
+                // Value does not contain known access right, invalid data
+                ISOException.throwIt(ISO7816.SW_DATA_INVALID);
+            }
+
+            if (keyExists(key))
+            {
+                // Key already set, data contains key duplicates.
+                ISOException.throwIt(ISO7816.SW_DATA_INVALID);
+            }
+
+            // At this point, setting key and value is allowed.
+            Util.arrayCopy(message, (short) bufferIndex, permissionDictionary, (short) nextFreeIndex, (short) (KEY_LENGTH + VALUE_LENGTH));
+            nextFreeIndex = (byte) (nextFreeIndex + KEY_LENGTH + VALUE_LENGTH);
         }
 
-        // At this point, setting key and value is allowed.
-        Util.arrayCopy(message, (short) 0, permissionDictionary, (short) nextFreeIndex, (short) (KEY_LENGTH + VALUE_LENGTH));
+        accessRightsAlreadySet = true;
+    }
+
+    /**
+     * Checks whether a value is a known access right which is allowed to be set in the dictionary.
+     * @param value the value to check
+     * @return true if the value represents a known access right
+     */
+    private boolean valueAllowed(byte[] value)
+    {
+        if (Util.arrayCompare(value, (short) 0, ACCESS_DENIED, (short) 0, VALUE_LENGTH) == 0)
+        {
+            return true;
+        }
+
+        if (Util.arrayCompare(value, (short) 0, ACCESS_GRANTED, (short) 0, VALUE_LENGTH) == 0)
+        {
+            return true;
+        }
+
+        return false;
     }
 
     /**
