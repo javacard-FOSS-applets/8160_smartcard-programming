@@ -27,6 +27,10 @@ public class Access extends Applet
     private static final byte[] ACCESS_DENIED = {(byte) 0x00};
     private static final byte[] ACCESS_GRANTED = {(byte) 0x10};
 
+    // Buffer index offsets
+    private static final byte OFFSET_DICTIONARY_SIZE = 1;
+    private static final byte OFFSET_INDEX = 2;
+
     // Data
     private static final byte KEY_LENGTH = 2;
     private static final byte VALUE_LENGTH = 1;
@@ -72,15 +76,15 @@ public class Access extends Applet
             return;
         }
 
-        byte[] buf = apdu.getBuffer();
+        byte[] buffer = apdu.getBuffer();
 
-        if (buf[ISO7816.OFFSET_CLA] != ACCESS_CLA)
+        if (buffer[ISO7816.OFFSET_CLA] != ACCESS_CLA)
         {
             ISOException.throwIt(ISO7816.SW_CLA_NOT_SUPPORTED);
             return;
         }
 
-        switch (buf[ISO7816.OFFSET_INS])
+        switch (buffer[ISO7816.OFFSET_INS])
         {
             case INIT_ACCESS_MEMORY:
                 initAccessMemory(apdu);
@@ -130,26 +134,28 @@ public class Access extends Applet
             ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
         }
 
-        byte[] message = decryptMessage(apdu);
+        byte[] buffer = apdu.getBuffer();
 
-        if (message.length != INIT_ACCESS_MEMORY_LENGTH)
+        short messageLength = decryptMessage(buffer);
+
+        if (messageLength != INIT_ACCESS_MEMORY_LENGTH)
         {
             // Data has invalid length.
             ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
             return;
         }
 
-        if (message[0] > MAX_ENTRY_COUNT)
+        if (buffer[0] > MAX_ENTRY_COUNT)
         {
             // Data out of bounds.
             ISOException.throwIt(ISO7816.SW_DATA_INVALID);
         }
 
         // The entry count delivered via APDU multiplied with number of bytes for one entry.
-        byte dictionarySize = (byte) (message[0] * (KEY_LENGTH + VALUE_LENGTH));
+        buffer[messageLength + OFFSET_DICTIONARY_SIZE] = (byte) (buffer[0] * (KEY_LENGTH + VALUE_LENGTH));
 
-        permissionDictionary = new byte[dictionarySize];
-        Util.arrayFillNonAtomic(permissionDictionary, (short) 0, dictionarySize, (byte) 0);
+        permissionDictionary = new byte[buffer[messageLength + OFFSET_DICTIONARY_SIZE]];
+        Util.arrayFillNonAtomic(permissionDictionary, (short) 0, buffer[messageLength + OFFSET_DICTIONARY_SIZE], (byte) 0);
 
         initExecuted = true;
     }
@@ -173,44 +179,40 @@ public class Access extends Applet
             ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
         }
 
-        byte[] message = decryptMessage(apdu);
+        byte[] buffer = apdu.getBuffer();
 
-        if (message.length < KEY_LENGTH + VALUE_LENGTH + 1)
+        short messageLength = decryptMessage(buffer);
+
+        if (messageLength < KEY_LENGTH + VALUE_LENGTH + 1)
         {
             // Data has invalid length. Minimum is one byte + bytes for one key value pair.
             ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
             return;
         }
 
-        if (message[0] * (KEY_LENGTH + VALUE_LENGTH) > permissionDictionary.length)
+        if (buffer[0] * (KEY_LENGTH + VALUE_LENGTH) > permissionDictionary.length)
         {
             // Initialized memory would be exceeded.
             ISOException.throwIt(ISO7816.SW_DATA_INVALID);
         }
 
         // Key value pairs start after first byte of message, hence index for the pairs start from 1.
-        for (int bufferIndex = 1; bufferIndex < message[0] * (KEY_LENGTH + VALUE_LENGTH); bufferIndex += (KEY_LENGTH + VALUE_LENGTH))
+        for (int bufferIndex = 1; bufferIndex < buffer[0] * (KEY_LENGTH + VALUE_LENGTH); bufferIndex += (KEY_LENGTH + VALUE_LENGTH))
         {
-            byte[] key = new byte[KEY_LENGTH];
-            System.arraycopy(message, bufferIndex, key, 0, key.length);
-
-            byte[] value = new byte[VALUE_LENGTH];
-            System.arraycopy(message, (byte) (bufferIndex + KEY_LENGTH), value, 0, value.length);
-
-            if (!valueAllowed(value))
+            if (!valueAllowed(buffer, (byte) (bufferIndex + KEY_LENGTH)))
             {
                 // Value does not contain known access right, invalid data
                 ISOException.throwIt(ISO7816.SW_DATA_INVALID);
             }
 
-            if (keyExists(key))
+            if (keyExists(buffer, (byte) (bufferIndex)))
             {
                 // Key already set, data contains key duplicates.
                 ISOException.throwIt(ISO7816.SW_DATA_INVALID);
             }
 
             // At this point, setting key and value is allowed.
-            Util.arrayCopy(message, (short) bufferIndex, permissionDictionary, (short) nextFreeIndex, (short) (KEY_LENGTH + VALUE_LENGTH));
+            Util.arrayCopy(buffer, (short) bufferIndex, permissionDictionary, (short) nextFreeIndex, (short) (KEY_LENGTH + VALUE_LENGTH));
             nextFreeIndex = (byte) (nextFreeIndex + KEY_LENGTH + VALUE_LENGTH);
         }
 
@@ -219,17 +221,18 @@ public class Access extends Applet
 
     /**
      * Checks whether a value is a known access right which is allowed to be set in the dictionary.
-     * @param value the value to check
+     * @param buffer the APDU buffer
+     * @param offset the buffer offset for the value to check
      * @return true if the value represents a known access right
      */
-    private boolean valueAllowed(byte[] value)
+    private boolean valueAllowed(byte[] buffer, byte offset)
     {
-        if (Util.arrayCompare(value, (short) 0, ACCESS_DENIED, (short) 0, VALUE_LENGTH) == 0)
+        if (Util.arrayCompare(buffer, (short) offset, ACCESS_DENIED, (short) 0, VALUE_LENGTH) == 0)
         {
             return true;
         }
 
-        if (Util.arrayCompare(value, (short) 0, ACCESS_GRANTED, (short) 0, VALUE_LENGTH) == 0)
+        if (Util.arrayCompare(buffer, (short) offset, ACCESS_GRANTED, (short) 0, VALUE_LENGTH) == 0)
         {
             return true;
         }
@@ -240,22 +243,25 @@ public class Access extends Applet
     /**
      * Checks if the key exists in the dictionary.
      *
-     * @param key the key to look for in the dictionary
+     * @param buffer the APDU buffer
+     * @param offset the buffer offset for the key to check
      * @return true if key is found in dictionary, false otherwise
      */
-    private boolean keyExists(byte[] key)
+    private boolean keyExists(byte[] buffer, byte offset)
     {
-        byte index = 0;
+        // dictionary key index
+        buffer[MAX_ENTRY_COUNT * (KEY_LENGTH + VALUE_LENGTH) + OFFSET_INDEX] = 0;
 
-        while (index < permissionDictionary.length)
+        while (buffer[MAX_ENTRY_COUNT * (KEY_LENGTH + VALUE_LENGTH) + OFFSET_INDEX] < permissionDictionary.length)
         {
-            if (Util.arrayCompare(permissionDictionary, (short) index, key, (short) 0, KEY_LENGTH) == 0)
+            
+            if (Util.arrayCompare(permissionDictionary, (short) buffer[offset + KEY_LENGTH + VALUE_LENGTH], buffer, (short) offset, KEY_LENGTH) == 0)
             {
                 // Matching entry found
                 return true;
             }
 
-            index = (byte) (index + KEY_LENGTH + VALUE_LENGTH);
+            buffer[MAX_ENTRY_COUNT * (KEY_LENGTH + VALUE_LENGTH) + OFFSET_INDEX] += (byte) (KEY_LENGTH + VALUE_LENGTH);
         }
 
         return false;
@@ -275,9 +281,10 @@ public class Access extends Applet
             ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
         }
 
-        byte[] message = decryptMessage(apdu);
+        byte[] buffer = apdu.getBuffer();
+        short messageLength = decryptMessage(buffer);
 
-        if (message.length != KEY_LENGTH)
+        if (messageLength != KEY_LENGTH)
         {
             // Data has invalid length.
             ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
@@ -319,28 +326,28 @@ public class Access extends Applet
     }
 
     /**
-     * Prepares response APDU and sends message to terminal.
+     * Send the given content from offset to offset+length via given APDU.
+     * Encrypts the content beforehand.
      *
-     * @param apdu    the response APDU
-     * @param content the response to send
+     * @param apdu Received APDU, which is used to send the data.
      */
-    private void send(APDU apdu, byte[] content)
+    private void send(APDU apdu, byte[] content, byte offset, byte length)
     {
         byte[] buffer = apdu.getBuffer();
-        short len = encryptMessage(buffer, content, (byte) 0, (byte) content.length);
+        short len = encryptMessage(buffer, content, offset, length);
 
         apdu.setOutgoingAndSend((short) 0, len);
     }
 
     /**
-     * Encrypts a message with the help of the cryptography applet.
-     * The encrypted message will be written in the {@code buffer} and the length of it will be returned.
+     * Encrypts the given message at offset to offset+length into the buffer at offset 0
+     * by using the Cryptography applet through the applet firewall.
      *
-     * @param buffer  the buffer to write the encrypted message to
-     * @param message the message to encrypt
-     * @param offset  Offset where the message begins.
-     * @param length  Length of the message.
-     * @return number of bytes written in the buffer
+     * @param buffer Target memory. Result will be stored at offset 0.
+     * @param message Memory containing the message to encrypt
+     * @param offset Offset where the message begins.
+     * @param length Length of the message.
+     * @return length of the encrypted message.
      */
     private short encryptMessage(byte[] buffer, byte[] message, byte offset, byte length)
     {
@@ -351,22 +358,19 @@ public class Access extends Applet
     }
 
     /**
-     * Decrypts a message with the help of the cryptography applet.
+     * Decrypts the given message at offset 0
+     * by using the Cryptography applet through the applet firewall.
      *
-     * @param apdu command APDU that contains the message to decrypt
-     * @return the decrypted message
+     * @param buffer Source and target memory.
+     *               Message starts at ISO7816.OFFSET_CDATA.
+     *               Result will be stored at offset 0.
+     * @return length of the decrypted message.
      */
-    private byte[] decryptMessage(APDU apdu)
+    private short decryptMessage(byte[] buffer)
     {
-        byte[] buffer = apdu.getBuffer();
-
         AID cryptographyAid = JCSystem.lookupAID(CRYPTOGRAPHY_AID, (short) 0, (byte) CRYPTOGRAPHY_AID.length);
         ICryptography cryptoApp = (ICryptography) JCSystem.getAppletShareableInterfaceObject(cryptographyAid, CRYPTOGRAPHY_SECRET);
 
-        short len = cryptoApp.decrypt(buffer, ISO7816.OFFSET_CDATA);
-        byte[] decryptedMessage = JCSystem.makeTransientByteArray(len, JCSystem.CLEAR_ON_DESELECT);
-        Util.arrayCopy(buffer, (short) 0, decryptedMessage, (short) 0, len);
-
-        return decryptedMessage;
+        return cryptoApp.decrypt(buffer, ISO7816.OFFSET_CDATA);
     }
 }
