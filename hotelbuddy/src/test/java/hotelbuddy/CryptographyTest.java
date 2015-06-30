@@ -92,7 +92,7 @@ public class CryptographyTest
         ICryptography cryptoApp = (ICryptography) JCSystem.getAppletShareableInterfaceObject(CryptographyAID, CryptographySecret);
         System.out.println("Encrypting...");
         byte[] buffer = new byte[128];
-        short len = cryptoApp.encrypt(buffer, message.getBytes());
+        short len = cryptoApp.encrypt(buffer, message.getBytes(), (byte) 0, (byte) message.length());
 
         Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(Cipher.DECRYPT_MODE, terminalPrivateKey);

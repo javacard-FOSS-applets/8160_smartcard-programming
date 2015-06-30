@@ -51,6 +51,7 @@ public class Access extends Applet
 
     /**
      * Installs the applet on the card.
+     *
      * @param bArray
      * @param bOffset
      * @param bLength
@@ -115,6 +116,7 @@ public class Access extends Applet
     /**
      * Initializes the dictionary memory with the space requested by the APDU message.
      * The message is expected to be 1 byte which represents the number of entries to be reserved.
+     *
      * @param apdu the APDU received by the card
      */
     private void initAccessMemory(APDU apdu)
@@ -153,6 +155,7 @@ public class Access extends Applet
      * Sets the access right for the key received from the APDU message.
      * The message is expected to have the following pattern:
      * [key bytes][value bytes] combined as one byte array.
+     *
      * @param apdu the APDU received by the card
      */
     private void setAccessRight(APDU apdu)
@@ -196,6 +199,7 @@ public class Access extends Applet
 
     /**
      * Checks if the key exists in the dictionary.
+     *
      * @param key the key to look for in the dictionary
      * @return true if key is found in dictionary, false otherwise
      */
@@ -220,6 +224,7 @@ public class Access extends Applet
     /**
      * Gets the access rights for the key received from the APDU message.
      * The message is expected to have the size of a dictionary key.
+     *
      * @param apdu the APDU received by the card
      */
     private void getAccessRight(APDU apdu)
@@ -248,6 +253,7 @@ public class Access extends Applet
     /**
      * Gets the value from the dictionary for the given key.
      * If the key does not exist, the access will be denied.
+     *
      * @param key the key to get the value for
      * @return value from dictionary if key exists, otherwise {@code ACCESS_DENIED}
      */
@@ -274,13 +280,14 @@ public class Access extends Applet
 
     /**
      * Prepares response APDU and sends message to terminal.
-     * @param apdu the response APDU
+     *
+     * @param apdu    the response APDU
      * @param content the response to send
      */
     private void send(APDU apdu, byte[] content)
     {
         byte[] buffer = apdu.getBuffer();
-        short len = encryptMessage(buffer, content);
+        short len = encryptMessage(buffer, content, (byte) 0, (byte) content.length);
 
         apdu.setOutgoingAndSend((short) 0, len);
     }
@@ -288,20 +295,24 @@ public class Access extends Applet
     /**
      * Encrypts a message with the help of the cryptography applet.
      * The encrypted message will be written in the {@code buffer} and the length of it will be returned.
-     * @param buffer the buffer to write the encrypted message to
+     *
+     * @param buffer  the buffer to write the encrypted message to
      * @param message the message to encrypt
+     * @param offset  Offset where the message begins.
+     * @param length  Length of the message.
      * @return number of bytes written in the buffer
      */
-    private short encryptMessage(byte[] buffer, byte[] message)
+    private short encryptMessage(byte[] buffer, byte[] message, byte offset, byte length)
     {
         AID cryptographyAid = JCSystem.lookupAID(CRYPTOGRAPHY_AID, (short) 0, (byte) CRYPTOGRAPHY_AID.length);
         ICryptography cryptoApp = (ICryptography) JCSystem.getAppletShareableInterfaceObject(cryptographyAid, CRYPTOGRAPHY_SECRET);
 
-        return cryptoApp.encrypt(buffer, message);
+        return cryptoApp.encrypt(buffer, message, offset, length);
     }
 
     /**
      * Decrypts a message with the help of the cryptography applet.
+     *
      * @param apdu command APDU that contains the message to decrypt
      * @return the decrypted message
      */
