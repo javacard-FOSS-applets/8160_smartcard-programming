@@ -44,11 +44,11 @@ public class CryptographyMock extends Applet implements ICryptography
     {
     }
 
-    public short encrypt(byte[] buffer, byte[] message)
+    public short encrypt(byte[] buffer, byte[] message, byte offset, byte length)
     {
         encrypted = true;
-        System.arraycopy(message, 0, buffer, 0, message.length);
-        return (short) message.length;
+        System.arraycopy(message, offset, buffer, 0, length);
+        return (short) length;
     }
 
     public short decrypt(byte[] message, byte offset)

@@ -289,22 +289,24 @@ public class Cryptography extends Applet implements ICryptography
     }
 
     /**
-     * Encrypts the passed message with terminalPublicKey and writes it into the buffer
+     * Encrypts the passed message with terminalPublicKey and writes it into the buffer at offset 0.
      *
      * @param buffer  apdu buffer
      * @param message message to encrypt
+     * @param offset start offset of the message
+     * @param length length of the message
      * @return length of encrypted message (usually 128 Byte)
      */
-    public short encrypt(byte[] buffer, byte[] message)
+    public short encrypt(byte[] buffer, byte[] message, byte offset, byte length)
     {
         rsaCipher.init(terminalPublicKey, Cipher.MODE_ENCRYPT);
-        return rsaCipher.doFinal(message, (short) 0, (short) message.length, buffer, (short) 0);
+        return rsaCipher.doFinal(message, (short) 0, (short) length, buffer, (short) 0);
     }
 
     /**
-     * Decrypts the passed message with cardPrivateKey and writes it into the buffer
+     * Decrypts the passed message with cardPrivateKey and writes it into the buffer at offset 0.
      *
-     * @param buffer  apdu buffer
+     * @param buffer apdu buffer
      * @param offset message to decrypt (128 Byte)
      * @return trimmed decrypted message
      */

@@ -12,9 +12,11 @@ public interface ICryptography extends Shareable
      *
      * @param buffer  apdu buffer
      * @param message message to encrypt
+     * @param offset start offset of the message
+     * @param length length of the message
      * @return length of encrypted message (usually 128 Byte)
      */
-    short encrypt(byte[] buffer, byte[] message);
+    public short encrypt(byte[] buffer, byte[] message, byte offset, byte length);
 
     /**
      * Decrypts the passed message with cardPrivateKey and writes it into the buffer

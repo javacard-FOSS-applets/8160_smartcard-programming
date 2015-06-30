@@ -36,7 +36,6 @@ public class Identification extends Applet
     private byte nameLength = 0;
     private byte[] name;
 
-    private final byte DATE_LENGTH = 4;
     private byte[] birthDay;
 
     private final byte MAX_CARID_LENGTH = 8;
@@ -52,7 +51,7 @@ public class Identification extends Applet
         register();
 
         name = new byte[MAX_NAME_LENGTH];
-        birthDay = new byte[DATE_LENGTH];
+        birthDay = new byte[DateHelper.DATE_LENGTH];
         carId = new byte[MAX_CARID_LENGTH];
         safePin = new byte[SAFEPIN_LENGTH];
     }
@@ -115,6 +114,9 @@ public class Identification extends Applet
         }
     }
 
+    /**
+     * Resets the state of the Identification applet.
+     */
     private void reset()
     {
         nameLength = 0;
@@ -123,6 +125,12 @@ public class Identification extends Applet
         safePinIsSet = false;
     }
 
+    /**
+     * Send the saved birthday via given APDU.
+     * If the birthday is not set, ISO7816.SW_COMMAND_NOT_ALLOWED is thrown.
+     *
+     * @param apdu Received APDU, which is used to send the data.
+     */
     private void getBirthday(APDU apdu)
     {
         if (birthDay[0] == 0x00)
@@ -132,7 +140,7 @@ public class Identification extends Applet
             return;
         }
 
-        send(apdu, birthDay);
+        send(apdu, birthDay, (byte) 0, DateHelper.DATE_LENGTH);
     }
 
     public boolean select()
@@ -164,8 +172,18 @@ public class Identification extends Applet
 
     }
 
+    /**
+     * Checks if the given age limit is passed, using the saved birthday.
+     * If the birthday is not set, ISO7816.SW_COMMAND_NOT_ALLOWED is thrown.
+     * If the message length is not 5 (birthday + age limit = 4 + 1), ISO7816.SW_WRONG_LENGTH is thrown.
+     * If the date of today has an invalid format, ISO7816.SW_DATA_INVALID is thrown.
+     *
+     * @param apdu Received APDU, which contains the date of today and the age limit.  Is also used to send the data.
+     */
     private void checkAge(APDU apdu)
     {
+        byte[] buffer = apdu.getBuffer();
+
         if (birthDay[0] == 0x00)
         {
             // Birthday not set yet, because day can not be 0x00
@@ -173,31 +191,34 @@ public class Identification extends Applet
             return;
         }
 
-        byte[] message = decryptMessage(apdu);
+        short messageLength = decryptMessage(buffer);
 
-        if (message.length != (DATE_LENGTH + 1))
+        if (messageLength != (DateHelper.DATE_LENGTH + 1))
         {
             ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
             return;
         }
 
-        byte[] today = JCSystem.makeTransientByteArray(DATE_LENGTH, JCSystem.CLEAR_ON_DESELECT);
-        Util.arrayCopy(message, (short) 0, today, (short) 0, DATE_LENGTH);
-
-        byte minimumAge = message[message.length - 1];
-
-        if (!DateHelper.checkDate(today))
+        if (!DateHelper.checkDate(buffer, 0))
         {
             ISOException.throwIt(ISO7816.SW_DATA_INVALID);
             return;
         }
 
-        byte[] result = JCSystem.makeTransientByteArray((short) 1, JCSystem.CLEAR_ON_DESELECT);
-        result[0] = DateHelper.yearDifference(today, birthDay) < minimumAge ? (byte) 0x00 : (byte) 0x01;
+        buffer[DateHelper.DATE_LENGTH + 1] = DateHelper.yearDifference(buffer, 0, birthDay) < buffer[DateHelper.DATE_LENGTH] ? (byte) 0x00 : (byte) 0x01;
 
-        send(apdu, result);
+        send(apdu, buffer, (byte) (DateHelper.DATE_LENGTH + 1), (byte) 1);
     }
 
+
+    /**
+     * Sets the birthday given by the APDU.
+     * If the birthday is already set, ISO7816.SW_COMMAND_NOT_ALLOWED is thrown.
+     * If the message length is not 4 (length of a date), ISO7816.SW_WRONG_LENGTH is thrown.
+     * If the birthday has an invalid format, ISO7816.SW_DATA_INVALID is thrown.
+     *
+     * @param apdu Received APDU, which contains the birthday.
+     */
     private void setBirthday(APDU apdu)
     {
         if (birthDay[0] != 0x00)
@@ -207,25 +228,33 @@ public class Identification extends Applet
             return;
         }
 
-        byte[] message = decryptMessage(apdu);
+        byte[] buffer = apdu.getBuffer();
 
-        if (message.length != DATE_LENGTH)
+        short messageLength = decryptMessage(buffer);
+
+        if (messageLength != DateHelper.DATE_LENGTH)
         {
             // Data doesnt have the length of a date
             ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
             return;
         }
 
-        if (!DateHelper.checkDate(message))
+        if (!DateHelper.checkDate(buffer, 0))
         {
             // Data is not valid date
             ISOException.throwIt(ISO7816.SW_DATA_INVALID);
             return;
         }
 
-        Util.arrayCopy(message, (short) 0, birthDay, (short) 0, DATE_LENGTH);
+        Util.arrayCopy(buffer, (short) 0, birthDay, (short) 0, DateHelper.DATE_LENGTH);
     }
 
+    /**
+     * Send the saved name via given APDU.
+     * If the name is not set, ISO7816.SW_COMMAND_NOT_ALLOWED is thrown.
+     *
+     * @param apdu Received APDU, which is used to send the data.
+     */
     private void getName(APDU apdu)
     {
         if (nameLength == 0)
@@ -234,21 +263,30 @@ public class Identification extends Applet
             ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
         }
 
-        byte[] trimmedName = JCSystem.makeTransientByteArray(nameLength, JCSystem.CLEAR_ON_DESELECT);
-        Util.arrayCopy(name, (byte) 0x00, trimmedName, (byte) 0x00, nameLength);
-
-        send(apdu, trimmedName);
+        send(apdu, name, (byte) 0, nameLength);
     }
 
-    private void send(APDU apdu, byte[] content)
+    /**
+     * Send the given content from offset to offset+length via given APDU.
+     * Encrypts the content beforehand.
+     *
+     * @param apdu Received APDU, which is used to send the data.
+     */
+    private void send(APDU apdu, byte[] content, byte offset, byte length)
     {
         byte[] buffer = apdu.getBuffer();
-        short len = encryptMessage(buffer, content);
+        short len = encryptMessage(buffer, content, offset, length);
 
-        // Util.arrayCopy(message, (short) 0, apdu.getBuffer(), (short) 0, (short) message.length);
         apdu.setOutgoingAndSend((short) 0, len);
     }
 
+    /**
+     * Sets the name given by the APDU.
+     * If the name is already set, ISO7816.SW_COMMAND_NOT_ALLOWED is thrown.
+     * If the message length is greater than MAX_NAME_LENGTH or zero, ISO7816.SW_WRONG_LENGTH is thrown.
+     *
+     * @param apdu Received APDU, which contains the birthday.
+     */
     private void setName(APDU apdu)
     {
         if (nameLength != 0)
@@ -258,38 +296,53 @@ public class Identification extends Applet
             return;
         }
 
-        byte[] message = decryptMessage(apdu);
+        byte[] buffer = apdu.getBuffer();
 
-        if (message.length > MAX_NAME_LENGTH || message.length == 0)
+        short messageLength = decryptMessage(buffer);
+
+        if (messageLength > MAX_NAME_LENGTH || messageLength == 0)
         {
             // Data doesnt have a correct length
             ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
             return;
         }
 
-        Util.arrayCopy(message, (short) 0, name, (short) 0, (short) message.length);
-        nameLength = (byte) message.length;
+        Util.arrayCopy(buffer, (short) 0, name, (short) 0, messageLength);
+        nameLength = (byte) messageLength;
     }
 
-    private short encryptMessage(byte[] buffer, byte[] message)
+    /**
+     * Encrypts the given message at offset to offset+length into the buffer at offset 0
+     * by using the Cryptography applet through the applet firewall.
+     *
+     * @param buffer Target memory. Result will be stored at offset 0.
+     * @param message Memory containing the message to encrypt
+     * @param offset Offset where the message begins.
+     * @param length Length of the message.
+     * @return length of the encrypted message.
+     */
+    private short encryptMessage(byte[] buffer, byte[] message, byte offset, byte length)
     {
         AID cryptographyAid = JCSystem.lookupAID(CRYPTOGRAPHY_AID, (short) 0, (byte) CRYPTOGRAPHY_AID.length);
         ICryptography cryptoApp = (ICryptography) JCSystem.getAppletShareableInterfaceObject(cryptographyAid, CRYPTOGRAPHY_SECRET);
 
-        return cryptoApp.encrypt(buffer, message);
+        return cryptoApp.encrypt(buffer, message, offset, length);
     }
 
-    private byte[] decryptMessage(APDU apdu)
+    /**
+     * Decrypts the given message at offset 0
+     * by using the Cryptography applet through the applet firewall.
+     *
+     * @param buffer Source and target memory.
+     *               Message starts at ISO7816.OFFSET_CDATA.
+     *               Result will be stored at offset 0.
+     * @return length of the decrypted message.
+     */
+    private short decryptMessage(byte[] buffer)
     {
-        byte[] buffer = apdu.getBuffer();
-
         AID cryptographyAid = JCSystem.lookupAID(CRYPTOGRAPHY_AID, (short) 0, (byte) CRYPTOGRAPHY_AID.length);
         ICryptography cryptoApp = (ICryptography) JCSystem.getAppletShareableInterfaceObject(cryptographyAid, CRYPTOGRAPHY_SECRET);
 
-        short len = cryptoApp.decrypt(buffer, ISO7816.OFFSET_CDATA);
-        byte[] decryptedMessage = JCSystem.makeTransientByteArray(len, JCSystem.CLEAR_ON_DESELECT);
-        Util.arrayCopy(buffer, (short) 0, decryptedMessage, (short) 0, len);
-
-        return decryptedMessage;
+        return cryptoApp.decrypt(buffer, ISO7816.OFFSET_CDATA);
     }
 }
