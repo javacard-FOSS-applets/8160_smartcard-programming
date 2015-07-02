@@ -12,8 +12,6 @@ public class Access extends Applet
     private static final byte ACCESS_CLA = 0x41;
 
     // Instructions
-    private static final byte INS_INIT_ACCESS_MEMORY = (byte) 0xA0;
-
     private static final byte INS_SET_ACCESS_RIGHTS = (byte) 0xC1;
     private static final byte INS_GET_ACCESS_RIGHT = (byte) 0xC2;
 
