@@ -31,12 +31,8 @@ public class Access extends Applet
     private static final byte KEY_LENGTH = 2;
     private static final byte VALUE_LENGTH = 1;
     private static final byte ENTRY_LENGTH = 3;
-
     private static final byte MAX_ENTRY_COUNT = 20;
-    private static final byte INIT_ACCESS_MEMORY_LENGTH = 1;
-    private static final byte SET_RIGHTS_MIN_LENGTH = 4;
 
-    private static final byte OFFSET_DICTIONARY_SIZE = 1;
     private static final byte OFFSET_INDEX_KEY_EXISTS = MAX_ENTRY_COUNT * ENTRY_LENGTH;
     private static final byte OFFSET_INDEX_GET_VALUE = 2;
     private static final byte OFFSET_RESULT_GET_VALUE = 3;
@@ -92,9 +88,6 @@ public class Access extends Applet
 
         switch (buffer[ISO7816.OFFSET_INS])
         {
-            case INS_INIT_ACCESS_MEMORY:
-                initAccessMemory(apdu);
-                break;
             case INS_SET_ACCESS_RIGHTS:
                 setAccessRights(apdu);
                 break;
@@ -120,65 +113,20 @@ public class Access extends Applet
         }
 
         nextFreeIndex = 0;
-        initExecuted = false;
         accessRightsAlreadySet = false;
 
         Util.arrayFillNonAtomic(permissionDictionary, (short) 0, (short) permissionDictionary.length, (byte) 0);
     }
 
     /**
-     * Initializes the dictionary memory with the space requested by the APDU message.
-     * The message is expected to be 1 byte which represents the number of entries to be reserved.
-     *
-     * @param apdu the APDU received by the card
-     */
-    private void initAccessMemory(APDU apdu)
-    {
-        if (initExecuted)
-        {
-            // Initialization allowed only once.
-            ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
-        }
-
-        byte[] buffer = apdu.getBuffer();
-
-        short messageLength = decryptMessage(buffer);
-
-        if (messageLength != INIT_ACCESS_MEMORY_LENGTH)
-        {
-            // Data has invalid length.
-            ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
-            return;
-        }
-
-        if (buffer[0] > MAX_ENTRY_COUNT || buffer[0] <= 0)
-        {
-            // Data out of bounds.
-            ISOException.throwIt(ISO7816.SW_DATA_INVALID);
-        }
-
-        buffer[OFFSET_DICTIONARY_SIZE] = (byte) (buffer[0] * ENTRY_LENGTH);
-
-        permissionDictionary = new byte[buffer[OFFSET_DICTIONARY_SIZE]];
-        Util.arrayFillNonAtomic(permissionDictionary, (short) 0, buffer[OFFSET_DICTIONARY_SIZE], (byte) 0);
-
-        initExecuted = true;
-    }
-
-    /**
-     * Sets the access right for the key received from the APDU message.
+     * Sets the access rights transmitted by the APDU.
      * The message is expected to have the following pattern:
-     * [number of entries following](1 byte)[key value bytes][key value bytes]...
+     * [key][value][key][value]...
+     *
      * @param apdu the APDU received by the card
      */
     private void setAccessRights(APDU apdu)
     {
-        if (!initExecuted)
-        {
-            // Initialization must be executed before setting rights.
-            ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
-        }
-
         if (accessRightsAlreadySet)
         {
             ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
@@ -188,21 +136,16 @@ public class Access extends Applet
 
         short messageLength = decryptMessage(buffer);
 
-        if (messageLength < SET_RIGHTS_MIN_LENGTH)
+        if (messageLength % ENTRY_LENGTH != 0 || messageLength == 0 || messageLength > MAX_ENTRY_COUNT * ENTRY_LENGTH)
         {
-            // Data has invalid length. Minimum is one byte + bytes for one key value pair.
+            // Data has invalid length.
+            // Minimum is key value pair. Must also contain complete pairs and not exceed max entry count.
             ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
-            return;
         }
 
-        if (buffer[0] * ENTRY_LENGTH > permissionDictionary.length)
-        {
-            // Initialized memory would be exceeded.
-            ISOException.throwIt(ISO7816.SW_DATA_INVALID);
-        }
+        permissionDictionary = new byte[messageLength];
 
-        // Key value pairs start after first byte of message, hence index for the pairs start from 1.
-        for (int bufferIndex = 1; bufferIndex < buffer[0] * ENTRY_LENGTH; bufferIndex += ENTRY_LENGTH)
+        for (int bufferIndex = 0; bufferIndex < permissionDictionary.length; bufferIndex += ENTRY_LENGTH)
         {
             if (!valueAllowed(buffer, (byte) (bufferIndex + KEY_LENGTH)))
             {
@@ -226,6 +169,7 @@ public class Access extends Applet
 
     /**
      * Checks whether a value is a known access right which is allowed to be set in the dictionary.
+     *
      * @param buffer the APDU buffer
      * @param offset the buffer offset for the value to check
      * @return true if the value represents a known access right
@@ -280,9 +224,9 @@ public class Access extends Applet
      */
     private void getAccessRight(APDU apdu)
     {
-        if (!initExecuted || !accessRightsAlreadySet)
+        if (!accessRightsAlreadySet)
         {
-            // Initialization of memory and setting rights must be executed before getting rights.
+            // Access rights must be set before get right requests.
             ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
         }
 
@@ -331,10 +275,10 @@ public class Access extends Applet
      * Send the given content from offset to offset+length via given APDU.
      * Encrypts the content beforehand.
      *
-     * @param apdu received APDU which is used to send the data
+     * @param apdu    received APDU which is used to send the data
      * @param content the source of the content to send
-     * @param offset specifies where the message in the content source starts
-     * @param length the length of the message in the content source
+     * @param offset  specifies where the message in the content source starts
+     * @param length  the length of the message in the content source
      */
     private void send(APDU apdu, byte[] content, byte offset, byte length)
     {
@@ -348,10 +292,10 @@ public class Access extends Applet
      * Encrypts the given message at offset to offset+length into the buffer at offset 0
      * by using the Cryptography applet through the applet firewall.
      *
-     * @param buffer Target memory. Result will be stored at offset 0.
+     * @param buffer  Target memory. Result will be stored at offset 0.
      * @param message Memory containing the message to encrypt
-     * @param offset Offset where the message begins
-     * @param length Length of the message
+     * @param offset  Offset where the message begins
+     * @param length  Length of the message
      * @return length of the encrypted message
      */
     private short encryptMessage(byte[] buffer, byte[] message, byte offset, byte length)

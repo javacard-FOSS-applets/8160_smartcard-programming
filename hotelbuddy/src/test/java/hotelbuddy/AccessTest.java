@@ -35,23 +35,15 @@ public class AccessTest
         System.out.println(isAppletSelected);
 
         byte[] answer;
-        System.out.println("\nInitializing memory");
-        byte[] initMessage = {(byte) 0x02};
-        CryptographyMock.DataLength = 1;
-        answer = TestHelper.ExecuteCommand(sim, (byte) 0x41, (byte) 0xA0, initMessage, (byte) 0x00);
-        TestHelper.EnsureStatusBytesNoError(answer);
-        Assert.assertTrue(CryptographyMock.decryptWasCalled());
-        CryptographyMock.reset();
-
         System.out.println("\nSetting Access Right");
-        // first byte: 2 entries, following the key value pairs [key 0xA0 0x01] [value 0x10] [key 0xA0 0x02] [value 0x10]
-        byte[] setMessage = {(byte) 0x02, (byte) 0xA0, (byte) 0x01, (byte) 0x10, (byte) 0xA0, (byte) 0x02, (byte) 0x10};
+        // following the key value pairs [key 0xA0 0x01] [value 0x10] [key 0xA0 0x02] [value 0x10]
+        byte[] setMessage = {(byte) 0xA0, (byte) 0x01, (byte) 0x10, (byte) 0xA0, (byte) 0x02, (byte) 0x10};
         CryptographyMock.DataLength = (short) setMessage.length;
         answer = TestHelper.ExecuteCommand(sim, (byte) 0x41, (byte) 0xC1, setMessage, (byte) 0x00);
         TestHelper.EnsureStatusBytesNoError(answer);
         Assert.assertTrue(CryptographyMock.decryptWasCalled());
 
-        byte[] expectedAnswer = { (byte) 0x10 };
+        byte[] expectedAnswer = {(byte) 0x10};
 
         System.out.println("\nGetting Access Right for first key");
         byte[] key = {(byte) 0xA0, (byte) 0x01};
@@ -76,35 +68,6 @@ public class AccessTest
     }
 
     @Test
-    public void Test_SetAccessRights_Error_NotInitialized()
-    {
-        Simulator sim = new Simulator();
-
-        sim.installApplet(CryptographyAID, CryptographyMock.class);
-        sim.installApplet(AccessAID, Access.class);
-
-        System.out.println("Getting ATR...");
-        byte[] atr = sim.getATR();
-        System.out.println(new String(atr));
-        System.out.println(TestHelper.ToHexString(atr));
-
-        System.out.println("\nSelecting Applet...");
-        boolean isAppletSelected = sim.selectApplet(AccessAID);
-        System.out.println(isAppletSelected);
-
-        byte[] answer;
-        System.out.println("\nSetting Access Right");
-        // first byte: 2 entries, following the key value pairs [key 0xA0 0x01] [value 0x10] [key 0xA0 0x02] [value 0x10]
-        byte[] setMessage = {(byte) 0x02, (byte) 0xA0, (byte) 0x01, (byte) 0x10, (byte) 0xA0, (byte) 0x02, (byte) 0x10};
-        CryptographyMock.DataLength = (short) setMessage.length;
-        answer = TestHelper.ExecuteCommand(sim, (byte) 0x41, (byte) 0xC1, setMessage, (byte) 0x00);
-        // Error: command not allowed
-        TestHelper.EnsureStatusBytes(answer, new byte[]{(byte) 0x69, (byte) 0x86});
-
-        CryptographyMock.reset();
-    }
-
-    @Test
     public void Test_SetAccessRights_Error_InvalidMessage()
     {
         Simulator sim = new Simulator();
@@ -122,17 +85,9 @@ public class AccessTest
         System.out.println(isAppletSelected);
 
         byte[] answer;
-        System.out.println("\nInitializing memory");
-        byte[] initMessage = {(byte) 0x02};
-        CryptographyMock.DataLength = 1;
-        answer = TestHelper.ExecuteCommand(sim, (byte) 0x41, (byte) 0xA0, initMessage, (byte) 0x00);
-        TestHelper.EnsureStatusBytesNoError(answer);
-        Assert.assertTrue(CryptographyMock.decryptWasCalled());
-        CryptographyMock.reset();
-
         System.out.println("\nSetting Access Right");
-        // minimal message (one pair) with missing value
-        byte[] setMessage = {(byte) 0x02, (byte) 0xA0, (byte) 0x01};
+        // only key without value
+        byte[] setMessage = {(byte) 0xA0, (byte) 0x01};
         CryptographyMock.DataLength = (short) setMessage.length;
         answer = TestHelper.ExecuteCommand(sim, (byte) 0x41, (byte) 0xC1, setMessage, (byte) 0x00);
         // Error: wrong length
@@ -143,7 +98,7 @@ public class AccessTest
     }
 
     @Test
-    public void Test_SetAccessRights_Error_ExceedingInitializedMemory()
+    public void Test_SetAccessRights_Error_ExceedingMaxEntries()
     {
         Simulator sim = new Simulator();
 
@@ -160,21 +115,39 @@ public class AccessTest
         System.out.println(isAppletSelected);
 
         byte[] answer;
-        System.out.println("\nInitializing memory");
-        byte[] initMessage = {(byte) 0x01};
-        CryptographyMock.DataLength = 1;
-        answer = TestHelper.ExecuteCommand(sim, (byte) 0x41, (byte) 0xA0, initMessage, (byte) 0x00);
-        TestHelper.EnsureStatusBytesNoError(answer);
-        Assert.assertTrue(CryptographyMock.decryptWasCalled());
-        CryptographyMock.reset();
-
         System.out.println("\nSetting Access Right");
-        // two entries
-        byte[] setMessage = {(byte) 0x02, (byte) 0xA0, (byte) 0x01, (byte) 0x10, (byte) 0xA0, (byte) 0x02, (byte) 0x10};
+        // 21 entries
+        byte[] setMessage = {
+                (byte) 0xA0, (byte) 0x01, (byte) 0x10,
+                (byte) 0xA0, (byte) 0x02, (byte) 0x10,
+                (byte) 0xA0, (byte) 0x03, (byte) 0x10,
+                (byte) 0xA0, (byte) 0x04, (byte) 0x10,
+                (byte) 0xA0, (byte) 0x05, (byte) 0x10,
+
+                (byte) 0xA0, (byte) 0x06, (byte) 0x10,
+                (byte) 0xA0, (byte) 0x07, (byte) 0x10,
+                (byte) 0xA0, (byte) 0x08, (byte) 0x10,
+                (byte) 0xA0, (byte) 0x09, (byte) 0x10,
+                (byte) 0xA0, (byte) 0x10, (byte) 0x10,
+
+                (byte) 0xA0, (byte) 0x11, (byte) 0x10,
+                (byte) 0xA0, (byte) 0x12, (byte) 0x10,
+                (byte) 0xA0, (byte) 0x13, (byte) 0x10,
+                (byte) 0xA0, (byte) 0x14, (byte) 0x10,
+                (byte) 0xA0, (byte) 0x15, (byte) 0x10,
+
+                (byte) 0xB1, (byte) 0x01, (byte) 0x10,
+                (byte) 0xB1, (byte) 0x02, (byte) 0x10,
+                (byte) 0xB1, (byte) 0x03, (byte) 0x10,
+                (byte) 0xB1, (byte) 0x04, (byte) 0x10,
+                (byte) 0xB1, (byte) 0x05, (byte) 0x10,
+
+                (byte) 0xB1, (byte) 0x06, (byte) 0x10
+        };
         CryptographyMock.DataLength = (short) setMessage.length;
         answer = TestHelper.ExecuteCommand(sim, (byte) 0x41, (byte) 0xC1, setMessage, (byte) 0x00);
-        // Error: data invalid
-        TestHelper.EnsureStatusBytes(answer, new byte[]{(byte) 0x69, (byte) 0x84});
+        // Error: wrong length
+        TestHelper.EnsureStatusBytes(answer, new byte[]{(byte) 0x67, (byte) 0x00});
         Assert.assertTrue(CryptographyMock.decryptWasCalled());
 
         CryptographyMock.reset();
@@ -198,17 +171,9 @@ public class AccessTest
         System.out.println(isAppletSelected);
 
         byte[] answer;
-        System.out.println("\nInitializing memory");
-        byte[] initMessage = {(byte) 0x01};
-        CryptographyMock.DataLength = 1;
-        answer = TestHelper.ExecuteCommand(sim, (byte) 0x41, (byte) 0xA0, initMessage, (byte) 0x00);
-        TestHelper.EnsureStatusBytesNoError(answer);
-        Assert.assertTrue(CryptographyMock.decryptWasCalled());
-        CryptographyMock.reset();
-
         System.out.println("\nSetting Access Right");
         // unknown value 0x22
-        byte[] setMessage = {(byte) 0x01, (byte) 0xA0, (byte) 0x01, (byte) 0x22};
+        byte[] setMessage = {(byte) 0xA0, (byte) 0x01, (byte) 0x22};
         CryptographyMock.DataLength = (short) setMessage.length;
         answer = TestHelper.ExecuteCommand(sim, (byte) 0x41, (byte) 0xC1, setMessage, (byte) 0x00);
         // Error: data invalid
@@ -236,50 +201,14 @@ public class AccessTest
         System.out.println(isAppletSelected);
 
         byte[] answer;
-        System.out.println("\nInitializing memory");
-        byte[] initMessage = {(byte) 0x01};
-        CryptographyMock.DataLength = 1;
-        answer = TestHelper.ExecuteCommand(sim, (byte) 0x41, (byte) 0xA0, initMessage, (byte) 0x00);
-        TestHelper.EnsureStatusBytesNoError(answer);
-        Assert.assertTrue(CryptographyMock.decryptWasCalled());
-        CryptographyMock.reset();
-
         System.out.println("\nSetting Access Right");
         // same keys for both entries (0xA0, 0x01)
-        byte[] setMessage = {(byte) 0x02, (byte) 0xA0, (byte) 0x01, (byte) 0x10, (byte) 0xA0, (byte) 0x01, (byte) 0x10};
+        byte[] setMessage = {(byte) 0xA0, (byte) 0x01, (byte) 0x10, (byte) 0xA0, (byte) 0x01, (byte) 0x10};
         CryptographyMock.DataLength = (short) setMessage.length;
         answer = TestHelper.ExecuteCommand(sim, (byte) 0x41, (byte) 0xC1, setMessage, (byte) 0x00);
         // Error: data invalid
         TestHelper.EnsureStatusBytes(answer, new byte[]{(byte) 0x69, (byte) 0x84});
         Assert.assertTrue(CryptographyMock.decryptWasCalled());
-
-        CryptographyMock.reset();
-    }
-
-    @Test
-    public void Test_GetAccessRight_Error_NotInitialized()
-    {
-        Simulator sim = new Simulator();
-
-        sim.installApplet(CryptographyAID, CryptographyMock.class);
-        sim.installApplet(AccessAID, Access.class);
-
-        System.out.println("Getting ATR...");
-        byte[] atr = sim.getATR();
-        System.out.println(new String(atr));
-        System.out.println(TestHelper.ToHexString(atr));
-
-        System.out.println("\nSelecting Applet...");
-        boolean isAppletSelected = sim.selectApplet(AccessAID);
-        System.out.println(isAppletSelected);
-
-        byte[] answer;
-        System.out.println("\nGetting Access Right");
-        byte[] key = {(byte) 0xA0, (byte) 0x01};
-        CryptographyMock.DataLength = (short) key.length;
-        answer = TestHelper.ExecuteCommand(sim, (byte) 0x41, (byte) 0xC2, key, (byte) 0x01);
-        // Error: command not allowed
-        TestHelper.EnsureStatusBytes(answer, new byte[]{(byte) 0x69, (byte) 0x86});
 
         CryptographyMock.reset();
     }
@@ -302,14 +231,6 @@ public class AccessTest
         System.out.println(isAppletSelected);
 
         byte[] answer;
-        System.out.println("\nInitializing memory");
-        byte[] initMessage = {(byte) 0x02};
-        CryptographyMock.DataLength = 1;
-        answer = TestHelper.ExecuteCommand(sim, (byte) 0x41, (byte) 0xA0, initMessage, (byte) 0x00);
-        TestHelper.EnsureStatusBytesNoError(answer);
-        Assert.assertTrue(CryptographyMock.decryptWasCalled());
-        CryptographyMock.reset();
-
         System.out.println("\nGetting Access Right for first key");
         byte[] key = {(byte) 0xA0, (byte) 0x01};
         CryptographyMock.DataLength = (short) key.length;
@@ -338,17 +259,9 @@ public class AccessTest
         System.out.println(isAppletSelected);
 
         byte[] answer;
-        System.out.println("\nInitializing memory");
-        byte[] initMessage = {(byte) 0x02};
-        CryptographyMock.DataLength = 1;
-        answer = TestHelper.ExecuteCommand(sim, (byte) 0x41, (byte) 0xA0, initMessage, (byte) 0x00);
-        TestHelper.EnsureStatusBytesNoError(answer);
-        Assert.assertTrue(CryptographyMock.decryptWasCalled());
-        CryptographyMock.reset();
-
         System.out.println("\nSetting Access Right");
         // first byte: 2 entries, following the key value pairs [key 0xA0 0x01] [value 0x10] [key 0xA0 0x02] [value 0x10]
-        byte[] setMessage = {(byte) 0x02, (byte) 0xA0, (byte) 0x01, (byte) 0x10, (byte) 0xA0, (byte) 0x02, (byte) 0x10};
+        byte[] setMessage = {(byte) 0xA0, (byte) 0x01, (byte) 0x10, (byte) 0xA0, (byte) 0x02, (byte) 0x10};
         CryptographyMock.DataLength = (short) setMessage.length;
         answer = TestHelper.ExecuteCommand(sim, (byte) 0x41, (byte) 0xC1, setMessage, (byte) 0x00);
         TestHelper.EnsureStatusBytesNoError(answer);
@@ -360,99 +273,6 @@ public class AccessTest
         answer = TestHelper.ExecuteCommand(sim, (byte) 0x41, (byte) 0xC2, key, (byte) 0x01);
         // Error: wrong length
         TestHelper.EnsureStatusBytes(answer, new byte[]{(byte) 0x67, (byte) 0x00});
-        Assert.assertTrue(CryptographyMock.decryptWasCalled());
-
-        CryptographyMock.reset();
-    }
-
-    @Test
-    public void Test_InitAccessMemory_Error_AlreadyInitialized()
-    {
-        Simulator sim = new Simulator();
-
-        sim.installApplet(CryptographyAID, CryptographyMock.class);
-        sim.installApplet(AccessAID, Access.class);
-
-        System.out.println("Getting ATR...");
-        byte[] atr = sim.getATR();
-        System.out.println(new String(atr));
-        System.out.println(TestHelper.ToHexString(atr));
-
-        System.out.println("\nSelecting Applet...");
-        boolean isAppletSelected = sim.selectApplet(AccessAID);
-        System.out.println(isAppletSelected);
-
-        byte[] answer;
-        System.out.println("\nInitializing memory");
-        byte[] initMessage = {(byte) 0x01};
-        CryptographyMock.DataLength = 1;
-        answer = TestHelper.ExecuteCommand(sim, (byte) 0x41, (byte) 0xA0, initMessage, (byte) 0x00);
-        TestHelper.EnsureStatusBytesNoError(answer);
-        Assert.assertTrue(CryptographyMock.decryptWasCalled());
-        CryptographyMock.reset();
-
-        System.out.println("\nInitializing memory second time");
-        CryptographyMock.DataLength = 1;
-        answer = TestHelper.ExecuteCommand(sim, (byte) 0x41, (byte) 0xA0, initMessage, (byte) 0x00);
-        // Error: command not allowed
-        TestHelper.EnsureStatusBytes(answer, new byte[]{(byte) 0x69, (byte) 0x86});
-
-        CryptographyMock.reset();
-    }
-
-    @Test
-    public void Test_InitAccessMemory_Error_InvalidMessageLength()
-    {
-        Simulator sim = new Simulator();
-
-        sim.installApplet(CryptographyAID, CryptographyMock.class);
-        sim.installApplet(AccessAID, Access.class);
-
-        System.out.println("Getting ATR...");
-        byte[] atr = sim.getATR();
-        System.out.println(new String(atr));
-        System.out.println(TestHelper.ToHexString(atr));
-
-        System.out.println("\nSelecting Applet...");
-        boolean isAppletSelected = sim.selectApplet(AccessAID);
-        System.out.println(isAppletSelected);
-
-        byte[] answer;
-        System.out.println("\nInitializing memory");
-        byte[] initMessage = {(byte) 0x01, (byte) 0x01};
-        CryptographyMock.DataLength = 2;
-        answer = TestHelper.ExecuteCommand(sim, (byte) 0x41, (byte) 0xA0, initMessage, (byte) 0x00);
-        // Error: wrong length
-        TestHelper.EnsureStatusBytes(answer, new byte[]{(byte) 0x67, (byte) 0x00});
-        Assert.assertTrue(CryptographyMock.decryptWasCalled());
-
-        CryptographyMock.reset();
-    }
-
-    @Test
-    public void Test_InitAccessMemory_Error_DataOutOfBounds()
-    {
-        Simulator sim = new Simulator();
-
-        sim.installApplet(CryptographyAID, CryptographyMock.class);
-        sim.installApplet(AccessAID, Access.class);
-
-        System.out.println("Getting ATR...");
-        byte[] atr = sim.getATR();
-        System.out.println(new String(atr));
-        System.out.println(TestHelper.ToHexString(atr));
-
-        System.out.println("\nSelecting Applet...");
-        boolean isAppletSelected = sim.selectApplet(AccessAID);
-        System.out.println(isAppletSelected);
-
-        byte[] answer;
-        System.out.println("\nInitializing memory");
-        byte[] initMessage = {(byte) 0xA0};
-        CryptographyMock.DataLength = 1;
-        answer = TestHelper.ExecuteCommand(sim, (byte) 0x41, (byte) 0xA0, initMessage, (byte) 0x00);
-        // Error: data invalid
-        TestHelper.EnsureStatusBytes(answer, new byte[]{(byte) 0x69, (byte) 0x84});
         Assert.assertTrue(CryptographyMock.decryptWasCalled());
 
         CryptographyMock.reset();
