@@ -39,11 +39,10 @@ public class Identification extends Applet
     private byte[] birthDay;
 
     private final byte MAX_CARID_LENGTH = 8;
-    private short carIdLength = 0;
+    private byte carIdLength = 0;
     private byte[] carId;
 
     private final byte SAFEPIN_LENGTH = 4;
-    private boolean safePinIsSet = false;
     private byte[] safePin;
 
     protected Identification()
@@ -54,6 +53,8 @@ public class Identification extends Applet
         birthDay = new byte[DateHelper.DATE_LENGTH];
         carId = new byte[MAX_CARID_LENGTH];
         safePin = new byte[SAFEPIN_LENGTH];
+
+        reset();
     }
 
     public static void install(byte[] bArray, short bOffset, byte bLength)
@@ -122,7 +123,7 @@ public class Identification extends Applet
         nameLength = 0;
         birthDay[0] = 0x00;
         carIdLength = 0;
-        safePinIsSet = false;
+        safePin[0] = 0x10;
     }
 
     /**
@@ -162,14 +163,52 @@ public class Identification extends Applet
 
     }
 
+    /**
+     * Send the saved car id via given APDU.
+     * If the car id is not set, ISO7816.SW_COMMAND_NOT_ALLOWED is thrown.
+     *
+     * @param apdu Received APDU, which is used to send the data.
+     */
     private void getCarId(APDU apdu)
     {
+        if (carIdLength == 0)
+        {
+            // Name not set yet
+            ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
+        }
 
+        send(apdu, carId, (byte) 0, carIdLength);
     }
 
+    /**
+     * Sets the car id given by the APDU.
+     * If the car id is already set, ISO7816.SW_COMMAND_NOT_ALLOWED is thrown.
+     * If the message length is greater than MAX_CARID_LENGTH or zero, ISO7816.SW_WRONG_LENGTH is thrown.
+     *
+     * @param apdu Received APDU, which contains the car id.
+     */
     private void setCarId(APDU apdu)
     {
+        if (carIdLength != 0)
+        {
+            // Name already set yet
+            ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
+            return;
+        }
 
+        byte[] buffer = apdu.getBuffer();
+
+        short messageLength = decryptMessage(buffer);
+
+        if (messageLength > MAX_CARID_LENGTH || messageLength == 0)
+        {
+            // Data doesnt have a correct length
+            ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
+            return;
+        }
+
+        Util.arrayCopy(buffer, (short) 0, carId, (short) 0, messageLength);
+        carIdLength = (byte) messageLength;
     }
 
     /**
@@ -285,7 +324,7 @@ public class Identification extends Applet
      * If the name is already set, ISO7816.SW_COMMAND_NOT_ALLOWED is thrown.
      * If the message length is greater than MAX_NAME_LENGTH or zero, ISO7816.SW_WRONG_LENGTH is thrown.
      *
-     * @param apdu Received APDU, which contains the birthday.
+     * @param apdu Received APDU, which contains the name.
      */
     private void setName(APDU apdu)
     {

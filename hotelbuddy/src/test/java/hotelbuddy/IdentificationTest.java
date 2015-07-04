@@ -281,7 +281,7 @@ public class IdentificationTest
     }
 
     @Test
-    public void Test_SetBirthday_Second_Time_Throws_WRONG_LENGTH()
+    public void Test_SetBirthday_Second_Time_Throws_COMMAND_NOT_ALLOWED()
     {
         byte[] birthday = {(byte) 12, (byte) 10, (byte) 19, (byte) 92};
 
@@ -445,5 +445,155 @@ public class IdentificationTest
 
             CryptographyMock.reset();
         }
+    }
+
+    @Test
+    public void Test_CarId()
+    {
+        String carId = "LPP7700";
+
+        Simulator sim = new Simulator();
+
+        sim.installApplet(CryptographyAID, CryptographyMock.class);
+        sim.installApplet(IdentificationAID, Identification.class);
+
+        System.out.println("Getting ATR...");
+        byte[] atr = sim.getATR();
+        System.out.println(new String(atr));
+        System.out.println(TestHelper.ToHexString(atr));
+
+        System.out.println("\nSelecting Applet...");
+        boolean isAppletSelected = sim.selectApplet(IdentificationAID);
+        System.out.println(isAppletSelected);
+
+        byte[] answer;
+        System.out.println("\nSetting CarId...");
+        CryptographyMock.DataLength = (short) carId.length();
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x49, (byte) 0xC0, carId.getBytes(), (byte) 0x00);
+        TestHelper.EnsureStatusBytesNoError(answer);
+        Assert.assertTrue(CryptographyMock.decryptWasCalled());
+
+        System.out.println("\nGetting CarId...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x49, (byte) 0xC1, new byte[0], (byte) 0xFF);
+        TestHelper.EnsureStatusBytesNoError(answer);
+        Assert.assertTrue(CryptographyMock.encryptWasCalled());
+
+        String answerString = new String(answer, 0, answer.length - 2);
+        Assert.assertEquals(carId, answerString);
+
+        CryptographyMock.reset();
+    }
+
+    @Test
+    public void Test_GetCarId_Called_Before_SetCarId_Throws_COMMAND_NOT_ALLOWED()
+    {
+        Simulator sim = new Simulator();
+
+        sim.installApplet(CryptographyAID, CryptographyMock.class);
+        sim.installApplet(IdentificationAID, Identification.class);
+
+        System.out.println("Getting ATR...");
+        byte[] atr = sim.getATR();
+        System.out.println(new String(atr));
+        System.out.println(TestHelper.ToHexString(atr));
+
+        System.out.println("\nSelecting Applet...");
+        boolean isAppletSelected = sim.selectApplet(IdentificationAID);
+        System.out.println(isAppletSelected);
+
+        System.out.println("\nGetting CarId...");
+        byte[] answer = TestHelper.ExecuteCommand(sim, (byte) 0x49, (byte) 0xC1, new byte[0], (byte) 0xFF);
+        TestHelper.EnsureStatusBytes(answer, new byte[]{(byte) 0x69, (byte) 0x86});
+
+        CryptographyMock.reset();
+    }
+
+    @Test
+    public void Test_SetCarId_Too_Long_Throws_WRONG_LENGTH()
+    {
+        String name = Stream.generate(() -> String.valueOf('a')).limit(9).collect(Collectors.joining());
+
+        Simulator sim = new Simulator();
+
+        sim.installApplet(CryptographyAID, CryptographyMock.class);
+        sim.installApplet(IdentificationAID, Identification.class);
+
+        System.out.println("Getting ATR...");
+        byte[] atr = sim.getATR();
+        System.out.println(new String(atr));
+        System.out.println(TestHelper.ToHexString(atr));
+
+        System.out.println("\nSelecting Applet...");
+        CryptographyMock.DataLength = (short) name.length();
+        boolean isAppletSelected = sim.selectApplet(IdentificationAID);
+        System.out.println(isAppletSelected);
+
+        byte[] answer;
+        System.out.println("\nSetting too long CarId");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x49, (byte) 0xC0, name.getBytes(), (byte) 0x00);
+        TestHelper.EnsureStatusBytes(answer, new byte[]{(byte) 0x67, (byte) 0x00});
+
+        CryptographyMock.reset();
+    }
+
+    @Test
+    public void Test_SetCarId_Second_Time_Throws_WRONG_LENGTH()
+    {
+        String carId = "LPP7700";
+
+        Simulator sim = new Simulator();
+
+        sim.installApplet(CryptographyAID, CryptographyMock.class);
+        sim.installApplet(IdentificationAID, Identification.class);
+
+        System.out.println("Getting ATR...");
+        byte[] atr = sim.getATR();
+        System.out.println(new String(atr));
+        System.out.println(TestHelper.ToHexString(atr));
+
+        System.out.println("\nSelecting Applet...");
+        CryptographyMock.DataLength = (short) carId.length();
+        boolean isAppletSelected = sim.selectApplet(IdentificationAID);
+        System.out.println(isAppletSelected);
+
+        byte[] answer;
+        System.out.println("\nSetting CarId");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x49, (byte) 0xC0, carId.getBytes(), (byte) 0x00);
+        TestHelper.EnsureStatusBytesNoError(answer);
+
+        System.out.println("\nSetting CarId Second Time");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x49, (byte) 0xC0, carId.getBytes(), (byte) 0x00);
+        TestHelper.EnsureStatusBytes(answer, new byte[]{(byte) 0x69, (byte) 0x86});
+
+        CryptographyMock.reset();
+    }
+
+    @Test
+    public void Test_SetCarId_Too_Short_Throws_WRONG_LENGTH()
+    {
+        String carId = "";
+
+        Simulator sim = new Simulator();
+
+        sim.installApplet(CryptographyAID, CryptographyMock.class);
+        sim.installApplet(IdentificationAID, Identification.class);
+
+        System.out.println("Getting ATR...");
+        byte[] atr = sim.getATR();
+        System.out.println(new String(atr));
+        System.out.println(TestHelper.ToHexString(atr));
+
+        System.out.println("\nSelecting Applet...");
+        boolean isAppletSelected = sim.selectApplet(IdentificationAID);
+        System.out.println(isAppletSelected);
+
+        byte[] answer;
+        System.out.println("\nSetting too short CarId");
+        CryptographyMock.DataLength = (short) carId.length();
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x49, (byte) 0xC0, carId.getBytes(), (byte) 0x00);
+        TestHelper.EnsureStatusBytes(answer, new byte[]{(byte) 0x67, (byte) 0x00});
+        Assert.assertTrue(CryptographyMock.decryptWasCalled());
+
+        CryptographyMock.reset();
     }
 }
