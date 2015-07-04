@@ -8,6 +8,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -594,6 +596,291 @@ public class IdentificationTest
         TestHelper.EnsureStatusBytes(answer, new byte[]{(byte) 0x67, (byte) 0x00});
         Assert.assertTrue(CryptographyMock.decryptWasCalled());
 
+        CryptographyMock.reset();
+    }
+
+    @Test
+    public void Test_SetSafePin()
+    {
+        byte[] pin = {(byte) 0, (byte) 1, (byte) 8, (byte) 9};
+
+        Simulator sim = new Simulator();
+
+        sim.installApplet(CryptographyAID, CryptographyMock.class);
+        sim.installApplet(IdentificationAID, Identification.class);
+
+        System.out.println("Getting ATR...");
+        byte[] atr = sim.getATR();
+        System.out.println(new String(atr));
+        System.out.println(TestHelper.ToHexString(atr));
+
+        System.out.println("\nSelecting Applet...");
+        boolean isAppletSelected = sim.selectApplet(IdentificationAID);
+        System.out.println(isAppletSelected);
+
+        CryptographyMock.DataLength = (short) pin.length;
+
+        byte[] answer;
+        System.out.println("\nSetting SafePin");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x49, (byte) 0xD0, pin, (byte) 0x00);
+        TestHelper.EnsureStatusBytesNoError(answer);
+        Assert.assertTrue(CryptographyMock.decryptWasCalled());
+
+        CryptographyMock.reset();
+    }
+
+    @Test
+    public void Test_SetSafePin_With_Wrong_Date_Lengths_Throws_WRONG_LENGTH()
+    {
+        byte[] tooShortSafePin = {(byte) 0, (byte) 1, (byte) 8};
+        byte[] tooLongSafePin = {(byte) 0, (byte) 1, (byte) 8, (byte) 9, (byte) 2};
+
+        Simulator sim = new Simulator();
+
+        sim.installApplet(CryptographyAID, CryptographyMock.class);
+        sim.installApplet(IdentificationAID, Identification.class);
+
+        System.out.println("Getting ATR...");
+        byte[] atr = sim.getATR();
+        System.out.println(new String(atr));
+        System.out.println(TestHelper.ToHexString(atr));
+
+        System.out.println("\nSelecting Applet...");
+        boolean isAppletSelected = sim.selectApplet(IdentificationAID);
+        System.out.println(isAppletSelected);
+
+        byte[] answer;
+        System.out.println("\nSetting Too Short SafePin");
+        CryptographyMock.DataLength = (short) tooShortSafePin.length;
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x49, (byte) 0xD0, tooShortSafePin, (byte) 0x00);
+        TestHelper.EnsureStatusBytes(answer, new byte[]{(byte) 0x67, (byte) 0x00});
+        Assert.assertTrue(CryptographyMock.decryptWasCalled());
+        CryptographyMock.reset();
+
+        System.out.println("\nSetting Too Long SafePin");
+        CryptographyMock.DataLength = (short) tooLongSafePin.length;
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x49, (byte) 0xD0, tooLongSafePin, (byte) 0x00);
+        TestHelper.EnsureStatusBytes(answer, new byte[]{(byte) 0x67, (byte) 0x00});
+        Assert.assertTrue(CryptographyMock.decryptWasCalled());
+        CryptographyMock.reset();
+    }
+
+    @Test
+    public void Test_SetSafePin_With_Invalid_SafePins_Throws_DATA_INVALID()
+    {
+        Simulator sim = new Simulator();
+
+        sim.installApplet(CryptographyAID, CryptographyMock.class);
+        sim.installApplet(IdentificationAID, Identification.class);
+
+        System.out.println("Getting ATR...");
+        byte[] atr = sim.getATR();
+        System.out.println(new String(atr));
+        System.out.println(TestHelper.ToHexString(atr));
+
+        System.out.println("\nSelecting Applet...");
+        boolean isAppletSelected = sim.selectApplet(IdentificationAID);
+        System.out.println(isAppletSelected);
+
+        for (boolean[] errors : TestHelper.getBinary(4))
+        {
+            if (Arrays.equals(errors, new boolean[]{false, false, false, false}))
+            {
+                continue;
+            }
+
+            List<byte[]> messages = createErrorPins(errors, 0, 4);
+
+            for (byte[] message : messages)
+            {
+                byte[] answer;
+                System.out.println("\nSetting Invalid Pin...");
+                CryptographyMock.DataLength = (short) message.length;
+                answer = TestHelper.ExecuteCommand(sim, (byte) 0x49, (byte) 0xD0, message, (byte) 0x00);
+                TestHelper.EnsureStatusBytes(answer, new byte[]{(byte) 0x69, (byte) 0x84});
+                Assert.assertTrue(CryptographyMock.decryptWasCalled());
+                CryptographyMock.reset();
+            }
+        }
+    }
+
+    private ArrayList<byte[]> createErrorPins(boolean[] errors, int currentPosition, int maxPosition)
+    {
+        if (currentPosition == maxPosition)
+        {
+            ArrayList pins = new ArrayList<byte[]>();
+            pins.add(new byte[]{(byte) 0, (byte) 0, (byte) 0, (byte) 0});
+            return pins;
+        }
+
+        ArrayList<byte[]> pins = createErrorPins(errors, currentPosition + 1, maxPosition);
+
+        if (errors[currentPosition])
+        {
+            for (byte[] pin : pins)
+            {
+                pin[currentPosition] = (byte) 10;
+            }
+
+            for (byte[] pin : TestHelper.cloneList(pins))
+            {
+                pin[currentPosition] = (byte) -1;
+                pins.add(pin);
+            }
+        }
+
+        return pins;
+    }
+
+    @Test
+    public void Test_SetSafePin_Second_Time_Throws_COMMAND_NOT_ALLOWED()
+    {
+        byte[] pin = {(byte) 0, (byte) 1, (byte) 8, (byte) 9};
+
+        Simulator sim = new Simulator();
+
+        sim.installApplet(CryptographyAID, CryptographyMock.class);
+        sim.installApplet(IdentificationAID, Identification.class);
+
+        System.out.println("Getting ATR...");
+        byte[] atr = sim.getATR();
+        System.out.println(new String(atr));
+        System.out.println(TestHelper.ToHexString(atr));
+
+        System.out.println("\nSelecting Applet...");
+        CryptographyMock.DataLength = (short) pin.length;
+        boolean isAppletSelected = sim.selectApplet(IdentificationAID);
+        System.out.println(isAppletSelected);
+
+        byte[] answer;
+        System.out.println("\nSetting SafePin");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x49, (byte) 0xD0, pin, (byte) 0x00);
+        TestHelper.EnsureStatusBytesNoError(answer);
+
+        System.out.println("\nSetting SafePin Second Time");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x49, (byte) 0xD0, pin, (byte) 0x00);
+        TestHelper.EnsureStatusBytes(answer, new byte[]{(byte) 0x69, (byte) 0x86});
+
+        CryptographyMock.reset();
+    }
+
+    @Test
+    public void Test_CheckSafePin_Before_SetSafePin_Throws_COMMAND_NOT_ALLOWED()
+    {
+        Simulator sim = new Simulator();
+
+        sim.installApplet(CryptographyAID, CryptographyMock.class);
+        sim.installApplet(IdentificationAID, Identification.class);
+
+        System.out.println("Getting ATR...");
+        byte[] atr = sim.getATR();
+        System.out.println(new String(atr));
+        System.out.println(TestHelper.ToHexString(atr));
+
+        System.out.println("\nSelecting Applet...");
+        boolean isAppletSelected = sim.selectApplet(IdentificationAID);
+        System.out.println(isAppletSelected);
+
+        byte[] answer;
+        System.out.println("\nTry getting SafePin, before setting SafePin");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x49, (byte) 0xD1, new byte[0], (byte) 0x00);
+        TestHelper.EnsureStatusBytes(answer, new byte[]{(byte) 0x69, (byte) 0x86});
+        Assert.assertFalse(CryptographyMock.encryptWasCalled());
+        CryptographyMock.reset();
+    }
+
+    @Test
+    public void Test_CheckPin()
+    {
+        byte[] pin = {(byte) 0, (byte) 0, (byte) 0, (byte) 0};
+
+        Simulator sim = new Simulator();
+
+        sim.installApplet(CryptographyAID, CryptographyMock.class);
+        sim.installApplet(IdentificationAID, Identification.class);
+
+        System.out.println("Getting ATR...");
+        byte[] atr = sim.getATR();
+        System.out.println(new String(atr));
+        System.out.println(TestHelper.ToHexString(atr));
+
+        System.out.println("\nSelecting Applet...");
+        boolean isAppletSelected = sim.selectApplet(IdentificationAID);
+        System.out.println(isAppletSelected);
+
+        byte[] answer;
+        System.out.println("\nSetting Birthday");
+        CryptographyMock.DataLength = (short) pin.length;
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x49, (byte) 0xD0, pin, (byte) 0x00);
+        TestHelper.EnsureStatusBytesNoError(answer);
+        CryptographyMock.reset();
+
+        for (byte one = 0; one < 10; one++)
+        {
+            for (byte two = 0; two < 10; two++)
+            {
+                for (byte three = 0; three < 10; three++)
+                {
+                    for (byte four = 0; four < 10; four++)
+                    {
+                        byte[] message = new byte[]{one, two, three, four};
+
+                        if (Arrays.equals(message, pin))
+                        {
+                            continue;
+                        }
+
+                        System.out.println("\nChecking Wrong Pin");
+                        CryptographyMock.DataLength = (short) message.length;
+                        answer = TestHelper.ExecuteCommand(sim, (byte) 0x49, (byte) 0xD1, message, (byte) 0x00);
+
+                        TestHelper.EnsureStatusBytesNoError(answer);
+                        Assert.assertTrue(CryptographyMock.decryptWasCalled());
+                        Assert.assertTrue(CryptographyMock.encryptWasCalled());
+                        TestHelper.compareWithoutStatusBytes(new byte[]{0x00}, answer, 1);
+
+                        CryptographyMock.reset();
+                    }
+                }
+            }
+        }
+
+        System.out.println("\nChecking Right Pin");
+        CryptographyMock.DataLength = (short) pin.length;
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x49, (byte) 0xD1, pin, (byte) 0x00);
+
+        TestHelper.EnsureStatusBytesNoError(answer);
+        Assert.assertTrue(CryptographyMock.decryptWasCalled());
+        Assert.assertTrue(CryptographyMock.encryptWasCalled());
+        TestHelper.compareWithoutStatusBytes(new byte[]{0x01}, answer, 1);
+
+        CryptographyMock.reset();
+    }
+
+    @Test
+    public void Test_Reset()
+    {
+        Simulator sim = new Simulator();
+
+        sim.installApplet(CryptographyAID, CryptographyMock.class);
+        sim.installApplet(IdentificationAID, Identification.class);
+
+        System.out.println("Getting ATR...");
+        byte[] atr = sim.getATR();
+        System.out.println(new String(atr));
+        System.out.println(TestHelper.ToHexString(atr));
+
+        System.out.println("\nSelecting Applet...");
+        boolean isAppletSelected = sim.selectApplet(IdentificationAID);
+        System.out.println(isAppletSelected);
+
+        byte[] answer;
+        System.out.println("\nResetting");
+        CryptographyMock.DataLength = (short) 0;
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x49, (byte) 0xFF, new byte[0], (byte) 0x00);
+        TestHelper.EnsureStatusBytesNoError(answer);
+        Assert.assertFalse(CryptographyMock.decryptWasCalled());
+        Assert.assertFalse(CryptographyMock.encryptWasCalled());
         CryptographyMock.reset();
     }
 }

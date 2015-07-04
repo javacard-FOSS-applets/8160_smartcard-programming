@@ -153,14 +153,106 @@ public class Identification extends Applet
     {
     }
 
+    /**
+     * Checks if the given safe pin is equal to the saved safe pin.
+     * If the safe pin is not set, ISO7816.SW_COMMAND_NOT_ALLOWED is thrown.
+     * If the message length is not SAFEPIN_LENGTH, ISO7816.SW_WRONG_LENGTH is thrown.
+     * If the pin to check has an invalid format, ISO7816.SW_DATA_INVALID is thrown.
+     *
+     * @param apdu Received APDU, which contains pin to check. Is also used to send the data.
+     */
     private void checkSafePin(APDU apdu)
     {
+        if (safePin[0] == 0x10)
+        {
+            // Safe pin already set yet
+            ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
+            return;
+        }
 
+        byte[] buffer = apdu.getBuffer();
+
+        short messageLength = decryptMessage(buffer);
+
+        if (messageLength != SAFEPIN_LENGTH)
+        {
+            // Data doesnt have a correct length
+            ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
+            return;
+        }
+
+        if (!checkSafePinFormat(buffer, (byte) 0x00))
+        {
+            // Wrong Safe Pin Format
+            ISOException.throwIt(ISO7816.SW_DATA_INVALID);
+            return;
+        }
+
+        buffer[0] = Util.arrayCompare(safePin, (byte) 0x00, buffer, (byte) 0x00, SAFEPIN_LENGTH) == 0 ? (byte) 0x01 : (byte) 0x00;
+
+        send(apdu, buffer, (byte) 0x00, (byte) 0x01);
     }
 
+    /**
+     * Sets the safe pin given by the APDU.
+     * If the safe pin is already set, ISO7816.SW_COMMAND_NOT_ALLOWED is thrown.
+     * If the message length is not equal to SAFEPIN_LENGTH, ISO7816.SW_WRONG_LENGTH is thrown.
+     * If the safe pin has an invalid format, ISO7816.SW_DATA_INVALID is thrown.
+     *
+     * @param apdu Received APDU, which contains the safe pin.
+     */
     private void setSafePin(APDU apdu)
     {
+        if (safePin[0] != 0x10)
+        {
+            // Safe pin already set yet
+            ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
+            return;
+        }
 
+        byte[] buffer = apdu.getBuffer();
+
+        short messageLength = decryptMessage(buffer);
+
+        if (messageLength != SAFEPIN_LENGTH)
+        {
+            // Data doesnt have a correct length
+            ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
+            return;
+        }
+
+        if (!checkSafePinFormat(buffer, (byte) 0x00))
+        {
+            // Wrong Safe Pin Format
+            ISOException.throwIt(ISO7816.SW_DATA_INVALID);
+            return;
+        }
+
+        Util.arrayCopy(buffer, (short) 0, safePin, (short) 0, SAFEPIN_LENGTH);
+    }
+
+    /**
+     * Checks, whether the given safe pin inside the buffer at offset is in valid format.
+     *
+     * @param buffer buffer containing the safe pin
+     * @param offset Offset of the safe pin in the buffer
+     * @return true, if the safe pin has a valid format, false otherwise.
+     */
+    private boolean checkSafePinFormat(byte[] buffer, byte offset)
+    {
+        byte end = (byte) (offset + SAFEPIN_LENGTH);
+
+        while (offset < end)
+        {
+            if (buffer[offset] < 0x00 || buffer[offset] > 0x09)
+            {
+                return false;
+            }
+
+            offset++;
+        }
+
+        return true;
     }
 
     /**
@@ -234,12 +326,14 @@ public class Identification extends Applet
 
         if (messageLength != (DateHelper.DATE_LENGTH + 1))
         {
+            // Wrong Data Length
             ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
             return;
         }
 
         if (!DateHelper.checkDate(buffer, 0))
         {
+            // Wrong Date Format
             ISOException.throwIt(ISO7816.SW_DATA_INVALID);
             return;
         }
@@ -354,10 +448,10 @@ public class Identification extends Applet
      * Encrypts the given message at offset to offset+length into the buffer at offset 0
      * by using the Cryptography applet through the applet firewall.
      *
-     * @param buffer Target memory. Result will be stored at offset 0.
+     * @param buffer  Target memory. Result will be stored at offset 0.
      * @param message Memory containing the message to encrypt
-     * @param offset Offset where the message begins.
-     * @param length Length of the message.
+     * @param offset  Offset where the message begins.
+     * @param length  Length of the message.
      * @return length of the encrypted message.
      */
     private short encryptMessage(byte[] buffer, byte[] message, byte offset, byte length)

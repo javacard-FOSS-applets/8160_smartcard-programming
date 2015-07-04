@@ -4,6 +4,9 @@ import com.licel.jcardsim.base.Simulator;
 import org.junit.Assert;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 public class TestHelper
 {
@@ -112,5 +115,28 @@ public class TestHelper
         byte[] received = new byte[length];
         System.arraycopy(answer, 0, received, 0, length);
         Assert.assertArrayEquals(expected, received);
+    }
+
+    public static boolean[][] getBinary(int n)
+    {
+        int numRows = (int) Math.pow(2, n);
+        boolean[][] bools = new boolean[numRows][n];
+        for (int i = 0; i < bools.length; i++)
+        {
+            for (int j = 0; j < bools[i].length; j++)
+            {
+                int val = bools.length * j + i;
+                int ret = (1 & (val >>> j));
+                bools[i][j] = ret != 0;
+            }
+        }
+
+        return bools;
+    }
+
+    public static List<byte[]> cloneList(List<byte[]> list) {
+        List<byte[]> clone = new ArrayList<byte[]>(list.size());
+        for(byte[] item: list) clone.add(item.clone());
+        return clone;
     }
 }
