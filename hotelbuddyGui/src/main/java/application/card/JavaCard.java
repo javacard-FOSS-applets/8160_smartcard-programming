@@ -132,7 +132,8 @@ public class JavaCard implements IJavaCard, CTListener
                 return new ErrorResult<>("Incorrect answer. Please check your command.");
             }
 
-            return new SuccessResult<>(responseApdu.data());
+            byte[] data = responseApdu.data();
+            return data == null ? new SuccessResult<>(new byte[0]) : new SuccessResult<>(data);
         }
         catch (Exception ex)
         {

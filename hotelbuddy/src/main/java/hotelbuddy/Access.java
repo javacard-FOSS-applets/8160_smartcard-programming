@@ -67,7 +67,6 @@ public class Access extends Applet
         new Access();
     }
 
-    @Override
     public void process(APDU apdu) throws ISOException
     {
         if (selectingApplet())

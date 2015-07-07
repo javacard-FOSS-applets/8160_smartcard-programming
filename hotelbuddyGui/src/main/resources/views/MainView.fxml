@@ -4,9 +4,8 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
-<BorderPane minHeight="400.0" minWidth="400.0" prefHeight="500.0" prefWidth="700.0"
-            xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="presentation.MainController">
+<?import presentation.controls.NumericTextField?>
+<BorderPane minHeight="400.0" minWidth="400.0" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="presentation.MainController">
     <center>
         <ScrollPane fitToHeight="true" fitToWidth="true" minViewportHeight="150.0">
             <content>
@@ -16,49 +15,36 @@
                             <content>
                                 <GridPane>
                                     <columnConstraints>
-                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="-Infinity"
-                                                           prefWidth="150.0"/>
-                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
+                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="150.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                                     </columnConstraints>
                                     <rowConstraints>
-                                        <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="30.0"
-                                                        vgrow="SOMETIMES"/>
-                                        <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0"
-                                                        vgrow="SOMETIMES"/>
-                                        <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0"
-                                                        vgrow="SOMETIMES"/>
-                                        <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0"
-                                                        vgrow="SOMETIMES"/>
-                                        <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0"
-                                                        vgrow="SOMETIMES"/>
-                                        <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0"
-                                                        vgrow="SOMETIMES"/>
-                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                        <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="30.0" vgrow="SOMETIMES" />
+                                        <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                        <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                        <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                        <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                        <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                     </rowConstraints>
                                     <children>
-                                        <Label styleClass="fieldLabel" text="Status"/>
-                                        <Label fx:id="con_statusLabel" text="status" GridPane.columnIndex="1"/>
+                                        <Label styleClass="fieldLabel" text="Status" />
+                                        <Label fx:id="con_statusLabel" text="status" GridPane.columnIndex="1" />
                                         <HBox spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
                                             <children>
-                                                <Button fx:id="con_connectButton" mnemonicParsing="false"
-                                                        text="Connect"/>
-                                                <Button fx:id="con_initializeCardButton" mnemonicParsing="false"
-                                                        text="Initialize Card"/>
+                                                <Button fx:id="con_connectButton" mnemonicParsing="false" text="Connect" />
+                                                <Button fx:id="con_initializeCardButton" mnemonicParsing="false" text="Initialize Card" />
                                             </children>
                                         </HBox>
-                                        <Label styleClass="fieldLabel" text="Terminal Key" GridPane.rowIndex="3"/>
-                                        <Label styleClass="fieldLabel" text="Card Key" GridPane.rowIndex="4"/>
-                                        <Label fx:id="con_terminalKeyStatus" text="Label" GridPane.columnIndex="1"
-                                               GridPane.rowIndex="3"/>
-                                        <Label fx:id="con_cardKeyStatus" text="Label" GridPane.columnIndex="1"
-                                               GridPane.rowIndex="4"/>
-                                        <Button fx:id="con_generateKeyButton" mnemonicParsing="false" text="Generate"
-                                                GridPane.columnIndex="1" GridPane.rowIndex="5"/>
-                                        <Label styleClass="fieldLabel" text="Generate missing keys"
-                                               GridPane.rowIndex="5"/>
+                                        <Label styleClass="fieldLabel" text="Terminal Key" GridPane.rowIndex="3" />
+                                        <Label styleClass="fieldLabel" text="Card Key" GridPane.rowIndex="4" />
+                                        <Label fx:id="con_terminalKeyStatus" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                        <Label fx:id="con_cardKeyStatus" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                        <Button fx:id="con_generateKeyButton" mnemonicParsing="false" text="Generate" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                                        <Label styleClass="fieldLabel" text="Generate missing keys" GridPane.rowIndex="5" />
                                     </children>
                                     <padding>
-                                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                                     </padding>
                                 </GridPane>
                             </content>
@@ -71,78 +57,54 @@
                                             <content>
                                                 <GridPane>
                                                     <columnConstraints>
-                                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity"
-                                                                           minWidth="-Infinity" prefWidth="125.0"/>
-                                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0"
-                                                                           prefWidth="100.0"/>
+                                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="125.0" />
+                                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                                                     </columnConstraints>
                                                     <rowConstraints>
-                                                        <RowConstraints maxHeight="-Infinity" minHeight="-Infinity"
-                                                                        prefHeight="30.0" vgrow="SOMETIMES"/>
-                                                        <RowConstraints maxHeight="-Infinity" minHeight="10.0"
-                                                                        prefHeight="30.0" vgrow="SOMETIMES"/>
+                                                        <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="30.0" vgrow="SOMETIMES" />
+                                                        <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                                     </rowConstraints>
                                                     <children>
-                                                        <Label styleClass="fieldLabel" text="Identification"/>
-                                                        <Label styleClass="fieldLabel" text="Access Control"
-                                                               GridPane.rowIndex="1"/>
-                                                        <Button fx:id="conf_resetIdentification" mnemonicParsing="false"
-                                                                text="Reset" GridPane.columnIndex="1"/>
-                                                        <Button fx:id="conf_restAccessControl" mnemonicParsing="false"
-                                                                text="Reset" GridPane.columnIndex="1" disable="true"
-                                                                GridPane.rowIndex="1"/>
+                                                        <Label styleClass="fieldLabel" text="Identification" />
+                                                        <Label styleClass="fieldLabel" text="Access Control" GridPane.rowIndex="1" />
+                                                        <Button fx:id="conf_resetIdentification" mnemonicParsing="false" text="Reset" GridPane.columnIndex="1" />
+                                                        <Button fx:id="conf_restAccessControl" disable="true" mnemonicParsing="false" text="Reset" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                                     </children>
                                                 </GridPane>
                                             </content>
                                             <padding>
-                                                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                                                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                                             </padding>
                                         </TitledPane>
                                         <TitledPane animated="false" collapsible="false" text="Identification">
                                             <content>
                                                 <GridPane>
                                                     <columnConstraints>
-                                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity"
-                                                                           minWidth="-Infinity" prefWidth="150.0"/>
-                                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0"
-                                                                           prefWidth="100.0"/>
+                                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="150.0" />
+                                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                                                     </columnConstraints>
                                                     <rowConstraints>
-                                                        <RowConstraints minHeight="10.0" prefHeight="30.0"
-                                                                        vgrow="SOMETIMES"/>
-                                                        <RowConstraints minHeight="10.0" prefHeight="30.0"
-                                                                        vgrow="SOMETIMES"/>
-                                                        <RowConstraints minHeight="10.0" prefHeight="30.0"
-                                                                        vgrow="SOMETIMES"/>
-                                                        <RowConstraints minHeight="10.0" prefHeight="30.0"
-                                                                        vgrow="SOMETIMES"/>
-                                                        <RowConstraints minHeight="10.0" prefHeight="30.0"
-                                                                        vgrow="SOMETIMES"/>
+                                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                                     </rowConstraints>
                                                     <children>
-                                                        <Button fx:id="conf_setIdentificationButton"
-                                                                mnemonicParsing="false" text="Apply"
-                                                                GridPane.columnIndex="1" GridPane.rowIndex="4"/>
-                                                        <Label styleClass="fieldLabel" text="Name"/>
-                                                        <TextField fx:id="conf_nameTextField" maxWidth="250.0"
-                                                                   GridPane.columnIndex="1"/>
-                                                        <Label styleClass="fieldLabel" text="Date of Birth"
-                                                               GridPane.rowIndex="1"/>
-                                                        <DatePicker fx:id="conf_birthDateDatePicker" maxWidth="250.0"
-                                                                    GridPane.columnIndex="1" GridPane.rowIndex="1"/>
-                                                        <Label styleClass="fieldLabel" text="License-Plate (Car)"
-                                                               GridPane.rowIndex="2"/>
-                                                        <TextField fx:id="conf_carIdTextField" maxWidth="250.0"
-                                                                   GridPane.columnIndex="1" GridPane.rowIndex="2"/>
-                                                        <Label styleClass="fieldLabel" text="Safe-Pin"
-                                                               GridPane.rowIndex="3"/>
-                                                        <TextField fx:id="conf_safePinTextField" maxWidth="250.0"
-                                                                   GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+                                                        <Button fx:id="conf_setIdentificationButton" mnemonicParsing="false" text="Apply" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                                        <Label styleClass="fieldLabel" text="Name" />
+                                                        <TextField fx:id="conf_nameTextField" maxWidth="250.0" GridPane.columnIndex="1" />
+                                                        <Label styleClass="fieldLabel" text="Date of Birth" GridPane.rowIndex="1" />
+                                                        <DatePicker fx:id="conf_birthDateDatePicker" maxWidth="250.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                                        <Label styleClass="fieldLabel" text="License-Plate (Car)" GridPane.rowIndex="2" />
+                                                        <TextField fx:id="conf_carIdTextField" maxWidth="250.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                                        <Label styleClass="fieldLabel" text="Safe-Pin" GridPane.rowIndex="3" />
+                                                        <NumericTextField fx:id="conf_safePinTextField" maxWidth="250.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                                                     </children>
                                                 </GridPane>
                                             </content>
                                             <padding>
-                                                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                                                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                                             </padding>
                                         </TitledPane>
                                     </children>
@@ -153,63 +115,79 @@
                             <content>
                                 <GridPane>
                                     <columnConstraints>
-                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="-Infinity"
-                                                           prefWidth="150.0"/>
-                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
+                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="150.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                                     </columnConstraints>
                                     <rowConstraints>
-                                        <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="30.0"
-                                                        vgrow="SOMETIMES"/>
-                                        <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0"
-                                                        vgrow="SOMETIMES"/>
-                                        <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0"
-                                                        vgrow="SOMETIMES"/>
-                                        <RowConstraints minHeight="10.0" vgrow="SOMETIMES"/>
+                                        <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="30.0" vgrow="SOMETIMES" />
+                                        <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                              <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                        <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                        <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
                                     </rowConstraints>
                                     <padding>
-                                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                                     </padding>
                                     <children>
-                                        <Label styleClass="fieldLabel" text="Name"/>
-                                        <Label fx:id="id_nameLabel" text="name" GridPane.columnIndex="1"/>
-                                        <Label styleClass="fieldLabel" text="Date of Birth" GridPane.rowIndex="1"/>
-                                        <Label fx:id="id_birthDateLabel" text="date" GridPane.columnIndex="1"
-                                               GridPane.rowIndex="1"/>
-                                        <Button fx:id="id_getButton" mnemonicParsing="false" text="Get"
-                                                GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                                        <Label styleClass="fieldLabel" text="Name" />
+                                        <Label fx:id="id_nameLabel" text="name" GridPane.columnIndex="1" />
+                                        <Label styleClass="fieldLabel" text="Date of Birth" GridPane.rowIndex="1" />
+                                        <Label fx:id="id_birthDateLabel" text="date" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                        <Button fx:id="id_getButton" mnemonicParsing="false" text="Get" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                              <Label styleClass="fieldLabel" text="Car Id" GridPane.rowIndex="2" />
+                              <Label fx:id="id_carIdLabel" text="carid" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                                     </children>
                                 </GridPane>
                             </content>
                         </Tab>
                         <Tab text="Access-Control">
                             <content>
-                                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0"/>
+                                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
                             </content>
                         </Tab>
                         <Tab text="Safe-Pin">
                             <content>
-                                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0"/>
+                        <GridPane>
+                           <columnConstraints>
+                              <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="150.0" />
+                              <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                           </columnConstraints>
+                           <rowConstraints>
+                              <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="30.0" vgrow="SOMETIMES" />
+                              <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="30.0" vgrow="SOMETIMES" />
+                              <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="30.0" vgrow="SOMETIMES" />
+                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                           </rowConstraints>
+                           <children>
+                              <Label styleClass="fieldLabel" text="Safe PIN" />
+                              <NumericTextField fx:id="sa_safePinTextField" maxWidth="250.0" GridPane.columnIndex="1" />
+                              <Label fx:id="sa_resultLabel" text="result" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                              <Button fx:id="sa_checkButton" mnemonicParsing="false" text="Check" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                           </children>
+                           <padding>
+                              <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                           </padding>
+                        </GridPane>
                             </content>
                         </Tab>
                         <Tab text="Log">
                             <content>
                                 <GridPane>
                                     <columnConstraints>
-                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0"/>
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
                                     </columnConstraints>
                                     <rowConstraints>
-                                        <RowConstraints minHeight="10.0" vgrow="SOMETIMES"/>
+                                        <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
                                     </rowConstraints>
                                     <children>
-                                        <TextArea fx:id="log_logTextArea" maxHeight="1.7976931348623157E308"
-                                                  maxWidth="1.7976931348623157E308" prefRowCount="5">
+                                        <TextArea fx:id="log_logTextArea" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefRowCount="5">
                                             <font>
-                                                <Font name="Monospaced Regular" size="12.0"/>
+                                                <Font name="Monospaced Regular" size="12.0" />
                                             </font>
                                         </TextArea>
                                     </children>
                                     <padding>
-                                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                                     </padding>
                                 </GridPane>
                             </content>
@@ -222,14 +200,14 @@
     <top>
         <HBox prefWidth="692.0" styleClass="splitpane" BorderPane.alignment="CENTER">
             <children>
-                <Label styleClass="h1" text="HotelBuddy"/>
+                <Label styleClass="h1" text="HotelBuddy" />
             </children>
             <padding>
-                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
             </padding>
         </HBox>
     </top>
     <padding>
-        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
     </padding>
 </BorderPane>

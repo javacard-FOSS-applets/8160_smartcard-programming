@@ -15,10 +15,8 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.paint.Color;
-import presentation.models.ConfigurationModel;
-import presentation.models.ConnectionModel;
-import presentation.models.IdentificationModel;
-import presentation.models.LogModel;
+import presentation.controls.NumericTextField;
+import presentation.models.*;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -33,17 +31,25 @@ public class MainController
 
     public Button conf_setIdentificationButton, con_initializeCardButton, conf_restAccessControl, conf_resetIdentification;
     public DatePicker conf_birthDateDatePicker;
-    public TextField conf_carIdTextField, conf_safePinTextField, conf_nameTextField;
+    public TextField conf_carIdTextField, conf_nameTextField;
+    public NumericTextField conf_safePinTextField;
 
-    public Label id_nameLabel, id_birthDateLabel;
+    public Label id_nameLabel, id_birthDateLabel, id_carIdLabel;
     public Button id_getButton;
+
+    public NumericTextField sa_safePinTextField;
+    public Label sa_resultLabel;
+    public Button sa_checkButton;
 
     public TextArea log_logTextArea;
 
     private ConnectionModel connectionModel;
     private ConfigurationModel configurationModel;
     private IdentificationModel identificationModel;
+    private SafePinModel safePinModel;
     private LogModel logModel;
+
+    private final int SafePinLength = 4;
 
     /**
      * Initializes the models used by the main view
@@ -53,6 +59,7 @@ public class MainController
         this.configurationModel = new ConfigurationModel();
         this.connectionModel = new ConnectionModel();
         this.identificationModel = new IdentificationModel();
+        this.safePinModel = new SafePinModel();
         this.logModel = new LogModel();
     }
 
@@ -240,6 +247,28 @@ public class MainController
             this.identificationModel.setBirthDate(birthDateResult.get());
         }
 
+        Result<String> carIdResult = IdentificationApplet.getCarId();
+        if (carIdResult.isSuccess())
+        {
+            this.identificationModel.setCarId(carIdResult.get());
+        }
+    }
+
+    /**
+     * Checks the entered Safe PIN
+     */
+    private void checkSafePin()
+    {
+        Result<Boolean> nameResult = IdentificationApplet.checkSafePin(this.safePinModel.getSafePin());
+        if (!nameResult.isSuccess())
+        {
+            this.safePinModel.setCheckStatus("Wrong Safe PIN!");
+            this.safePinModel.setCheckStatusColor(Color.RED);
+            return;
+        }
+
+        this.safePinModel.setCheckStatus("Correct Safe PIN");
+        this.safePinModel.setCheckStatusColor(Color.GREEN);
     }
 
     /**
@@ -278,6 +307,20 @@ public class MainController
             return;
         }
 
+        result = IdentificationApplet.setCarId(this.configurationModel.getCarId());
+        if (!result.isSuccess())
+        {
+            AlertHelper.showErrorAlert(result.getErrorMessage());
+            return;
+        }
+
+        result = IdentificationApplet.setSafePin(this.configurationModel.getSafePin());
+        if (!result.isSuccess())
+        {
+            AlertHelper.showErrorAlert(result.getErrorMessage());
+            return;
+        }
+
         AlertHelper.showSuccessAlert("Data successfully set.");
     }
 
@@ -306,20 +349,29 @@ public class MainController
 
         id_getButton.addEventHandler(ActionEvent.ACTION, e -> getIdentificationData());
 
+        sa_checkButton.addEventHandler(ActionEvent.ACTION, e -> checkSafePin());
+
         con_statusLabel.textProperty().bind(this.connectionModel.connectionStatusProperty());
         con_statusLabel.textFillProperty().bind(this.connectionModel.connectionStatusColorProperty());
-        con_terminalKeyStatus.textProperty().bindBidirectional(this.connectionModel.terminalKeyStatusProperty());
-        con_terminalKeyStatus.textFillProperty().bindBidirectional(this.connectionModel.terminalKeyStatusColorProperty());
-        con_cardKeyStatus.textProperty().bindBidirectional(this.connectionModel.cardKeyStatusProperty());
-        con_cardKeyStatus.textFillProperty().bindBidirectional(this.connectionModel.cardKeyStatusColorProperty());
+        con_terminalKeyStatus.textProperty().bind(this.connectionModel.terminalKeyStatusProperty());
+        con_terminalKeyStatus.textFillProperty().bind(this.connectionModel.terminalKeyStatusColorProperty());
+        con_cardKeyStatus.textProperty().bind(this.connectionModel.cardKeyStatusProperty());
+        con_cardKeyStatus.textFillProperty().bind(this.connectionModel.cardKeyStatusColorProperty());
 
         conf_nameTextField.textProperty().bindBidirectional(this.configurationModel.nameProperty());
         conf_carIdTextField.textProperty().bindBidirectional(this.configurationModel.carIdProperty());
+        conf_safePinTextField.setMaxlength(SafePinLength);
         conf_safePinTextField.textProperty().bindBidirectional(this.configurationModel.safePinProperty());
         conf_birthDateDatePicker.valueProperty().bindBidirectional(this.configurationModel.birthDateProperty());
 
         id_nameLabel.textProperty().bind(this.identificationModel.nameProperty());
         id_birthDateLabel.textProperty().bind(this.identificationModel.birthDateProperty());
+        id_carIdLabel.textProperty().bind(this.identificationModel.carIdProperty());
+
+        sa_safePinTextField.setMaxlength(SafePinLength);
+        sa_safePinTextField.textProperty().bindBidirectional(this.safePinModel.safePinProperty());
+        sa_resultLabel.textProperty().bind(this.safePinModel.checkStatusProperty());
+        sa_resultLabel.textFillProperty().bind(this.safePinModel.checkStatusColorProperty());
 
         log_logTextArea.textProperty().bind(this.logModel.logMessageProperty());
     }

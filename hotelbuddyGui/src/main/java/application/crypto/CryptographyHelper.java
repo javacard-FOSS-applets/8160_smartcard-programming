@@ -69,7 +69,7 @@ public class CryptographyHelper
     {
         byte[] mod = stripLeadingZero(modulus);
 
-        Result<byte[]> importModResult = JavaCardHelper.sendCommand(cla, insMod, mod, (byte) 0x00);
+        Result<byte[]> importModResult = JavaCardHelper.sendCommandWithoutEncryption(cla, insMod, mod, (byte) 0x00);
         if (!importModResult.isSuccess())
         {
             LogHelper.log(LogLevel.FAILURE, "Import of modulus failed.");
@@ -78,7 +78,7 @@ public class CryptographyHelper
 
         byte[] exp = stripLeadingZero(exponent);
 
-        Result<byte[]> importExpResult = JavaCardHelper.sendCommand(cla, insExp, exp, (byte) 0x00);
+        Result<byte[]> importExpResult = JavaCardHelper.sendCommandWithoutEncryption(cla, insExp, exp, (byte) 0x00);
         if (!importExpResult.isSuccess())
         {
             LogHelper.log(LogLevel.FAILURE, "Import of exponent failed.");

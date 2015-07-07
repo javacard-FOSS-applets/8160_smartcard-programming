@@ -10,6 +10,7 @@ public class IdentificationModel
 {
     private StringProperty name = new SimpleStringProperty("");
     private StringProperty birthDate = new SimpleStringProperty("");
+    private StringProperty carId = new SimpleStringProperty("");
 
     public String getName()
     {
@@ -39,5 +40,20 @@ public class IdentificationModel
     public void setBirthDate(String birthDate)
     {
         this.birthDate.set(birthDate);
+    }
+
+    public String getCarId()
+    {
+        return carId.get();
+    }
+
+    public StringProperty carIdProperty()
+    {
+        return carId;
+    }
+
+    public void setCarId(String carId)
+    {
+        this.carId.set(carId);
     }
 }
