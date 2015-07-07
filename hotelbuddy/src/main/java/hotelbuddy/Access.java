@@ -40,7 +40,6 @@ public class Access extends Applet
     private static byte[] permissionDictionary;
     private static byte nextFreeIndex;
 
-    private static boolean initExecuted;
     private static boolean accessRightsAlreadySet;
 
     /**
@@ -51,7 +50,6 @@ public class Access extends Applet
         register();
 
         nextFreeIndex = 0;
-        initExecuted = false;
         accessRightsAlreadySet = false;
     }
 
@@ -104,7 +102,7 @@ public class Access extends Applet
      */
     private void reset()
     {
-        if (!initExecuted)
+        if (!accessRightsAlreadySet)
         {
             return;
         }

@@ -3,6 +3,8 @@ package presentation;
 import application.card.JavaCard;
 import application.crypto.KeyFileGenerator;
 import application.crypto.RSACryptographyHelper;
+import application.hotelbuddy.AccessApplet;
+import application.hotelbuddy.AccessRestrictedRoom;
 import application.hotelbuddy.CryptographyApplet;
 import application.hotelbuddy.IdentificationApplet;
 import application.log.LogHelper;
@@ -11,6 +13,7 @@ import common.AlertHelper;
 import common.Result;
 import common.SuccessResult;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -20,6 +23,7 @@ import presentation.models.*;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashMap;
 
 /**
  * Created by Patrick on 19.06.2015.
@@ -29,13 +33,18 @@ public class MainController
     public Button con_connectButton, con_generateKeyButton;
     public Label con_statusLabel, con_terminalKeyStatus, con_cardKeyStatus;
 
-    public Button conf_setIdentificationButton, con_initializeCardButton, conf_restAccessControl, conf_resetIdentification;
+    public Button conf_setIdentificationButton, con_initializeCardButton, conf_restAccessControl, conf_resetIdentification, conf_setAccessButton;
     public DatePicker conf_birthDateDatePicker;
     public TextField conf_carIdTextField, conf_nameTextField;
     public NumericTextField conf_safePinTextField;
+    public CheckBox conf_classicBarCheckbox, conf_casinoCheckbox, conf_poolCheckbox, conf_skyBarCheckbox, conf_wellnessCheckbox;
 
     public Label id_nameLabel, id_birthDateLabel, id_carIdLabel;
     public Button id_getButton;
+
+    public Button ac_checkButton;
+    public Label ac_statusLabel;
+    public ComboBox<AccessRestrictedRoom> ac_roomComboBox;
 
     public NumericTextField sa_safePinTextField;
     public Label sa_resultLabel;
@@ -46,10 +55,9 @@ public class MainController
     private ConnectionModel connectionModel;
     private ConfigurationModel configurationModel;
     private IdentificationModel identificationModel;
+    private AccessModel accessModel;
     private SafePinModel safePinModel;
-    private LogModel logModel;
-
-    private final int SafePinLength = 4;
+    private LogModel2 logModel;
 
     /**
      * Initializes the models used by the main view
@@ -59,8 +67,9 @@ public class MainController
         this.configurationModel = new ConfigurationModel();
         this.connectionModel = new ConnectionModel();
         this.identificationModel = new IdentificationModel();
+        this.accessModel = new AccessModel();
         this.safePinModel = new SafePinModel();
-        this.logModel = new LogModel();
+        this.logModel = new LogModel2();
     }
 
     /**
@@ -73,6 +82,8 @@ public class MainController
     public void initialize()
     {
         initializeBindings();
+        this.accessModel.setRooms(FXCollections.observableArrayList(AccessRestrictedRoom.values()));
+        this.ac_roomComboBox.getSelectionModel().selectFirst();
 
         LogHelper.setOnNewLogEntry(this::onNewLog);
 
@@ -172,7 +183,7 @@ public class MainController
      * Generates the rsa key files
      * if the terminal key file is generated, it get's loaded
      *
-     * @return
+     * @return result of the operation
      */
     private Result<Boolean> generateRsaKeys()
     {
@@ -333,6 +344,15 @@ public class MainController
         }
     }
 
+    private void resetAccess()
+    {
+        Result<Boolean> result = AccessApplet.reset();
+        if (!result.isSuccess())
+        {
+            AlertHelper.showErrorAlert(result.getErrorMessage());
+        }
+    }
+
     private void initializeBindings()
     {
         con_connectButton.addEventHandler(ActionEvent.ACTION, e -> connectToSmartCardAsync(true));
@@ -345,9 +365,13 @@ public class MainController
         con_initializeCardButton.disableProperty().bind(this.connectionModel.isConnectionEstablishedProperty());
 
         conf_setIdentificationButton.addEventHandler(ActionEvent.ACTION, e -> setIdentificationData());
+        conf_setAccessButton.addEventHandler(ActionEvent.ACTION, e -> setAccessData());
         conf_resetIdentification.addEventHandler(ActionEvent.ACTION, e -> resetIdentification());
+        conf_restAccessControl.addEventHandler(ActionEvent.ACTION, e -> resetAccess());
 
         id_getButton.addEventHandler(ActionEvent.ACTION, e -> getIdentificationData());
+
+        ac_checkButton.addEventHandler(ActionEvent.ACTION, e -> checkRoom());
 
         sa_checkButton.addEventHandler(ActionEvent.ACTION, e -> checkSafePin());
 
@@ -360,19 +384,60 @@ public class MainController
 
         conf_nameTextField.textProperty().bindBidirectional(this.configurationModel.nameProperty());
         conf_carIdTextField.textProperty().bindBidirectional(this.configurationModel.carIdProperty());
-        conf_safePinTextField.setMaxlength(SafePinLength);
+        conf_safePinTextField.setMaxlength(IdentificationApplet.SafePinLength);
         conf_safePinTextField.textProperty().bindBidirectional(this.configurationModel.safePinProperty());
         conf_birthDateDatePicker.valueProperty().bindBidirectional(this.configurationModel.birthDateProperty());
+
+        conf_classicBarCheckbox.selectedProperty().bindBidirectional(this.configurationModel.classicBarAccessProperty());
+        conf_casinoCheckbox.selectedProperty().bindBidirectional(this.configurationModel.casinoAccessProperty());
+        conf_poolCheckbox.selectedProperty().bindBidirectional(this.configurationModel.poolAccessProperty());
+        conf_skyBarCheckbox.selectedProperty().bindBidirectional(this.configurationModel.skyBarAccessProperty());
+        conf_wellnessCheckbox.selectedProperty().bindBidirectional(this.configurationModel.wellnessAccessProperty());
 
         id_nameLabel.textProperty().bind(this.identificationModel.nameProperty());
         id_birthDateLabel.textProperty().bind(this.identificationModel.birthDateProperty());
         id_carIdLabel.textProperty().bind(this.identificationModel.carIdProperty());
 
-        sa_safePinTextField.setMaxlength(SafePinLength);
+        ac_statusLabel.textProperty().bind(this.accessModel.checkStatusProperty());
+        ac_statusLabel.textFillProperty().bind(this.accessModel.checkStatusColorProperty());
+        ac_roomComboBox.valueProperty().bindBidirectional(this.accessModel.selectedRoomProperty());
+        ac_roomComboBox.itemsProperty().bindBidirectional(this.accessModel.roomsProperty());
+
+        sa_safePinTextField.setMaxlength(IdentificationApplet.SafePinLength);
         sa_safePinTextField.textProperty().bindBidirectional(this.safePinModel.safePinProperty());
         sa_resultLabel.textProperty().bind(this.safePinModel.checkStatusProperty());
         sa_resultLabel.textFillProperty().bind(this.safePinModel.checkStatusColorProperty());
 
         log_logTextArea.textProperty().bind(this.logModel.logMessageProperty());
+    }
+
+    private void checkRoom()
+    {
+        Result<Boolean> result = AccessApplet.checkRoom(this.accessModel.getSelectedRoom());
+        if (!result.isSuccess())
+        {
+            this.accessModel.setCheckStatus("Acces denied!");
+            this.accessModel.setCheckStatusColor(Color.RED);
+            return;
+        }
+
+        this.accessModel.setCheckStatus("Acces allowed!");
+        this.accessModel.setCheckStatusColor(Color.GREEN);
+    }
+
+    private void setAccessData()
+    {
+        HashMap<AccessRestrictedRoom, Boolean> accessRestriction = new HashMap<>();
+        accessRestriction.put(AccessRestrictedRoom.ClassicBar, this.configurationModel.getClassicBarAccess());
+        accessRestriction.put(AccessRestrictedRoom.Casino, this.configurationModel.getCasinoAccess());
+        accessRestriction.put(AccessRestrictedRoom.Pool, this.configurationModel.getPoolAccess());
+        accessRestriction.put(AccessRestrictedRoom.SkyBar, this.configurationModel.getSkyBarAccess());
+        accessRestriction.put(AccessRestrictedRoom.Wellness, this.configurationModel.getWellnessAccess());
+
+        Result<Boolean> result = AccessApplet.setAccess(accessRestriction);
+        if (!result.isSuccess())
+        {
+            AlertHelper.showErrorAlert(result.getErrorMessage());
+        }
     }
 }

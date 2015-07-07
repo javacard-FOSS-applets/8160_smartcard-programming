@@ -106,7 +106,7 @@ public class JavaCard implements IJavaCard, CTListener
             passThru = (PassThruCardService) card.getCardService(PassThruCardService.class, true);
             commandApdu = command;
 
-            LogHelper.log(LogLevel.INFO, "Sending %s", ByteHelper.ToHexString(commandApdu.getBuffer()));
+            LogHelper.log(LogLevel.INFO, "Sending %s", HexString.hexifyShort(commandApdu.getCLA(), commandApdu.getINS()));
 
             responseApdu = passThru.sendCommandAPDU(commandApdu);
 
@@ -116,7 +116,7 @@ public class JavaCard implements IJavaCard, CTListener
                 LogHelper.log(LogLevel.FAILURE, "Unknown class byte %02x", commandApdu.getCLA());
                 return new ErrorResult<>("Unknown class byte. Please check your command.");
             }
-            else if (status.equals("6d00"))
+            else if (status.equals("6D00"))
             {
                 LogHelper.log(LogLevel.FAILURE, "Unknown instruction byte %02x", commandApdu.getINS());
                 return new ErrorResult<>("Incorrect instruction byte. Please check your command.");
@@ -132,6 +132,7 @@ public class JavaCard implements IJavaCard, CTListener
                 return new ErrorResult<>("Incorrect answer. Please check your command.");
             }
 
+            LogHelper.log(LogLevel.INFO, "Command successfull");
             byte[] data = responseApdu.data();
             return data == null ? new SuccessResult<>(new byte[0]) : new SuccessResult<>(data);
         }

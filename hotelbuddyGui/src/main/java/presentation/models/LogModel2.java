@@ -6,7 +6,7 @@ import javafx.beans.property.StringProperty;
 /**
  * Created by Patrick on 24.06.2015.
  */
-public class LogModel
+public class LogModel2
 {
     private StringProperty logMessage = new SimpleStringProperty("");
 

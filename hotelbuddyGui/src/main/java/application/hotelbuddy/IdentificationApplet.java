@@ -1,13 +1,11 @@
 package application.hotelbuddy;
 
-import application.card.JavaCardHelper;
 import application.log.LogHelper;
 import application.log.LogLevel;
 import common.ErrorResult;
 import common.Result;
 import common.SuccessResult;
 
-import javax.security.auth.login.LoginException;
 import java.time.LocalDate;
 
 /**
@@ -15,6 +13,8 @@ import java.time.LocalDate;
  */
 public class IdentificationApplet
 {
+    public static final int SafePinLength = 4;
+
     private static final String AppletName = "Identification";
 
     private static final byte CLA = (byte) 0x49;
@@ -42,7 +42,7 @@ public class IdentificationApplet
             return new SuccessResult<>(true);
         }
 
-        Result<byte[]> result = sendValue(name.getBytes(), INS_SetName, "Name");
+        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, name.getBytes(), INS_SetName);
         return !result.isSuccess() ? new ErrorResult<>(result.getErrorMessage()) : new SuccessResult<>(true);
     }
 
@@ -53,7 +53,7 @@ public class IdentificationApplet
      */
     public static Result<String> getName()
     {
-        Result<byte[]> result = getValue(INS_GetName, "Name");
+        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, INS_GetName);
         if (!result.isSuccess())
         {
             return new ErrorResult<>(result.getErrorMessage());
@@ -75,7 +75,7 @@ public class IdentificationApplet
             return new SuccessResult<>(true);
         }
 
-        Result<byte[]> result = sendValue(carId.getBytes(), INS_SetCarId, "Car Id");
+        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, carId.getBytes(), INS_SetCarId);
         return !result.isSuccess() ? new ErrorResult<>(result.getErrorMessage()) : new SuccessResult<>(true);
     }
 
@@ -86,10 +86,9 @@ public class IdentificationApplet
      */
     public static Result<String> getCarId()
     {
-        Result<byte[]> result = getValue(INS_GetCarId, "Car Id");
+        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, INS_GetCarId);
         if (!result.isSuccess())
         {
-            LogHelper.log(LogLevel.FAILURE, "Invalid PIN format");
             return new ErrorResult<>(result.getErrorMessage());
         }
 
@@ -104,14 +103,14 @@ public class IdentificationApplet
      */
     public static Result<Boolean> setSafePin(String safePin)
     {
-        if (safePin.length() < 4 || safePin.length() > 4)
+        if (safePin.length() < SafePinLength || safePin.length() > SafePinLength)
         {
             LogHelper.log(LogLevel.FAILURE, "Invalid PIN format");
-            return new ErrorResult<>("Safe PIN needs to be 4 digits long");
+            return new ErrorResult<>(String.format("Safe PIN needs to be %s digits long", SafePinLength));
         }
 
         byte[] pin = ConvertSafePin(safePin);
-        Result<byte[]> result = sendValue(pin, INS_SetSafePin, "Safe PIN");
+        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, pin, INS_SetSafePin);
         return !result.isSuccess() ? new ErrorResult<>(result.getErrorMessage()) : new SuccessResult<>(true);
     }
 
@@ -122,13 +121,14 @@ public class IdentificationApplet
      */
     public static Result<Boolean> checkSafePin(String safePin)
     {
-        if (safePin.length() < 4 || safePin.length() > 4)
+        if (safePin.length() < SafePinLength || safePin.length() > SafePinLength)
         {
-            return new ErrorResult<>("Safe PIN needs to be 4 digits long");
+            LogHelper.log(LogLevel.FAILURE, "Invalid PIN format");
+            return new ErrorResult<>(String.format("Safe PIN needs to be %s digits long", SafePinLength));
         }
 
         byte[] pin = ConvertSafePin(safePin);
-        Result<byte[]> result = sendValue(pin, INS_CheckSafePin, "Safe PIN");
+        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, pin, INS_CheckSafePin);
         if (!result.isSuccess())
         {
             return new ErrorResult<>(result.getErrorMessage());
@@ -166,13 +166,13 @@ public class IdentificationApplet
             return new SuccessResult<>(true);
         }
 
-        byte[] d = new byte[4];
-        d[0] = (byte) date.getDayOfMonth();
-        d[1] = (byte) date.getMonth().getValue();
-        d[2] = (byte) (date.getYear() / 100);
-        d[3] = (byte) (date.getYear() % 100);
+        byte[] data = new byte[4];
+        data[0] = (byte) date.getDayOfMonth();
+        data[1] = (byte) date.getMonth().getValue();
+        data[2] = (byte) (date.getYear() / 100);
+        data[3] = (byte) (date.getYear() % 100);
 
-        Result<byte[]> result = sendValue(d, INS_SetBirthDay, "Birthday");
+        Result<byte[]> result = CommonApplet.sendValue(AppletName, CLA, data, INS_SetBirthDay);
         return !result.isSuccess() ? new ErrorResult<>(result.getErrorMessage()) : new SuccessResult<>(true);
     }
 
@@ -183,7 +183,7 @@ public class IdentificationApplet
      */
     public static Result<String> getBirthDay()
     {
-        Result<byte[]> result = getValue(INS_GetBirthDay, "BirthDay");
+        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, INS_GetBirthDay);
         if (!result.isSuccess())
         {
             return new ErrorResult<>(result.getErrorMessage());
@@ -203,74 +203,8 @@ public class IdentificationApplet
      */
     public static Result<Boolean> reset()
     {
-        Result<Boolean> selectResult = JavaCardHelper.selectApplet(AppletName);
-        if (!selectResult.isSuccess())
-        {
-            return selectResult;
-        }
-
-        Result<byte[]> result = JavaCardHelper.sendCommand(CLA, INS_Reset);
-        if (!result.isSuccess())
-        {
-            LogHelper.log(LogLevel.INFO, "Reset failed");
-            return new ErrorResult<>(result.getErrorMessage());
-        }
-
-        return new SuccessResult<>(true);
+        return CommonApplet.reset(AppletName, CLA, INS_Reset);
     }
 
-    /**
-     * Encrypts the given data and sends it to the card with the given instruction
-     *
-     * @param data data to encrypt and send
-     * @param ins  instruction
-     * @param desc description of the data, used for log and error-messages
-     * @return result of the operation
-     */
-    private static Result<byte[]> sendValue(byte[] data, byte ins, String desc)
-    {
-        Result<Boolean> selectResult = JavaCardHelper.selectApplet(AppletName);
-        if (!selectResult.isSuccess())
-        {
-            return new ErrorResult<>(selectResult.getErrorMessage());
-        }
 
-        Result<byte[]> result = JavaCardHelper.sendCommand(CLA, ins, data, (byte) 0x00);
-
-        if (!result.isSuccess())
-        {
-            LogHelper.log(LogLevel.INFO, "%s couldn't be send", desc);
-            return new ErrorResult<>(result.getErrorMessage());
-        }
-
-        LogHelper.log(LogLevel.INFO, "%s successfull send", desc);
-        return result;
-    }
-
-    /**
-     * Receives a value from the card with the given instruction
-     *
-     * @param ins  instruction
-     * @param desc description of the data, used for log and error-messages
-     * @return result of the operation
-     */
-    private static Result<byte[]> getValue(byte ins, String desc)
-    {
-        Result<Boolean> selectResult = JavaCardHelper.selectApplet(AppletName);
-        if (!selectResult.isSuccess())
-        {
-            return new ErrorResult<>(selectResult.getErrorMessage());
-        }
-
-        Result<byte[]> result = JavaCardHelper.sendCommand(CLA, ins);
-
-        if (!result.isSuccess())
-        {
-            LogHelper.log(LogLevel.FAILURE, "Could't receive %s", desc);
-            return new ErrorResult<>(result.getErrorMessage());
-        }
-
-        LogHelper.log(LogLevel.INFO, "%s successfull received", desc);
-        return result;
-    }
 }
