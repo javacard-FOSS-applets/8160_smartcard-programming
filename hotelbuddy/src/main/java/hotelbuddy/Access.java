@@ -143,7 +143,7 @@ public class Access extends Applet
 
         permissionDictionary = new byte[messageLength];
 
-        for (int bufferIndex = 0; bufferIndex < permissionDictionary.length; bufferIndex += ENTRY_LENGTH)
+        for (short bufferIndex = 0; bufferIndex < permissionDictionary.length; bufferIndex += ENTRY_LENGTH)
         {
             if (!valueAllowed(buffer, (byte) (bufferIndex + KEY_LENGTH)))
             {
@@ -158,7 +158,7 @@ public class Access extends Applet
             }
 
             // At this point, setting key and value is allowed.
-            Util.arrayCopy(buffer, (short) bufferIndex, permissionDictionary, (short) nextFreeIndex, (short) ENTRY_LENGTH);
+            Util.arrayCopy(buffer, bufferIndex, permissionDictionary, (short) nextFreeIndex, (short) ENTRY_LENGTH);
             nextFreeIndex = (byte) (nextFreeIndex + ENTRY_LENGTH);
         }
 

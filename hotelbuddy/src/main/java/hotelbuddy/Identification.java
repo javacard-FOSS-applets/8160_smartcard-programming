@@ -331,14 +331,14 @@ public class Identification extends Applet
             return;
         }
 
-        if (!DateHelper.checkDate(buffer, 0))
+        if (!DateHelper.checkDate(buffer, (short) 0))
         {
             // Wrong Date Format
             ISOException.throwIt(ISO7816.SW_DATA_INVALID);
             return;
         }
 
-        buffer[DateHelper.DATE_LENGTH + 1] = DateHelper.yearDifference(buffer, 0, birthDay) < buffer[DateHelper.DATE_LENGTH] ? (byte) 0x00 : (byte) 0x01;
+        buffer[DateHelper.DATE_LENGTH + 1] = DateHelper.yearDifference(buffer, (short) 0, birthDay) < buffer[DateHelper.DATE_LENGTH] ? (byte) 0x00 : (byte) 0x01;
 
         send(apdu, buffer, (byte) (DateHelper.DATE_LENGTH + 1), (byte) 1);
     }
@@ -372,7 +372,7 @@ public class Identification extends Applet
             return;
         }
 
-        if (!DateHelper.checkDate(buffer, 0))
+        if (!DateHelper.checkDate(buffer, (short) 0))
         {
             // Data is not valid date
             ISOException.throwIt(ISO7816.SW_DATA_INVALID);

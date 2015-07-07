@@ -19,7 +19,7 @@ public class DateHelper
      *
      * @return the year difference from start to end date.
      */
-    public static byte yearDifference(byte[] startDateBuffer, int offset, byte[] endDate)
+    public static byte yearDifference(byte[] startDateBuffer, short offset, byte[] endDate)
     {
         // Age by year difference
         byte age = (byte) (startDateBuffer[offset + 3] - endDate[3]);
@@ -61,7 +61,7 @@ public class DateHelper
      *
      * @return true, if the date is valid. false otherwise.
      */
-    public static boolean checkDate(byte[] buffer, int offset)
+    public static boolean checkDate(byte[] buffer, short offset)
     {
         // Check Day Range
         if (buffer[offset] < 1 || buffer[offset] > 31)
