@@ -60,11 +60,9 @@ public final class CommonApplet
 
         if (!result.isSuccess())
         {
-            LogHelper.log(LogLevel.INFO, "Data couldn't be send");
             return new ErrorResult<>(result.getErrorMessage());
         }
 
-        LogHelper.log(LogLevel.INFO, "Data successfull send");
         return result;
     }
 

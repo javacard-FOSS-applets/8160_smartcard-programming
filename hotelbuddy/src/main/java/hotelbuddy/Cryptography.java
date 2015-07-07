@@ -300,7 +300,7 @@ public class Cryptography extends Applet implements ICryptography
     public short encrypt(byte[] buffer, byte[] message, byte offset, byte length)
     {
         rsaCipher.init(terminalPublicKey, Cipher.MODE_ENCRYPT);
-        return rsaCipher.doFinal(message, (short) 0, (short) length, buffer, (short) 0);
+        return rsaCipher.doFinal(message, (short) offset, (short) length, buffer, (short) 0);
     }
 
     /**

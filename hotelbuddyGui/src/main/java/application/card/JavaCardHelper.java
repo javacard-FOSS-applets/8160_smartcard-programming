@@ -30,11 +30,6 @@ public class JavaCardHelper
 
     public static Result<byte[]> sendCommand(byte cla, byte ins, byte[] content, byte answerLength)
     {
-        if (content.length < 1)
-        {
-            return sendCommandWithoutEncryption(cla, ins, content, answerLength);
-        }
-
         Result<byte[]> encryptedMessage = RSACryptographyHelper.current().encrypt(content);
         if (!encryptedMessage.isSuccess())
         {
@@ -43,13 +38,13 @@ public class JavaCardHelper
         }
 
         ISOCommandAPDU command = ApduHelper.getCommand(cla, ins, encryptedMessage.get(), answerLength);
-        Result<byte[]> result = JavaCard.current().sendCommand(command);
-        if (!result.isSuccess() || result.get().length < 1)
+        Result<byte[]> commandResult = JavaCard.current().sendCommand(command);
+        if (!commandResult.isSuccess() || commandResult.get().length < 1)
         {
-            return result;
+            return commandResult;
         }
 
-        Result<byte[]> decryptedMessage = RSACryptographyHelper.current().decrypt(result.get());
+        Result<byte[]> decryptedMessage = RSACryptographyHelper.current().decrypt(commandResult.get());
         if (!decryptedMessage.isSuccess())
         {
             LogHelper.log(LogLevel.FAILURE, "Decryption failed");
@@ -67,7 +62,7 @@ public class JavaCardHelper
 
     public static Result<byte[]> sendCommandWithoutEncryption(byte cla, byte ins)
     {
-        return sendCommand(cla, ins, new byte[0], (byte) 0x00);
+        return sendCommandWithoutEncryption(cla, ins, new byte[0], (byte) 0x00);
     }
 
     public static Result<byte[]> sendCommand(byte cla, byte ins)

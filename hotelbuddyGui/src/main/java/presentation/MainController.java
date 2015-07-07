@@ -57,7 +57,7 @@ public class MainController
     private IdentificationModel identificationModel;
     private AccessModel accessModel;
     private SafePinModel safePinModel;
-    private LogModel2 logModel;
+    private LogModel logModel;
 
     /**
      * Initializes the models used by the main view
@@ -69,7 +69,7 @@ public class MainController
         this.identificationModel = new IdentificationModel();
         this.accessModel = new AccessModel();
         this.safePinModel = new SafePinModel();
-        this.logModel = new LogModel2();
+        this.logModel = new LogModel();
     }
 
     /**
@@ -353,6 +353,36 @@ public class MainController
         }
     }
 
+    private void checkRoom()
+    {
+        Result<Boolean> result = AccessApplet.checkRoom(this.accessModel.getSelectedRoom());
+        if (!result.isSuccess())
+        {
+            this.accessModel.setCheckStatus("Access denied!");
+            this.accessModel.setCheckStatusColor(Color.RED);
+            return;
+        }
+
+        this.accessModel.setCheckStatus("Access allowed!");
+        this.accessModel.setCheckStatusColor(Color.GREEN);
+    }
+
+    private void setAccessData()
+    {
+        HashMap<AccessRestrictedRoom, Boolean> accessRestriction = new HashMap<>();
+        accessRestriction.put(AccessRestrictedRoom.ClassicBar, this.configurationModel.getClassicBarAccess());
+        accessRestriction.put(AccessRestrictedRoom.Casino, this.configurationModel.getCasinoAccess());
+        accessRestriction.put(AccessRestrictedRoom.Pool, this.configurationModel.getPoolAccess());
+        accessRestriction.put(AccessRestrictedRoom.SkyBar, this.configurationModel.getSkyBarAccess());
+        accessRestriction.put(AccessRestrictedRoom.Wellness, this.configurationModel.getWellnessAccess());
+
+        Result<Boolean> result = AccessApplet.setAccess(accessRestriction);
+        if (!result.isSuccess())
+        {
+            AlertHelper.showErrorAlert(result.getErrorMessage());
+        }
+    }
+
     private void initializeBindings()
     {
         con_connectButton.addEventHandler(ActionEvent.ACTION, e -> connectToSmartCardAsync(true));
@@ -409,35 +439,5 @@ public class MainController
         sa_resultLabel.textFillProperty().bind(this.safePinModel.checkStatusColorProperty());
 
         log_logTextArea.textProperty().bind(this.logModel.logMessageProperty());
-    }
-
-    private void checkRoom()
-    {
-        Result<Boolean> result = AccessApplet.checkRoom(this.accessModel.getSelectedRoom());
-        if (!result.isSuccess())
-        {
-            this.accessModel.setCheckStatus("Acces denied!");
-            this.accessModel.setCheckStatusColor(Color.RED);
-            return;
-        }
-
-        this.accessModel.setCheckStatus("Acces allowed!");
-        this.accessModel.setCheckStatusColor(Color.GREEN);
-    }
-
-    private void setAccessData()
-    {
-        HashMap<AccessRestrictedRoom, Boolean> accessRestriction = new HashMap<>();
-        accessRestriction.put(AccessRestrictedRoom.ClassicBar, this.configurationModel.getClassicBarAccess());
-        accessRestriction.put(AccessRestrictedRoom.Casino, this.configurationModel.getCasinoAccess());
-        accessRestriction.put(AccessRestrictedRoom.Pool, this.configurationModel.getPoolAccess());
-        accessRestriction.put(AccessRestrictedRoom.SkyBar, this.configurationModel.getSkyBarAccess());
-        accessRestriction.put(AccessRestrictedRoom.Wellness, this.configurationModel.getWellnessAccess());
-
-        Result<Boolean> result = AccessApplet.setAccess(accessRestriction);
-        if (!result.isSuccess())
-        {
-            AlertHelper.showErrorAlert(result.getErrorMessage());
-        }
     }
 }

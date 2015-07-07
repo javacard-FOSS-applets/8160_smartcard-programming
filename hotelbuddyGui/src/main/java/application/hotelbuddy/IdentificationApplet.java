@@ -103,6 +103,11 @@ public class IdentificationApplet
      */
     public static Result<Boolean> setSafePin(String safePin)
     {
+        if (safePin.equals(""))
+        {
+            return new SuccessResult<>(true);
+        }
+
         if (safePin.length() < SafePinLength || safePin.length() > SafePinLength)
         {
             LogHelper.log(LogLevel.FAILURE, "Invalid PIN format");
