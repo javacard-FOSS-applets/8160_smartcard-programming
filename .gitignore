@@ -52,3 +52,5 @@ crashlytics.properties
 crashlytics-build.properties
 target/
 /hotelbuddyGui/build
+/hotelbuddyGui/cardKey.txt
+/hotelbuddyGui/terminalKey.txt
