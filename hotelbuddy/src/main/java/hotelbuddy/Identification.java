@@ -12,20 +12,20 @@ public class Identification extends Applet
     private static final byte IDENTIFICATION_CLA = 0x49;
 
     // Instructions
-    private static final byte SET_NAME = (byte) 0xA0;
-    private static final byte GET_NAME = (byte) 0xA1;
+    private static final byte INS_SET_NAME = (byte) 0xA0;
+    private static final byte INS_GET_NAME = (byte) 0xA1;
 
-    private static final byte SET_BIRTHDAY = (byte) 0xB0;
-    private static final byte GET_BIRTHDAY = (byte) 0xB1;
-    private static final byte CHECK_AGE = (byte) 0xB2;
+    private static final byte INS_SET_BIRTHDAY = (byte) 0xB0;
+    private static final byte INS_GET_BIRTHDAY = (byte) 0xB1;
+    private static final byte INS_CHECK_AGE = (byte) 0xB2;
 
-    private static final byte SET_CARID = (byte) 0xC0;
-    private static final byte GET_CARID = (byte) 0xC1;
+    private static final byte INS_SET_CARID = (byte) 0xC0;
+    private static final byte INS_GET_CARID = (byte) 0xC1;
 
-    private static final byte SET_SAFEPIN = (byte) 0xD0;
-    private static final byte CHECK_SAFEPIN = (byte) 0xD1;
+    private static final byte INS_SET_SAFEPIN = (byte) 0xD0;
+    private static final byte INS_CHECK_SAFEPIN = (byte) 0xD1;
 
-    private static final byte RESET = (byte) 0xFF;
+    private static final byte INS_RESET = (byte) 0xFF;
 
     // Other Applets
     private static final byte[] CRYPTOGRAPHY_AID = {0x43, 0x72, 0x79, 0x70, 0x74, 0x6f, 0x67, 0x72, 0x61, 0x70, 0x68, 0x79};
@@ -33,13 +33,13 @@ public class Identification extends Applet
 
     // Data
     private final byte MAX_NAME_LENGTH = 50;
-    private byte nameLength = 0;
+    private byte currentNameLength = 0;
     private byte[] name;
 
     private byte[] birthDay;
 
     private final byte MAX_CARID_LENGTH = 8;
-    private byte carIdLength = 0;
+    private byte currentCarIdLength = 0;
     private byte[] carId;
 
     private final byte SAFEPIN_LENGTH = 4;
@@ -80,34 +80,34 @@ public class Identification extends Applet
 
         switch (buf[ISO7816.OFFSET_INS])
         {
-            case SET_NAME:
+            case INS_SET_NAME:
                 setName(apdu);
                 break;
-            case GET_NAME:
+            case INS_GET_NAME:
                 getName(apdu);
                 break;
-            case SET_BIRTHDAY:
+            case INS_SET_BIRTHDAY:
                 setBirthday(apdu);
                 break;
-            case GET_BIRTHDAY:
+            case INS_GET_BIRTHDAY:
                 getBirthday(apdu);
                 break;
-            case CHECK_AGE:
+            case INS_CHECK_AGE:
                 checkAge(apdu);
                 break;
-            case SET_CARID:
+            case INS_SET_CARID:
                 setCarId(apdu);
                 break;
-            case GET_CARID:
+            case INS_GET_CARID:
                 getCarId(apdu);
                 break;
-            case SET_SAFEPIN:
+            case INS_SET_SAFEPIN:
                 setSafePin(apdu);
                 break;
-            case CHECK_SAFEPIN:
+            case INS_CHECK_SAFEPIN:
                 checkSafePin(apdu);
                 break;
-            case RESET:
+            case INS_RESET:
                 reset();
                 break;
             default:
@@ -120,9 +120,14 @@ public class Identification extends Applet
      */
     private void reset()
     {
-        nameLength = 0;
+        // Length = 0 -> Not set yet
+        currentNameLength = 0;
+        currentCarIdLength = 0;
+
+        // Day can not be 0 -> Not set yet
         birthDay[0] = 0x00;
-        carIdLength = 0;
+
+        // Safe pin number one can not be greater than 9 -> Not set yet
         safePin[0] = 0x10;
     }
 
@@ -263,13 +268,13 @@ public class Identification extends Applet
      */
     private void getCarId(APDU apdu)
     {
-        if (carIdLength == 0)
+        if (currentCarIdLength == 0)
         {
             // Name not set yet
             ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
         }
 
-        send(apdu, carId, (byte) 0, carIdLength);
+        send(apdu, carId, (byte) 0, currentCarIdLength);
     }
 
     /**
@@ -281,7 +286,7 @@ public class Identification extends Applet
      */
     private void setCarId(APDU apdu)
     {
-        if (carIdLength != 0)
+        if (currentCarIdLength != 0)
         {
             // Name already set yet
             ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
@@ -300,7 +305,7 @@ public class Identification extends Applet
         }
 
         Util.arrayCopy(buffer, (short) 0, carId, (short) 0, messageLength);
-        carIdLength = (byte) messageLength;
+        currentCarIdLength = (byte) messageLength;
     }
 
     /**
@@ -338,9 +343,9 @@ public class Identification extends Applet
             return;
         }
 
-        buffer[DateHelper.DATE_LENGTH + 1] = DateHelper.yearDifference(buffer, (short) 0, birthDay) < buffer[DateHelper.DATE_LENGTH] ? (byte) 0x00 : (byte) 0x01;
+        buffer[0] = DateHelper.yearDifference(buffer, (short) 0, birthDay) < buffer[DateHelper.DATE_LENGTH] ? (byte) 0x00 : (byte) 0x01;
 
-        send(apdu, buffer, (byte) (DateHelper.DATE_LENGTH + 1), (byte) 1);
+        send(apdu, buffer, (byte) 0, (byte) 1);
     }
 
 
@@ -390,13 +395,13 @@ public class Identification extends Applet
      */
     private void getName(APDU apdu)
     {
-        if (nameLength == 0)
+        if (currentNameLength == 0)
         {
             // Name not set yet
             ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
         }
 
-        send(apdu, name, (byte) 0, nameLength);
+        send(apdu, name, (byte) 0, currentNameLength);
     }
 
     /**
@@ -422,7 +427,7 @@ public class Identification extends Applet
      */
     private void setName(APDU apdu)
     {
-        if (nameLength != 0)
+        if (currentNameLength != 0)
         {
             // Name already set yet
             ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
@@ -441,7 +446,7 @@ public class Identification extends Applet
         }
 
         Util.arrayCopy(buffer, (short) 0, name, (short) 0, messageLength);
-        nameLength = (byte) messageLength;
+        currentNameLength = (byte) messageLength;
     }
 
     /**
