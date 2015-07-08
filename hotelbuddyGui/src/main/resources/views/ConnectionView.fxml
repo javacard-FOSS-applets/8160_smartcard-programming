@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<GridPane xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1"
+          fx:controller="presentation.controllers.ConnectionController">
+    <columnConstraints>
+        <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="150.0"/>
+        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
+    </columnConstraints>
+    <rowConstraints>
+        <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="30.0" vgrow="SOMETIMES"/>
+        <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+        <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+        <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+        <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+        <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+    </rowConstraints>
+    <children>
+        <Label styleClass="fieldLabel" text="Status"/>
+        <Label fx:id="statusLabel" text="status" GridPane.columnIndex="1"/>
+        <HBox spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+            <children>
+                <Button fx:id="connectButton" mnemonicParsing="false" text="Connect"/>
+                <Button fx:id="initializeCardButton" mnemonicParsing="false" text="Initialize Card"/>
+            </children>
+        </HBox>
+        <Label styleClass="fieldLabel" text="Terminal Key" GridPane.rowIndex="3"/>
+        <Label styleClass="fieldLabel" text="Card Key" GridPane.rowIndex="4"/>
+        <Label fx:id="terminalKeyStatus" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+        <Label fx:id="cardKeyStatus" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+        <Button fx:id="generateKeyButton" mnemonicParsing="false" text="Generate" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+        <Label styleClass="fieldLabel" text="Generate missing keys" GridPane.rowIndex="5"/>
+    </children>
+    <padding>
+        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+    </padding>
+</GridPane>
