@@ -2,6 +2,7 @@ package presentation.controllers;
 
 import application.hotelbuddy.AccessApplet;
 import application.hotelbuddy.AccessRestrictedRoom;
+import application.hotelbuddy.IdentificationApplet;
 import common.Result;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
@@ -10,7 +11,11 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
+import javafx.util.converter.NumberStringConverter;
+import presentation.controls.NumericTextField;
 import presentation.models.AccessModel;
+
+import java.time.ZonedDateTime;
 
 /**
  * Created by Patrick on 08.07.2015.
@@ -20,6 +25,7 @@ public class AccessController
     public Button checkButton;
     public Label checkStatusLabel;
     public ComboBox<AccessRestrictedRoom> roomComboBox;
+    public NumericTextField ageRestrictionTextField;
 
     private AccessModel model = new AccessModel();
 
@@ -50,6 +56,17 @@ public class AccessController
             return;
         }
 
+        if (this.model.getAgeRestriction() > 0)
+        {
+            Result<Boolean> ageCheckResult = IdentificationApplet.checkAge(ZonedDateTime.now().toLocalDate(), this.model.getAgeRestriction());
+            if (!ageCheckResult.isSuccess())
+            {
+                this.model.setCheckStatus("Access denied!");
+                this.model.setCheckStatusColor(Color.RED);
+                return;
+            }
+        }
+
         this.model.setCheckStatus("Access allowed!");
         this.model.setCheckStatusColor(Color.GREEN);
     }
@@ -62,5 +79,8 @@ public class AccessController
         checkStatusLabel.textFillProperty().bind(this.model.checkStatusColorProperty());
         roomComboBox.valueProperty().bindBidirectional(this.model.selectedRoomProperty());
         roomComboBox.itemsProperty().bindBidirectional(this.model.roomsProperty());
+        ageRestrictionTextField.textProperty().bindBidirectional(this.model.ageRestrictionProperty(), new NumberStringConverter());
+        ageRestrictionTextField.setMaxlength(2);
+        ageRestrictionTextField.setDefaultValue(0);
     }
 }

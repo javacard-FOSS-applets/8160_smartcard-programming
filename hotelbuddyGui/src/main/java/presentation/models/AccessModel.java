@@ -17,6 +17,8 @@ public class AccessModel
     private ObjectProperty<AccessRestrictedRoom> selectedRoom = new SimpleObjectProperty<>();
     private ListProperty<AccessRestrictedRoom> rooms = new SimpleListProperty<>();
 
+    private IntegerProperty ageRestriction = new SimpleIntegerProperty();
+
     public String getCheckStatus()
     {
         return checkStatus.get();
@@ -75,5 +77,20 @@ public class AccessModel
     public void setRooms(javafx.collections.ObservableList<AccessRestrictedRoom> rooms)
     {
         this.rooms.set(rooms);
+    }
+
+    public int getAgeRestriction()
+    {
+        return ageRestriction.get();
+    }
+
+    public IntegerProperty ageRestrictionProperty()
+    {
+        return ageRestriction;
+    }
+
+    public void setAgeRestriction(int ageRestriction)
+    {
+        this.ageRestriction.set(ageRestriction);
     }
 }

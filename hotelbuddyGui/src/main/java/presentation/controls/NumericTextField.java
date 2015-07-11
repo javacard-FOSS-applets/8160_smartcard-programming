@@ -2,6 +2,8 @@ package presentation.controls;
 
 import javafx.scene.control.TextField;
 
+import java.util.Optional;
+
 /**
  * Created by Patrick on 07.07.2015.
  */
@@ -9,9 +11,12 @@ public class NumericTextField extends TextField
 {
     private int maxlength;
 
+    private Optional<Integer> defaultValue;
+
     public NumericTextField()
     {
         this.maxlength = 10;
+        this.defaultValue = Optional.empty();
     }
 
     public void setMaxlength(int maxlength)
@@ -19,10 +24,15 @@ public class NumericTextField extends TextField
         this.maxlength = maxlength;
     }
 
+    public void setDefaultValue(int value)
+    {
+        this.defaultValue = Optional.of(value);
+    }
+
     @Override
     public void replaceText(int start, int end, String text)
     {
-        if (validate(text))
+        if (this.validate(start, end, text))
         {
             super.replaceText(start, end, text);
         }
@@ -31,14 +41,39 @@ public class NumericTextField extends TextField
     @Override
     public void replaceSelection(String text)
     {
-        if (validate(text))
+        if ("".equals(text))
+        {
+            super.replaceSelection(text);
+        }
+
+        if (text.matches("[0-9]") && this.getText().length() < maxlength)
         {
             super.replaceSelection(text);
         }
     }
 
-    private boolean validate(String text)
+    private boolean validate(int start, int end, String text)
     {
-        return "".equals(text) || (text.matches("[0-9]") && getText().length() < maxlength);
+        if ("".equals(text))
+        {
+            return true;
+        }
+
+        if (!text.matches("[0-9]"))
+        {
+            return false;
+        }
+
+        if (this.getText().length() < maxlength)
+        {
+            return true;
+        }
+
+        if (getText().length() - (end - start) + text.length() <= this.maxlength)
+        {
+            return true;
+        }
+
+        return false;
     }
 }
