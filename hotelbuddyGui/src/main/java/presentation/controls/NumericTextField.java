@@ -1,5 +1,6 @@
 package presentation.controls;
 
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.scene.control.TextField;
 
 import java.util.Optional;
@@ -17,6 +18,13 @@ public class NumericTextField extends TextField
     {
         this.maxlength = 10;
         this.defaultValue = Optional.empty();
+
+        this.focusedProperty().addListener(x -> {
+            if (getText().length() == 0 && this.defaultValue.isPresent())
+            {
+                replaceText(0, 0, this.defaultValue.get().toString());
+            }
+        });
     }
 
     public void setMaxlength(int maxlength)
