@@ -29,7 +29,7 @@ public final class CommonApplet
             return selectResult;
         }
 
-        Result<byte[]> result = JavaCardHelper.sendCommand(cla, insReset);
+        Result<byte[]> result = JavaCardHelper.sendCommandWithoutEncryption(cla, insReset);
         if (!result.isSuccess())
         {
             LogHelper.log(LogLevel.INFO, "Reset failed");
@@ -56,7 +56,7 @@ public final class CommonApplet
             return new ErrorResult<>(selectResult.getErrorMessage());
         }
 
-        Result<byte[]> result = JavaCardHelper.sendCommand(cla, ins, data, (byte) 0x00);
+        Result<byte[]> result = JavaCardHelper.sendCommand(cla, ins, data);
 
         if (!result.isSuccess())
         {

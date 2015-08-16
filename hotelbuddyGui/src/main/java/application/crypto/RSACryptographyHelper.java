@@ -13,6 +13,7 @@ import java.math.BigInteger;
 import java.nio.file.Path;
 import java.security.KeyFactory;
 import java.security.PublicKey;
+import java.security.Signature;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.RSAPrivateKeySpec;
@@ -31,6 +32,8 @@ public class RSACryptographyHelper implements IRSACryptographyHelper
     private RSAPrivateKey terminalPrivateKey;
     private RSAPublicKey terminalPublicKey;
 
+    private Signature signature;
+
     private PublicKey cardPublicKey;
 
     private RSACryptographyHelper()
@@ -38,6 +41,7 @@ public class RSACryptographyHelper implements IRSACryptographyHelper
         try
         {
             rsaCipher = Cipher.getInstance("RSA");
+            signature = Signature.getInstance("MD5withRSA");
         }
         catch (Exception ex)
         {
@@ -110,8 +114,18 @@ public class RSACryptographyHelper implements IRSACryptographyHelper
     {
         try
         {
+            signature.initSign(this.terminalPrivateKey);
+            signature.update(message);
+            byte[] signatureBytes = signature.sign();
+
             rsaCipher.init(Cipher.ENCRYPT_MODE, this.cardPublicKey);
-            return new SuccessResult<>(rsaCipher.doFinal(message));
+            byte[] messageBytes = rsaCipher.doFinal(message);
+
+            byte[] result = new byte[256];
+            System.arraycopy(messageBytes, 0, result, 0, messageBytes.length);
+            System.arraycopy(signatureBytes, 0, result, messageBytes.length, signatureBytes.length);
+
+            return new SuccessResult<>(result);
         }
         catch (Exception ex)
         {
@@ -126,7 +140,16 @@ public class RSACryptographyHelper implements IRSACryptographyHelper
         try
         {
             rsaCipher.init(Cipher.DECRYPT_MODE, this.terminalPrivateKey);
-            return new SuccessResult<>(rsaCipher.doFinal(message));
+            byte[] messageBytes = rsaCipher.doFinal(message, 0, 128);
+
+            signature.initVerify(this.cardPublicKey);
+            signature.update(messageBytes);
+            if (!signature.verify(message, 128, 128))
+            {
+                return new ErrorResult<>("Invalid Signature");
+            }
+
+            return new SuccessResult<>(messageBytes);
         }
         catch (Exception ex)
         {
