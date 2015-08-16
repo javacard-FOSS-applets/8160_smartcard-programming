@@ -1,7 +1,7 @@
 language: java
 jdk:
   - oraclejdk8  
- script:
+script:
   - bundle exec mvn -f ./hotelbuddy/pom.xml compile
   - bundle exec mvn -f ./hotelbuddy/pom.xml test
   - bundle exec mvn -f ./hotelbuddyGui/pom.xml compile
