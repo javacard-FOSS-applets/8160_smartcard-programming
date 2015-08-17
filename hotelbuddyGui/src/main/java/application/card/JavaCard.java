@@ -2,7 +2,6 @@ package application.card;
 
 import application.log.LogHelper;
 import application.log.LogLevel;
-import common.ByteHelper;
 import common.ErrorResult;
 import common.Result;
 import common.SuccessResult;
@@ -14,7 +13,6 @@ import opencard.core.service.SmartCard;
 import opencard.core.terminal.CardTerminalException;
 import opencard.core.terminal.ResponseAPDU;
 import opencard.core.util.HexString;
-import opencard.opt.terminal.ISOCommandAPDU;
 import opencard.opt.util.PassThruCardService;
 
 /**
@@ -89,7 +87,7 @@ public class JavaCard implements IJavaCard, CTListener
     }
 
     @Override
-    public Result<byte[]> sendCommand(ISOCommandAPDU command)
+    public Result<byte[]> sendCommand(HotelBuddyCommand command)
     {
         if (card == null)
         {
@@ -97,34 +95,33 @@ public class JavaCard implements IJavaCard, CTListener
             return new ErrorResult<>("No card available. Please connect your card before sending a command.");
         }
 
-        ISOCommandAPDU commandApdu;
-        ResponseAPDU responseApdu;
-        PassThruCardService passThru;
-
         try
         {
-            passThru = (PassThruCardService) card.getCardService(PassThruCardService.class, true);
-            commandApdu = command;
+            PassThruCardService passThru = (PassThruCardService) card.getCardService(PassThruCardService.class, true);
 
-            LogHelper.log(LogLevel.INFO, "Sending %s", HexString.hexifyShort(commandApdu.getCLA(), commandApdu.getINS()));
-
-            responseApdu = passThru.sendCommandAPDU(commandApdu);
+            LogHelper.log(LogLevel.INFO, "Sending %s", HexString.hexifyShort(command.getCLA(), command.getINS()));
+            ResponseAPDU responseApdu = passThru.sendCommandAPDU(command);
 
             String status = HexString.hexifyShort(responseApdu.sw1(), responseApdu.sw2());
             if (status.equals("6E00"))
             {
-                LogHelper.log(LogLevel.FAILURE, "Unknown class byte %02x", commandApdu.getCLA());
+                LogHelper.log(LogLevel.FAILURE, "Unknown class byte %02x", command.getCLA());
                 return new ErrorResult<>("Unknown class byte. Please check your command.");
             }
             else if (status.equals("6D00"))
             {
-                LogHelper.log(LogLevel.FAILURE, "Unknown instruction byte %02x", commandApdu.getINS());
+                LogHelper.log(LogLevel.FAILURE, "Unknown instruction byte %02x", command.getINS());
                 return new ErrorResult<>("Incorrect instruction byte. Please check your command.");
             }
             else if (status.equals("6986"))
             {
                 LogHelper.log(LogLevel.FAILURE, "Data already set or not available");
                 return new ErrorResult<>("The data is already set. If you want to set new data, please reset the applet.");
+            }
+            else if (status.equals("6984"))
+            {
+                LogHelper.log(LogLevel.FAILURE, "Data invalid. Signature verification failed.");
+                return new ErrorResult<>("Data invalid. Signature verification failed.");
             }
             else if (!status.equals("9000"))
             {
@@ -139,7 +136,7 @@ public class JavaCard implements IJavaCard, CTListener
         catch (Exception ex)
         {
             LogHelper.log(ex);
-            return new ErrorResult<>("");
+            return new ErrorResult<>(ex.getMessage());
         }
     }
 

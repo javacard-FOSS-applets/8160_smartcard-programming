@@ -1,9 +1,7 @@
 package hotelbuddy;
 
 import javacard.framework.*;
-import javacard.security.KeyBuilder;
-import javacard.security.RSAPrivateKey;
-import javacard.security.RSAPublicKey;
+import javacard.security.*;
 import javacardx.crypto.Cipher;
 
 public class Cryptography extends Applet implements ICryptography
@@ -32,6 +30,8 @@ public class Cryptography extends Applet implements ICryptography
     private RSAPrivateKey cardPrivateKey;
     private RSAPublicKey cardPublicKey;
     private RSAPublicKey terminalPublicKey;
+    private MessageDigest messageDigest;
+    private Signature signature;
 
     private Cipher rsaCipher = null;
 
@@ -60,6 +60,9 @@ public class Cryptography extends Applet implements ICryptography
         terminalPublicKey = (RSAPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_RSA_PUBLIC, KeyBuilder.LENGTH_RSA_1024, false);
 
         rsaCipher = Cipher.getInstance(Cipher.ALG_RSA_PKCS1, false);
+
+        messageDigest = MessageDigest.getInstance(MessageDigest.ALG_SHA, false);
+        signature = Signature.getInstance(Signature.ALG_RSA_MD5_PKCS1, false);
     }
 
     public static void install(byte[] bArray, short bOffset, byte bLength)
@@ -293,14 +296,19 @@ public class Cryptography extends Applet implements ICryptography
      *
      * @param buffer  apdu buffer
      * @param message message to encrypt
-     * @param offset start offset of the message
-     * @param length length of the message
+     * @param offset  start offset of the message
+     * @param length  length of the message
      * @return length of encrypted message (usually 128 Byte)
      */
     public short encrypt(byte[] buffer, byte[] message, byte offset, byte length)
     {
+        signature.init(cardPrivateKey, Signature.MODE_SIGN);
+        short len = signature.sign(message, (short) offset, (short) length, buffer, (short) 128);
+
         rsaCipher.init(terminalPublicKey, Cipher.MODE_ENCRYPT);
-        return rsaCipher.doFinal(message, (short) offset, (short) length, buffer, (short) 0);
+        short len2 = rsaCipher.doFinal(message, (short) offset, (short) length, buffer, (short) 0);
+
+        return (short)(len + len2);
     }
 
     /**
@@ -313,7 +321,15 @@ public class Cryptography extends Applet implements ICryptography
     public short decrypt(byte[] buffer, byte offset)
     {
         rsaCipher.init(cardPrivateKey, Cipher.MODE_DECRYPT);
-        return rsaCipher.doFinal(buffer, (short) offset, (short) 128, buffer, (short) 0);
+        short len = rsaCipher.doFinal(buffer, (short) offset, (short) 128, buffer, (short) 0);
+
+        signature.init(terminalPublicKey, Signature.MODE_VERIFY);
+        if (!signature.verify(buffer, (short) 0, len, buffer, (short) (offset + 128), (short) 128))
+        {
+            ISOException.throwIt(ISO7816.SW_DATA_INVALID);
+        }
+
+        return len;
     }
 
     /**

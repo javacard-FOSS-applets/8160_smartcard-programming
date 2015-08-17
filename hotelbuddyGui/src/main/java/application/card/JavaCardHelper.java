@@ -6,7 +6,6 @@ import application.log.LogLevel;
 import common.ErrorResult;
 import common.Result;
 import common.SuccessResult;
-import opencard.opt.terminal.ISOCommandAPDU;
 
 /**
  * Created by Patrick on 23.06.2015.
@@ -15,7 +14,7 @@ public class JavaCardHelper
 {
     public static Result<Boolean> selectApplet(String appletId)
     {
-        ISOCommandAPDU command = ApduHelper.getSelectCommand(appletId);
+        HotelBuddyCommand command = ApduHelper.getSelectCommand(appletId);
         Result<byte[]> selectResult = JavaCard.current().sendCommand(command);
 
         if (!selectResult.isSuccess())
@@ -28,7 +27,7 @@ public class JavaCardHelper
         return new SuccessResult<>(true);
     }
 
-    public static Result<byte[]> sendCommand(byte cla, byte ins, byte[] content, byte answerLength)
+    public static Result<byte[]> sendCommand(byte cla, byte ins, byte[] content)
     {
         Result<byte[]> encryptedMessage = RSACryptographyHelper.current().encrypt(content);
         if (!encryptedMessage.isSuccess())
@@ -37,7 +36,7 @@ public class JavaCardHelper
             return new ErrorResult<>(encryptedMessage.getErrorMessage());
         }
 
-        ISOCommandAPDU command = ApduHelper.getCommand(cla, ins, encryptedMessage.get(), answerLength);
+        HotelBuddyCommand command = ApduHelper.getCommand(cla, ins, encryptedMessage.get());
         Result<byte[]> commandResult = JavaCard.current().sendCommand(command);
         if (!commandResult.isSuccess() || commandResult.get().length < 1)
         {
@@ -54,20 +53,20 @@ public class JavaCardHelper
         return decryptedMessage;
     }
 
-    public static Result<byte[]> sendCommandWithoutEncryption(byte cla, byte ins, byte[] content, byte answerLength)
+    public static Result<byte[]> sendCommandWithoutEncryption(byte cla, byte ins, byte[] content)
     {
-        ISOCommandAPDU command = ApduHelper.getCommand(cla, ins, content, answerLength);
+        HotelBuddyCommand command = ApduHelper.getCommand(cla, ins, content);
         return JavaCard.current().sendCommand(command);
     }
 
     public static Result<byte[]> sendCommandWithoutEncryption(byte cla, byte ins)
     {
-        return sendCommandWithoutEncryption(cla, ins, new byte[0], (byte) 0x00);
+        return sendCommandWithoutEncryption(cla, ins, new byte[0]);
     }
 
     public static Result<byte[]> sendCommand(byte cla, byte ins)
     {
-        Result<byte[]> result = sendCommand(cla, ins, new byte[0], (byte) 0x00);
+        Result<byte[]> result = sendCommand(cla, ins, new byte[0]);
         if (!result.isSuccess() || result.get().length < 1)
         {
             return result;

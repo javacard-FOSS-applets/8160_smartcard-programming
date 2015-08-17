@@ -3,6 +3,7 @@ package hotelbuddy;
 import com.licel.jcardsim.base.Simulator;
 import common.TestHelper;
 import javacard.framework.AID;
+import javacard.framework.ISOException;
 import javacard.framework.JCSystem;
 import org.junit.Assert;
 import org.junit.Test;
@@ -91,19 +92,25 @@ public class CryptographyTest
 
         ICryptography cryptoApp = (ICryptography) JCSystem.getAppletShareableInterfaceObject(CryptographyAID, CryptographySecret);
         System.out.println("Encrypting...");
-        byte[] buffer = new byte[128];
+        byte[] buffer = new byte[256];
         short len = cryptoApp.encrypt(buffer, message.getBytes(), (byte) 0, (byte) message.length());
 
         Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(Cipher.DECRYPT_MODE, terminalPrivateKey);
-        String decryptMessage = new String(cipher.doFinal(buffer)).trim();
+        byte[] decryptedBytes = cipher.doFinal(buffer, 0, 128);
+        String decryptedMessage = new String(decryptedBytes).trim();
 
-        Assert.assertEquals(message, decryptMessage);
-        Assert.assertEquals(len, 128);
+        Signature signature = Signature.getInstance("MD5WithRSA");
+        signature.initVerify(cardPublicKey);
+        signature.update(decryptedMessage.getBytes());
+
+        Assert.assertTrue(signature.verify(buffer, 128, 128));
+        Assert.assertEquals(message, decryptedMessage);
+        Assert.assertEquals(len, 256);
     }
 
     @Test
-    public void Test_Decryption() throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException
+    public void Test_Decryption() throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException, SignatureException
     {
         // Arrange
         String message = "This is my test-message!";
@@ -112,6 +119,7 @@ public class CryptographyTest
         keyGen.initialize(1024);
 
         KeyPair key = keyGen.generateKeyPair();
+        RSAPrivateKey terminalPrivateKey = (RSAPrivateKey) key.getPrivate();
         RSAPublicKey terminalPublicKey = (RSAPublicKey) key.getPublic();
 
         key = keyGen.generateKeyPair();
@@ -177,7 +185,16 @@ public class CryptographyTest
 
         Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(Cipher.ENCRYPT_MODE, otherPublicKey);
-        byte[] buffer = cipher.doFinal(message.getBytes());
+        byte[] encryptedBytes = cipher.doFinal(message.getBytes());
+
+        Signature signature = Signature.getInstance("MD5WithRSA");
+        signature.initSign(terminalPrivateKey);
+        signature.update(message.getBytes());
+        byte[] signatureBytes = signature.sign();
+
+        byte[] buffer = new byte[256];
+        System.arraycopy(encryptedBytes, 0, buffer, 0, 128);
+        System.arraycopy(signatureBytes, 0, buffer, 128, 128);
 
         // Selecting other applet
         // getShareableInterfaceObject() checks the caller id
@@ -191,6 +208,103 @@ public class CryptographyTest
 
         Assert.assertEquals(message, new String(decryptedMessage));
         Assert.assertEquals(len, 24);
+    }
+
+    @Test(expected = ISOException.class)
+    public void Test_Decryption_Fail_Wrong_Plaintext() throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException, SignatureException
+    {
+        // Arrange
+        String message = "This is my test-message!";
+        String fakeMessage = "This is my fake-message!";
+
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+        keyGen.initialize(1024);
+
+        KeyPair key = keyGen.generateKeyPair();
+        RSAPrivateKey terminalPrivateKey = (RSAPrivateKey) key.getPrivate();
+        RSAPublicKey terminalPublicKey = (RSAPublicKey) key.getPublic();
+
+        key = keyGen.generateKeyPair();
+        RSAPrivateKey cardPrivateKey = (RSAPrivateKey) key.getPrivate();
+        RSAPublicKey cardPublicKey = (RSAPublicKey) key.getPublic();
+
+        Simulator sim = new Simulator();
+
+        // Act
+        sim.installApplet(CryptographyAID, Cryptography.class);
+        sim.installApplet(IdentificationAID, Identification.class);
+
+        System.out.println("Getting ATR...");
+        byte[] atr = sim.getATR();
+        System.out.println(new String(atr));
+        System.out.println(TestHelper.ToHexString(atr));
+
+        System.out.println("\nSelecting Applet...");
+        boolean isAppletSelected = sim.selectApplet(CryptographyAID);
+        System.out.println(isAppletSelected);
+        Assert.assertTrue(isAppletSelected);
+
+        byte[] answer;
+
+        System.out.println("\nSetting private modulus of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF0, cardPrivateKey.getModulus().toByteArray(), (byte) 0x00);
+        TestHelper.EnsureStatusBytesNoError(answer);
+
+        System.out.println("\nSetting private exponent of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF1, cardPrivateKey.getPrivateExponent().toByteArray(), (byte) 0x00);
+        TestHelper.EnsureStatusBytesNoError(answer);
+
+        System.out.println("\nSetting public modulus of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF2, cardPublicKey.getModulus().toByteArray(), (byte) 0x00);
+        TestHelper.EnsureStatusBytesNoError(answer);
+
+        System.out.println("\nSetting public exponent of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF3, cardPublicKey.getPublicExponent().toByteArray(), (byte) 0x00);
+        TestHelper.EnsureStatusBytesNoError(answer);
+
+        System.out.println("\nSetting public modulus of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xE0, terminalPublicKey.getModulus().toByteArray(), (byte) 0x00);
+        TestHelper.EnsureStatusBytesNoError(answer);
+
+        System.out.println("\nSetting public exponent of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xE1, terminalPublicKey.getPublicExponent().toByteArray(), (byte) 0x00);
+        TestHelper.EnsureStatusBytesNoError(answer);
+
+        System.out.println("\nExporting public modulus of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF4, new byte[0], (byte) 0x04);
+        byte[] otherMod = TestHelper.GetAnswerWithoutStatus(answer);
+        TestHelper.EnsureStatusBytesNoError(answer);
+
+        System.out.println("\nExporting public exponent of the card...");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x43, (byte) 0xF5, new byte[0], (byte) 0x04);
+        byte[] otherExp = TestHelper.GetAnswerWithoutStatus(answer);
+        TestHelper.EnsureStatusBytesNoError(answer);
+
+        // Creating PublicKey for other party
+        RSAPublicKeySpec spec = new RSAPublicKeySpec(new BigInteger(otherMod), new BigInteger(otherExp));
+        KeyFactory factory = KeyFactory.getInstance("RSA");
+        PublicKey otherPublicKey = factory.generatePublic(spec);
+
+        Cipher cipher = Cipher.getInstance("RSA");
+        cipher.init(Cipher.ENCRYPT_MODE, otherPublicKey);
+        byte[] encryptedBytes = cipher.doFinal(fakeMessage.getBytes());
+
+        Signature signature = Signature.getInstance("MD5WithRSA");
+        signature.initSign(terminalPrivateKey);
+        signature.update(message.getBytes());
+        byte[] signatureBytes = signature.sign();
+
+        byte[] buffer = new byte[256];
+        System.arraycopy(encryptedBytes, 0, buffer, 0, 128);
+        System.arraycopy(signatureBytes, 0, buffer, 128, 128);
+
+        // Selecting other applet
+        // getShareableInterfaceObject() checks the caller id
+        sim.selectApplet(IdentificationAID);
+
+        ICryptography cryptoApp = (ICryptography) JCSystem.getAppletShareableInterfaceObject(CryptographyAID, CryptographySecret);
+        System.out.println("Decrypting...");
+        cryptoApp.decrypt(buffer, (byte) 0x00);
     }
 
     @Test
