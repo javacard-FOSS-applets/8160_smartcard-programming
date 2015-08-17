@@ -2,6 +2,7 @@ package presentation.controllers;
 
 import application.hotelbuddy.AccessApplet;
 import application.hotelbuddy.AccessRestrictedRoom;
+import application.hotelbuddy.BonusApplet;
 import application.hotelbuddy.IdentificationApplet;
 import common.AlertHelper;
 import common.Result;
@@ -11,6 +12,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.TextField;
+import javafx.util.converter.NumberStringConverter;
 import presentation.controls.NumericTextField;
 import presentation.models.ConfigurationModel;
 
@@ -21,9 +23,9 @@ import java.util.HashMap;
  */
 public class ConfigurationController
 {
-    public Button setIdentificationButton, restAccessControl, resetIdentification, setAccessButton;
+    public Button setIdentificationButton, resetAccessControl, resetIdentification, setAccessButton, addPointsButton, resetPoints;
     public DatePicker birthDateDatePicker;
-    public TextField carIdTextField, nameTextField;
+    public TextField carIdTextField, nameTextField, pointsTextField;
     public NumericTextField safePinTextField;
     public CheckBox classicBarCheckbox, casinoCheckbox, poolCheckbox, skyBarCheckbox, wellnessCheckbox;
 
@@ -76,6 +78,15 @@ public class ConfigurationController
         AlertHelper.showSuccessAlert("Data successfully set.");
     }
 
+    private void addPoints()
+    {
+        Result<Boolean> result = BonusApplet.registerBonus((short) this.model.getPoints());
+        if (!result.isSuccess())
+        {
+            AlertHelper.showErrorAlert(result.getErrorMessage());
+        }
+    }
+
     /**
      * Resets the IdentificationApplet
      */
@@ -94,6 +105,18 @@ public class ConfigurationController
     private void resetAccess()
     {
         Result<Boolean> result = AccessApplet.reset();
+        if (!result.isSuccess())
+        {
+            AlertHelper.showErrorAlert(result.getErrorMessage());
+        }
+    }
+
+    /**
+     * Resets the Bonus Points
+     */
+    private void resetPoints()
+    {
+        Result<Boolean> result = BonusApplet.reset();
         if (!result.isSuccess())
         {
             AlertHelper.showErrorAlert(result.getErrorMessage());
@@ -126,14 +149,17 @@ public class ConfigurationController
     {
         setIdentificationButton.addEventHandler(ActionEvent.ACTION, e -> setIdentificationData());
         setAccessButton.addEventHandler(ActionEvent.ACTION, e -> setAccessData());
+        addPointsButton.addEventHandler(ActionEvent.ACTION, e -> addPoints());
         resetIdentification.addEventHandler(ActionEvent.ACTION, e -> resetIdentification());
-        restAccessControl.addEventHandler(ActionEvent.ACTION, e -> resetAccess());
+        resetAccessControl.addEventHandler(ActionEvent.ACTION, e -> resetAccess());
+        resetPoints.addEventHandler(ActionEvent.ACTION, e -> resetPoints());
 
         nameTextField.textProperty().bindBidirectional(this.model.nameProperty());
         carIdTextField.textProperty().bindBidirectional(this.model.carIdProperty());
         safePinTextField.setMaxlength(IdentificationApplet.SafePinLength);
         safePinTextField.textProperty().bindBidirectional(this.model.safePinProperty());
         birthDateDatePicker.valueProperty().bindBidirectional(this.model.birthDateProperty());
+        pointsTextField.textProperty().bindBidirectional(this.model.pointsProperty(), new NumberStringConverter());
 
         classicBarCheckbox.selectedProperty().bindBidirectional(this.model.classicBarAccessProperty());
         casinoCheckbox.selectedProperty().bindBidirectional(this.model.casinoAccessProperty());

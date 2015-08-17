@@ -14,6 +14,7 @@ public class ConfigurationModel
     private StringProperty carId = new SimpleStringProperty("");
     private ObjectProperty<LocalDate> birthDate = new SimpleObjectProperty<>();
     private StringProperty safePin = new SimpleStringProperty("");
+    private IntegerProperty points = new SimpleIntegerProperty(0);
 
     private BooleanProperty classicBarAccess = new SimpleBooleanProperty(false);
     private BooleanProperty casinoAccess = new SimpleBooleanProperty(false);
@@ -154,5 +155,20 @@ public class ConfigurationModel
     public void setWellnessAccess(boolean wellnessAccess)
     {
         this.wellnessAccess.set(wellnessAccess);
+    }
+
+    public int getPoints()
+    {
+        return points.get();
+    }
+
+    public IntegerProperty pointsProperty()
+    {
+        return points;
+    }
+
+    public void setPoints(int points)
+    {
+        this.points.set(points);
     }
 }
