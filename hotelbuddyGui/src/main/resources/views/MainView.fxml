@@ -34,6 +34,11 @@
                         <fx:include fx:id="SafePinTab" source="SafePinView.fxml"/>
                     </content>
                 </Tab>
+                <Tab text="Bonus Points">
+                    <content>
+                        <fx:include fx:id="BonusTab" source="Bonus.fxml"/>
+                    </content>
+                </Tab>
                 <Tab text="Log">
                     <content>
                         <fx:include fx:id="LogTab" source="LogView.fxml"/>

@@ -6,7 +6,6 @@ import application.log.LogLevel;
 import common.ErrorResult;
 import common.Result;
 import common.SuccessResult;
-import javafx.beans.property.StringProperty;
 
 /**
  * Created by Patrick on 07.07.2015.
@@ -43,9 +42,9 @@ public final class CommonApplet
      * Sends the given data to the card with the given instruction
      *
      * @param appletName applet to select
-     * @param cla cla
-     * @param data data to encrypt and send
-     * @param ins  instruction
+     * @param cla        cla
+     * @param data       data to encrypt and send
+     * @param ins        instruction
      * @return result of the operation
      */
     public static Result<byte[]> sendValue(String appletName, byte cla, byte[] data, byte ins)
@@ -67,11 +66,25 @@ public final class CommonApplet
     }
 
     /**
+     * Sends the given data to the card with the given instruction
+     *
+     * @param appletName applet to select
+     * @param cla        cla
+     * @param data       data to encrypt and send
+     * @param ins        instruction
+     * @return result of the operation
+     */
+    public static Result<byte[]> sendValue(String appletName, byte cla, byte data, byte ins)
+    {
+        return sendValue(appletName, cla, new byte[]{data}, ins);
+    }
+
+    /**
      * Sends the given instruction to the card
      *
      * @param appletName applet to select
-     * @param cla cla
-     * @param ins  instruction
+     * @param cla        cla
+     * @param ins        instruction
      * @return result of the operation
      */
     public static Result<byte[]> sendValue(String appletName, byte cla, byte ins)
