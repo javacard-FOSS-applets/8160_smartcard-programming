@@ -14,6 +14,7 @@ public class Bonus extends Applet
     // Instructions
     private static final byte INS_REGISTER_BONUS = (byte) 0xB0;
     private static final byte INS_GET_ALL_BONUS = (byte) 0xB1;
+    private static final byte INS_RESET = (byte) 0xF0;
 
     // Other Applets
     private static final byte[] CRYPTOGRAPHY_AID = {0x43, 0x72, 0x79, 0x70, 0x74, 0x6f, 0x67, 0x72, 0x61, 0x70, 0x68, 0x79};
@@ -73,9 +74,21 @@ public class Bonus extends Applet
             case INS_GET_ALL_BONUS:
                 getAllBonus(apdu);
                 break;
+            case INS_RESET:
+                reset(apdu);
+                break;
             default:
                 ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
         }
+    }
+
+    /**
+     * Resets the bonus points to zero.
+     * @param apdu the APDU received by the card.
+     */
+    private void reset(APDU apdu)
+    {
+        this.bonusPoints = 0;
     }
 
     /**

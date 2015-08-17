@@ -174,4 +174,44 @@ public class BonusTest
 
         CryptographyMock.reset();
     }
+
+    @Test
+    public void Test_Reset()
+    {
+        Simulator sim = new Simulator();
+
+        sim.installApplet(CryptographyAID, CryptographyMock.class);
+        sim.installApplet(BonusAID, Bonus.class);
+
+        System.out.println("Getting ATR...");
+        byte[] atr = sim.getATR();
+        System.out.println(new String(atr));
+        System.out.println(TestHelper.ToHexString(atr));
+
+        System.out.println("\nSelecting Applet...");
+        boolean isAppletSelected = sim.selectApplet(BonusAID);
+        System.out.println(isAppletSelected);
+
+        byte[] answer;
+        System.out.println("\nSetting bonus points");
+        byte[] setMessage = { (byte) 0x7F, (byte) 0xFF };
+        CryptographyMock.DataLength = (short) setMessage.length;
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x42, (byte) 0xB0, setMessage, (byte) 0x00);
+        TestHelper.EnsureStatusBytesNoError(answer);
+        Assert.assertTrue(CryptographyMock.decryptWasCalled());
+
+        System.out.println("\nReset the bonus points");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x42, (byte) 0xF0, new byte[0], (byte) 0x00);
+        TestHelper.EnsureStatusBytesNoError(answer);
+        Assert.assertTrue(CryptographyMock.decryptWasCalled());
+
+        byte[] expectedAnswer = { (byte) 0x00, (byte) 0x00 };
+        System.out.println("\nGetting bonus points from card");
+        answer = TestHelper.ExecuteCommand(sim, (byte) 0x42, (byte) 0xB1, new byte[0], (byte) 0x02);
+        TestHelper.EnsureStatusBytesNoError(answer);
+        Assert.assertTrue(CryptographyMock.encryptWasCalled());
+        TestHelper.compareWithoutStatusBytes(expectedAnswer, answer, expectedAnswer.length);
+
+        CryptographyMock.reset();
+    }
 }
