@@ -133,7 +133,7 @@ public class Bonus extends Applet
      */
     private void getAllBonus(APDU apdu)
     {
-        send(apdu, new byte[] { (byte) ((this.bonusPoints & 0xFF00) >> 8), (byte) (this.bonusPoints & 0x00FF) }, (byte) 0, BONUS_LENGTH);
+        send(apdu, new byte[] { (byte) ((this.bonusPoints >> 8) & 0xFF), (byte) (this.bonusPoints & 0x00FF) }, (byte) 0, BONUS_LENGTH);
     }
 
     /**
