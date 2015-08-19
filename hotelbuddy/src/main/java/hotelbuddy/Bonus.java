@@ -100,6 +100,7 @@ public class Bonus extends Applet
      */
     private void registerBonus(APDU apdu)
     {
+        apdu.setIncomingAndReceive();
         byte[] buffer = apdu.getBuffer();
 
         short messageLength = decryptMessage(buffer);

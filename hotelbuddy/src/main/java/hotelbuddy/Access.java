@@ -127,6 +127,7 @@ public class Access extends Applet
             ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
         }
 
+        apdu.setIncomingAndReceive();
         byte[] buffer = apdu.getBuffer();
 
         short messageLength = decryptMessage(buffer);
@@ -155,7 +156,7 @@ public class Access extends Applet
             }
 
             // At this point, setting key and value is allowed.
-            Util.arrayCopy(buffer, bufferIndex, permissionDictionary, (short) nextFreeIndex, (short) ENTRY_LENGTH);
+            Util.arrayCopy(buffer, bufferIndex, permissionDictionary, (short) (nextFreeIndex & 0x00FF), (short) (ENTRY_LENGTH & 0x00FF));
             nextFreeIndex = (byte) (nextFreeIndex + ENTRY_LENGTH);
         }
 
@@ -199,13 +200,13 @@ public class Access extends Applet
         while (buffer[OFFSET_INDEX_KEY_EXISTS] < permissionDictionary.length)
         {
             // Check the key at the current dictionary key index and compare it to the key from the APDU buffer.
-            if (Util.arrayCompare(permissionDictionary, (short) buffer[OFFSET_INDEX_KEY_EXISTS], buffer, (short) offset, KEY_LENGTH) == 0)
+            if (Util.arrayCompare(permissionDictionary, (short) (buffer[OFFSET_INDEX_KEY_EXISTS] & 0x00FF), buffer, (short) (offset & 0x00FF), KEY_LENGTH) == 0)
             {
                 // Matching entry found
                 return true;
             }
 
-            buffer[OFFSET_INDEX_KEY_EXISTS] += (byte) ENTRY_LENGTH;
+            buffer[OFFSET_INDEX_KEY_EXISTS] += ENTRY_LENGTH;
         }
 
         return false;
@@ -224,6 +225,8 @@ public class Access extends Applet
             // Access rights must be set before get right requests.
             ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
         }
+
+        apdu.setIncomingAndReceive();
 
         byte[] buffer = apdu.getBuffer();
         short messageLength = decryptMessage(buffer);
@@ -252,10 +255,10 @@ public class Access extends Applet
 
         while (buffer[OFFSET_INDEX_GET_VALUE] < permissionDictionary.length)
         {
-            if (Util.arrayCompare(permissionDictionary, (short) buffer[OFFSET_INDEX_GET_VALUE], buffer, (short) 0, KEY_LENGTH) == 0)
+            if (Util.arrayCompare(permissionDictionary, (short) (buffer[OFFSET_INDEX_GET_VALUE] & 0x00FF), buffer, (short) 0, KEY_LENGTH) == 0)
             {
                 // Matching entry found
-                Util.arrayCopy(permissionDictionary, (short) (buffer[OFFSET_INDEX_GET_VALUE] + KEY_LENGTH), buffer, (short) OFFSET_RESULT_GET_VALUE, VALUE_LENGTH);
+                Util.arrayCopy(permissionDictionary, (short) ((buffer[OFFSET_INDEX_GET_VALUE] + KEY_LENGTH) & 0x00FF), buffer, (short) (OFFSET_RESULT_GET_VALUE & 0x00FF), VALUE_LENGTH);
                 return;
             }
 
@@ -263,7 +266,7 @@ public class Access extends Applet
         }
 
         // Key not found in the dictionary, access will be denied.
-        Util.arrayCopy(ACCESS_DENIED, (short) 0, buffer, (short) OFFSET_RESULT_GET_VALUE, VALUE_LENGTH);
+        Util.arrayCopy(ACCESS_DENIED, (short) 0, buffer, (short) (OFFSET_RESULT_GET_VALUE & 0x00FF), VALUE_LENGTH);
     }
 
     /**
