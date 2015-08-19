@@ -21,6 +21,7 @@ public class Bonus extends Applet
     private static final byte CRYPTOGRAPHY_SECRET = 0x2A;
 
     // Constants and Offsets
+    private static final short MAX_BONUS_VALUE = 30000;
     private static final byte BONUS_LENGTH = 2;
     private static final byte GET_BONUS_OFFSET = 0;
 
@@ -94,7 +95,7 @@ public class Bonus extends Applet
     /**
      * Adds the received value from APDU buffer to the bonus point pool on the card.
      * Checks and prevents overflow from happening.
-     * Max bonus points are limited to max value of data type short.
+     * Bonus points are limited to the value of {@code MAX_BONUS_VALUE}.
      * @param apdu the APDU received by the card
      */
     private void registerBonus(APDU apdu)
@@ -116,10 +117,9 @@ public class Bonus extends Applet
             ISOException.throwIt(ISO7816.SW_DATA_INVALID);
         }
 
-        if (Short.MAX_VALUE - this.bonusPoints < Util.getShort(buffer, (short) 0))
+        if (MAX_BONUS_VALUE - this.bonusPoints < Util.getShort(buffer, (short) 0))
         {
             // The addition of received bonus points would cause an overflow.
-            // Maybe not the proper exception for this purpose?
             ISOException.throwIt(ISO7816.SW_CONDITIONS_NOT_SATISFIED);
         }
 
@@ -132,11 +132,7 @@ public class Bonus extends Applet
      */
     private void getAllBonus(APDU apdu)
     {
-        byte[] buffer = apdu.getBuffer();
-        buffer[GET_BONUS_OFFSET] = (byte) ((this.bonusPoints & 0xFF00) >> 8);
-        buffer[GET_BONUS_OFFSET + 1] = (byte) (this.bonusPoints & 0x00FF);
-
-        send(apdu, buffer , GET_BONUS_OFFSET, BONUS_LENGTH);
+        send(apdu, new byte[] { (byte) ((this.bonusPoints & 0xFF00) >> 8), (byte) (this.bonusPoints & 0x00FF) }, (byte) 0, BONUS_LENGTH);
     }
 
     /**
