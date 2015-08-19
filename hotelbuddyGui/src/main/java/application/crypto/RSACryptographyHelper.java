@@ -121,7 +121,7 @@ public class RSACryptographyHelper implements IRSACryptographyHelper
             rsaCipher.init(Cipher.ENCRYPT_MODE, this.cardPublicKey);
             byte[] messageBytes = rsaCipher.doFinal(message);
 
-            byte[] result = new byte[256];
+            byte[] result = new byte[signatureBytes.length + messageBytes.length];
             System.arraycopy(messageBytes, 0, result, 0, messageBytes.length);
             System.arraycopy(signatureBytes, 0, result, messageBytes.length, signatureBytes.length);
 
@@ -140,11 +140,11 @@ public class RSACryptographyHelper implements IRSACryptographyHelper
         try
         {
             rsaCipher.init(Cipher.DECRYPT_MODE, this.terminalPrivateKey);
-            byte[] messageBytes = rsaCipher.doFinal(message, 0, 128);
+            byte[] messageBytes = rsaCipher.doFinal(message, 0, 64);
 
             signature.initVerify(this.cardPublicKey);
             signature.update(messageBytes);
-            if (!signature.verify(message, 128, 128))
+            if (!signature.verify(message, 64, 64))
             {
                 return new ErrorResult<>("Invalid Signature");
             }

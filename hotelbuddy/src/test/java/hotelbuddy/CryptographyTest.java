@@ -34,7 +34,7 @@ public class CryptographyTest
         String message = "This is my test-message!";
 
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-        keyGen.initialize(1024);
+        keyGen.initialize(512);
 
         KeyPair key = keyGen.generateKeyPair();
         RSAPrivateKey terminalPrivateKey = (RSAPrivateKey) key.getPrivate();
@@ -97,16 +97,16 @@ public class CryptographyTest
 
         Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(Cipher.DECRYPT_MODE, terminalPrivateKey);
-        byte[] decryptedBytes = cipher.doFinal(buffer, 0, 128);
+        byte[] decryptedBytes = cipher.doFinal(buffer, 0, 64);
         String decryptedMessage = new String(decryptedBytes).trim();
 
         Signature signature = Signature.getInstance("MD5WithRSA");
         signature.initVerify(cardPublicKey);
         signature.update(decryptedMessage.getBytes());
 
-        Assert.assertTrue(signature.verify(buffer, 128, 128));
+        Assert.assertTrue(signature.verify(buffer, 64, 64));
         Assert.assertEquals(message, decryptedMessage);
-        Assert.assertEquals(len, 256);
+        Assert.assertEquals(len, 128);
     }
 
     @Test
@@ -116,7 +116,7 @@ public class CryptographyTest
         String message = "This is my test-message!";
 
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-        keyGen.initialize(1024);
+        keyGen.initialize(512);
 
         KeyPair key = keyGen.generateKeyPair();
         RSAPrivateKey terminalPrivateKey = (RSAPrivateKey) key.getPrivate();
@@ -193,8 +193,8 @@ public class CryptographyTest
         byte[] signatureBytes = signature.sign();
 
         byte[] buffer = new byte[256];
-        System.arraycopy(encryptedBytes, 0, buffer, 0, 128);
-        System.arraycopy(signatureBytes, 0, buffer, 128, 128);
+        System.arraycopy(encryptedBytes, 0, buffer, 0, 64);
+        System.arraycopy(signatureBytes, 0, buffer, 64, 64);
 
         // Selecting other applet
         // getShareableInterfaceObject() checks the caller id
@@ -218,7 +218,7 @@ public class CryptographyTest
         String fakeMessage = "This is my fake-message!";
 
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-        keyGen.initialize(1024);
+        keyGen.initialize(512);
 
         KeyPair key = keyGen.generateKeyPair();
         RSAPrivateKey terminalPrivateKey = (RSAPrivateKey) key.getPrivate();
@@ -295,8 +295,8 @@ public class CryptographyTest
         byte[] signatureBytes = signature.sign();
 
         byte[] buffer = new byte[256];
-        System.arraycopy(encryptedBytes, 0, buffer, 0, 128);
-        System.arraycopy(signatureBytes, 0, buffer, 128, 128);
+        System.arraycopy(encryptedBytes, 0, buffer, 0, 64);
+        System.arraycopy(signatureBytes, 0, buffer, 64, 64);
 
         // Selecting other applet
         // getShareableInterfaceObject() checks the caller id
@@ -311,7 +311,7 @@ public class CryptographyTest
     public void Test_Set_Private_Mod_Of_Card_Twice_Throws_Error() throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException
     {
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-        keyGen.initialize(1024);
+        keyGen.initialize(512);
 
         KeyPair key = keyGen.generateKeyPair();
         RSAPrivateKey cardPrivateKey = (RSAPrivateKey) key.getPrivate();
@@ -339,7 +339,7 @@ public class CryptographyTest
     public void Test_Set_Private_Exp_Of_Card_Twice_Throws_Error() throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException
     {
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-        keyGen.initialize(1024);
+        keyGen.initialize(512);
 
         KeyPair key = keyGen.generateKeyPair();
         RSAPrivateKey cardPrivateKey = (RSAPrivateKey) key.getPrivate();
@@ -366,7 +366,7 @@ public class CryptographyTest
     public void Test_Set_Public_Mod_Of_Card_Twice_Throws_Error() throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException
     {
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-        keyGen.initialize(1024);
+        keyGen.initialize(512);
 
         KeyPair key = keyGen.generateKeyPair();
         RSAPublicKey cardPublicKey = (RSAPublicKey) key.getPublic();
@@ -394,7 +394,7 @@ public class CryptographyTest
     public void Test_Set_Public_Exp_Of_Card_Twice_Throws_Error() throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException
     {
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-        keyGen.initialize(1024);
+        keyGen.initialize(512);
 
         KeyPair key = keyGen.generateKeyPair();
         RSAPublicKey cardPublicKey = (RSAPublicKey) key.getPublic();
@@ -422,7 +422,7 @@ public class CryptographyTest
     public void Test_Set_Public_Mod_Of_Terminal_Twice_Throws_Error() throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException
     {
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-        keyGen.initialize(1024);
+        keyGen.initialize(512);
 
         KeyPair key = keyGen.generateKeyPair();
         RSAPublicKey terminalPublicKey = (RSAPublicKey) key.getPublic();
@@ -450,7 +450,7 @@ public class CryptographyTest
     public void Test_Set_Public_Exp_Of_Terminal_Twice_Throws_Error() throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException
     {
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-        keyGen.initialize(1024);
+        keyGen.initialize(512);
 
         KeyPair key = keyGen.generateKeyPair();
         RSAPublicKey terminalPublicKey = (RSAPublicKey) key.getPublic();

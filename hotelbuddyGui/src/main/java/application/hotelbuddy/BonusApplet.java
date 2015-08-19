@@ -3,7 +3,6 @@ package application.hotelbuddy;
 import common.ErrorResult;
 import common.Result;
 import common.SuccessResult;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.nio.ByteBuffer;
 
@@ -12,12 +11,13 @@ import java.nio.ByteBuffer;
  */
 public class BonusApplet
 {
-    private static final String AppletName = "Bonus";
+    private static final String APPLET_NAME = "Bonus";
 
     private static final byte CLA = (byte) 0x42;
 
     private static final byte INS_REGISTER_BONUS = (byte) 0xB0;
     private static final byte INS_GET_ALL_BONUS = (byte) 0xB1;
+    private static final byte INS_RESET = (byte) 0xF0;
 
     /**
      * Sends the given name to the card
@@ -32,7 +32,11 @@ public class BonusApplet
             return new SuccessResult<>(true);
         }
 
-        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, points.byteValue(), INS_REGISTER_BONUS);
+        ByteBuffer buffer = ByteBuffer.allocate(2);
+        buffer.putShort(points);
+        byte[] bytes = buffer.array();
+
+        Result<byte[]> result =  CommonApplet.sendValue(APPLET_NAME, CLA, INS_REGISTER_BONUS, bytes);
         return !result.isSuccess() ? new ErrorResult<>(result.getErrorMessage()) : new SuccessResult<>(true);
     }
 
@@ -43,7 +47,7 @@ public class BonusApplet
      */
     public static Result<Short> getAllBonus()
     {
-        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, INS_GET_ALL_BONUS);
+        Result<byte[]> result =  CommonApplet.sendValue(APPLET_NAME, CLA, INS_GET_ALL_BONUS);
         if (!result.isSuccess())
         {
             return new ErrorResult<>(result.getErrorMessage());
@@ -55,6 +59,6 @@ public class BonusApplet
 
     public static Result<Boolean> reset()
     {
-        throw new NotImplementedException();
+        return CommonApplet.reset(APPLET_NAME, CLA, INS_RESET);
     }
 }

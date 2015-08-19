@@ -53,7 +53,7 @@ public class AccessApplet
             count += ENTRY_LENGTH;
         }
 
-        Result<byte[]> result = CommonApplet.sendValue(APPLET_NAME, CLA, accessBytes, INS_SetRight);
+        Result<byte[]> result = CommonApplet.sendValue(APPLET_NAME, CLA, INS_SetRight, accessBytes);
         return !result.isSuccess() ? new ErrorResult<>(result.getErrorMessage()) : new SuccessResult<>(true);
     }
 
@@ -65,7 +65,7 @@ public class AccessApplet
         roomByte[0] = (byte) Integer.parseInt(roomNumber.substring(0, 2));
         roomByte[1] = (byte) Integer.parseInt(roomNumber.substring(2, 4));
 
-        Result<byte[]> result = CommonApplet.sendValue(APPLET_NAME, CLA, roomByte, INS_GetRight);
+        Result<byte[]> result = CommonApplet.sendValue(APPLET_NAME, CLA, INS_GetRight, roomByte);
         return result.isSuccess() && result.get()[0] == ACCESS_GRANTED ? new SuccessResult<>(true) : new ErrorResult<>("Access Denied");
     }
 }

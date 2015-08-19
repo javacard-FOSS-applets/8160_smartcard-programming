@@ -43,7 +43,7 @@ public class IdentificationApplet
             return new SuccessResult<>(true);
         }
 
-        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, name.getBytes(), INS_SET_NAME);
+        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, INS_SET_NAME, name.getBytes());
         return !result.isSuccess() ? new ErrorResult<>(result.getErrorMessage()) : new SuccessResult<>(true);
     }
 
@@ -76,7 +76,7 @@ public class IdentificationApplet
             return new SuccessResult<>(true);
         }
 
-        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, carId.getBytes(), INS_SET_CARID);
+        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, INS_SET_CARID, carId.getBytes());
         return !result.isSuccess() ? new ErrorResult<>(result.getErrorMessage()) : new SuccessResult<>(true);
     }
 
@@ -116,7 +116,7 @@ public class IdentificationApplet
         }
 
         byte[] pin = ConvertSafePin(safePin);
-        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, pin, INS_SET_SAFEPIN);
+        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, INS_SET_SAFEPIN, pin);
         return !result.isSuccess() ? new ErrorResult<>(result.getErrorMessage()) : new SuccessResult<>(true);
     }
 
@@ -134,7 +134,7 @@ public class IdentificationApplet
         }
 
         byte[] pin = ConvertSafePin(safePin);
-        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, pin, INS_CHECK_SAFEPIN);
+        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, INS_CHECK_SAFEPIN, pin);
         if (!result.isSuccess())
         {
             return new ErrorResult<>(result.getErrorMessage());
@@ -178,7 +178,7 @@ public class IdentificationApplet
         data[2] = (byte) (date.getYear() / 100);
         data[3] = (byte) (date.getYear() % 100);
 
-        Result<byte[]> result = CommonApplet.sendValue(AppletName, CLA, data, INS_SET_BIRTHDAY);
+        Result<byte[]> result = CommonApplet.sendValue(AppletName, CLA, INS_SET_BIRTHDAY, data);
         return !result.isSuccess() ? new ErrorResult<>(result.getErrorMessage()) : new SuccessResult<>(true);
     }
 
@@ -218,7 +218,7 @@ public class IdentificationApplet
         data[3] = (byte) (date.getYear() % 100);
         data[4] = (byte) age;
 
-        Result<byte[]> result = CommonApplet.sendValue(AppletName, CLA, data, INS_CHECK_AGE);
+        Result<byte[]> result = CommonApplet.sendValue(AppletName, CLA, INS_CHECK_AGE, data);
         if (!result.isSuccess())
         {
             return new ErrorResult<>(result.getErrorMessage());

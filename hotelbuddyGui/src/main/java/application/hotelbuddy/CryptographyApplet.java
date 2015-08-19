@@ -69,14 +69,14 @@ public class CryptographyApplet
             return selectResult;
         }
 
-        Result<byte[]> exportModResult = JavaCardHelper.sendCommandWithoutEncryption(CLA, INS_ExportCardPublicMod);
+        Result<byte[]> exportModResult = JavaCardHelper.sendCommandWithoutEncryption(CLA, INS_ExportCardPublicMod, (byte) 0x40);
         if (!exportModResult.isSuccess())
         {
             LogHelper.log(LogLevel.FAILURE, "Import of modulus from card failed.");
             return new ErrorResult<>(exportModResult.getErrorMessage());
         }
 
-        Result<byte[]> exportExponentResult = JavaCardHelper.sendCommandWithoutEncryption(CLA, INS_ExportCardPublicExp);
+        Result<byte[]> exportExponentResult = JavaCardHelper.sendCommandWithoutEncryption(CLA, INS_ExportCardPublicExp, (byte) 0x03);
         if (!exportExponentResult.isSuccess())
         {
             LogHelper.log(LogLevel.FAILURE, "Import of exponent from failed.");

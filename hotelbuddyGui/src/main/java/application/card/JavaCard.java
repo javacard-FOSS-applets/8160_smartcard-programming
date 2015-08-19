@@ -50,7 +50,7 @@ public class JavaCard implements IJavaCard, CTListener
         {
             LogHelper.log(ex);
             shutdown();
-            return new ErrorResult<>("Terminal not available. Please check your opencard.properties file.");
+            return new ErrorResult<>("Terminal not available. Please check your opencard2.properties file.");
         }
         catch (Exception ex)
         {
@@ -61,8 +61,8 @@ public class JavaCard implements IJavaCard, CTListener
 
         LogHelper.log(LogLevel.INFO, "Setting up connection to smartcard");
 
-        CardRequest cardRequest = new CardRequest(CardRequest.ANYCARD, null, PassThruCardService.class);
-        cardRequest.setTimeout(1);
+        CardRequest cardRequest = new CardRequest(CardRequest.ANYCARD, null, null);
+        cardRequest.setTimeout(5);
 
         try
         {
@@ -99,7 +99,7 @@ public class JavaCard implements IJavaCard, CTListener
         {
             PassThruCardService passThru = (PassThruCardService) card.getCardService(PassThruCardService.class, true);
 
-            LogHelper.log(LogLevel.INFO, "Sending %s", HexString.hexifyShort(command.getCLA(), command.getINS()));
+            LogHelper.log(LogLevel.INFO, "Sending %s", command.toString());
             ResponseAPDU responseApdu = passThru.sendCommandAPDU(command);
 
             String status = HexString.hexifyShort(responseApdu.sw1(), responseApdu.sw2());

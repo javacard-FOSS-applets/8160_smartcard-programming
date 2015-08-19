@@ -36,7 +36,7 @@ public class JavaCardHelper
             return new ErrorResult<>(encryptedMessage.getErrorMessage());
         }
 
-        HotelBuddyCommand command = ApduHelper.getCommand(cla, ins, encryptedMessage.get());
+        HotelBuddyCommand command = ApduHelper.getCommand(cla, ins, encryptedMessage.get(), (byte) 0x40);
         Result<byte[]> commandResult = JavaCard.current().sendCommand(command);
         if (!commandResult.isSuccess() || commandResult.get().length < 1)
         {
@@ -53,15 +53,21 @@ public class JavaCardHelper
         return decryptedMessage;
     }
 
-    public static Result<byte[]> sendCommandWithoutEncryption(byte cla, byte ins, byte[] content)
+    public static Result<byte[]> sendCommandWithoutEncryption(byte cla, byte ins, byte[] content, byte answerLength)
     {
-        HotelBuddyCommand command = ApduHelper.getCommand(cla, ins, content);
+        HotelBuddyCommand command = ApduHelper.getCommand(cla, ins, content, answerLength);
+        return JavaCard.current().sendCommand(command);
+    }
+
+    public static Result<byte[]> sendCommandWithoutEncryption(byte cla, byte ins,byte answerLength)
+    {
+        HotelBuddyCommand command = ApduHelper.getCommand(cla, ins, answerLength);
         return JavaCard.current().sendCommand(command);
     }
 
     public static Result<byte[]> sendCommandWithoutEncryption(byte cla, byte ins)
     {
-        return sendCommandWithoutEncryption(cla, ins, new byte[0]);
+        return sendCommandWithoutEncryption(cla, ins, (byte) 0x00);
     }
 
     public static Result<byte[]> sendCommand(byte cla, byte ins)

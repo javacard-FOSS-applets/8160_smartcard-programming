@@ -29,7 +29,7 @@
                                 <Button fx:id="resetAccessControl" mnemonicParsing="false" text="Reset" GridPane.columnIndex="1"
                                         GridPane.rowIndex="1"/>
                                 <Button fx:id="resetPoints" mnemonicParsing="false" text="Reset" GridPane.columnIndex="1"
-                                        GridPane.rowIndex="2" disable="true"/>
+                                        GridPane.rowIndex="2"/>
                             </children>
                         </GridPane>
                     </content>
