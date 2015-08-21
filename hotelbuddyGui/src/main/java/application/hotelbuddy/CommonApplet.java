@@ -47,7 +47,7 @@ public final class CommonApplet
      * @param data       data to encrypt and send
      * @return result of the operation
      */
-    public static Result<byte[]> sendValue(String appletName, byte cla, byte ins, byte[] data)
+    public static Result<byte[]> sendValue(String appletName, byte cla, byte ins, byte[] data, byte answerLength)
     {
         Result<Boolean> selectResult = JavaCardHelper.selectApplet(appletName);
         if (!selectResult.isSuccess())
@@ -55,7 +55,7 @@ public final class CommonApplet
             return new ErrorResult<>(selectResult.getErrorMessage());
         }
 
-        Result<byte[]> result = JavaCardHelper.sendCommand(cla, ins, data);
+        Result<byte[]> result = JavaCardHelper.sendCommand(cla, ins, data, answerLength);
 
         if (!result.isSuccess())
         {
@@ -64,6 +64,21 @@ public final class CommonApplet
 
         return result;
     }
+
+    /**
+     * Sends the given data to the card with the given instruction
+     *
+     * @param appletName applet to select
+     * @param cla        cla
+     * @param ins        instruction
+     * @param data       data to encrypt and send
+     * @return result of the operation
+     */
+    public static Result<byte[]> sendValue(String appletName, byte cla, byte ins, byte[] data)
+    {
+        return sendValue(appletName, cla, ins, data, (byte) 0x00);
+    }
+
     /**
      * Sends the given instruction to the card
      *
@@ -72,8 +87,8 @@ public final class CommonApplet
      * @param ins        instruction
      * @return result of the operation
      */
-    public static Result<byte[]> sendValue(String appletName, byte cla, byte ins)
+    public static Result<byte[]> sendValue(String appletName, byte cla, byte ins, byte answerLength)
     {
-        return sendValue(appletName, cla, ins, new byte[0]);
+        return sendValue(appletName, cla, ins, new byte[0], answerLength);
     }
 }

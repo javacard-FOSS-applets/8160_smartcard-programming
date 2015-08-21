@@ -23,11 +23,10 @@ public class JavaCardHelper
             return new ErrorResult<>(selectResult.getErrorMessage());
         }
 
-        LogHelper.log(LogLevel.INFO, "%s Applet selected", appletId);
         return new SuccessResult<>(true);
     }
 
-    public static Result<byte[]> sendCommand(byte cla, byte ins, byte[] content)
+    public static Result<byte[]> sendCommand(byte cla, byte ins, byte[] content, byte answerLength)
     {
         Result<byte[]> encryptedMessage = RSACryptographyHelper.current().encrypt(content);
         if (!encryptedMessage.isSuccess())
@@ -36,7 +35,7 @@ public class JavaCardHelper
             return new ErrorResult<>(encryptedMessage.getErrorMessage());
         }
 
-        HotelBuddyCommand command = ApduHelper.getCommand(cla, ins, encryptedMessage.get(), (byte) 0x40);
+        HotelBuddyCommand command = ApduHelper.getCommand(cla, ins, encryptedMessage.get(), answerLength);
         Result<byte[]> commandResult = JavaCard.current().sendCommand(command);
         if (!commandResult.isSuccess() || commandResult.get().length < 1)
         {
@@ -59,32 +58,18 @@ public class JavaCardHelper
         return JavaCard.current().sendCommand(command);
     }
 
-    public static Result<byte[]> sendCommandWithoutEncryption(byte cla, byte ins,byte answerLength)
+    public static Result<byte[]> sendCommandWithoutEncryption(byte cla, byte ins, byte[] content)
     {
-        HotelBuddyCommand command = ApduHelper.getCommand(cla, ins, answerLength);
-        return JavaCard.current().sendCommand(command);
+        return sendCommandWithoutEncryption(cla, ins, content, (byte) 0x00);
+    }
+
+    public static Result<byte[]> sendCommandWithoutEncryption(byte cla, byte ins, byte answerLength)
+    {
+        return sendCommandWithoutEncryption(cla, ins, new byte[0], answerLength);
     }
 
     public static Result<byte[]> sendCommandWithoutEncryption(byte cla, byte ins)
     {
-        return sendCommandWithoutEncryption(cla, ins, (byte) 0x00);
-    }
-
-    public static Result<byte[]> sendCommand(byte cla, byte ins)
-    {
-        Result<byte[]> result = sendCommand(cla, ins, new byte[0]);
-        if (!result.isSuccess() || result.get().length < 1)
-        {
-            return result;
-        }
-
-        Result<byte[]> decryptedMessage = RSACryptographyHelper.current().decrypt(result.get());
-        if (!decryptedMessage.isSuccess())
-        {
-            LogHelper.log(LogLevel.FAILURE, "Decryption failed");
-            return new ErrorResult<>(decryptedMessage.getErrorMessage());
-        }
-
-        return decryptedMessage;
+        return sendCommandWithoutEncryption(cla, ins, new byte[0], (byte) 0x00);
     }
 }

@@ -64,29 +64,6 @@ public class CryptographyHelper
         return new BigInteger(str);
     }
 
-    public static Result<Boolean> exportKeyToCard(byte cla, byte[] modulus, byte insMod, byte[] exponent, byte insExp)
-    {
-        byte[] mod = stripLeadingZero(modulus);
-
-        Result<byte[]> importModResult = JavaCardHelper.sendCommandWithoutEncryption(cla, insMod, mod, (byte) 0x00);
-        if (!importModResult.isSuccess())
-        {
-            LogHelper.log(LogLevel.FAILURE, "Import of modulus failed.");
-            return new ErrorResult<>(importModResult.getErrorMessage());
-        }
-
-        byte[] exp = stripLeadingZero(exponent);
-
-        Result<byte[]> importExpResult = JavaCardHelper.sendCommandWithoutEncryption(cla, insExp, exp, (byte) 0x00);
-        if (!importExpResult.isSuccess())
-        {
-            LogHelper.log(LogLevel.FAILURE, "Import of exponent failed.");
-            return new ErrorResult<>(importExpResult.getErrorMessage());
-        }
-
-        return new SuccessResult<>(true);
-    }
-
     public static byte[] stripLeadingZero(byte[] value)
     {
         byte[] result = value;

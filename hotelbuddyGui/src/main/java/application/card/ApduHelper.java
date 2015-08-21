@@ -14,9 +14,4 @@ public class ApduHelper
     {
         return new HotelBuddyCommand(classByte, instruction, (byte)0x00, (byte)0x00, content, answerLength);
     }
-
-    public static HotelBuddyCommand getCommand(byte classByte, byte instruction, byte answerLength)
-    {
-        return new HotelBuddyCommand(classByte, instruction, (byte)0x00, (byte)0x00, answerLength);
-    }
 }

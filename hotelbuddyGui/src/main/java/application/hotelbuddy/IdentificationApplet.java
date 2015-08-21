@@ -13,8 +13,6 @@ import java.time.LocalDate;
  */
 public class IdentificationApplet
 {
-    public static final int SafePinLength = 4;
-
     private static final String AppletName = "Identification";
 
     private static final byte CLA = (byte) 0x49;
@@ -28,7 +26,12 @@ public class IdentificationApplet
     private static final byte INS_SET_SAFEPIN = (byte) 0xD0;
     private static final byte INS_CHECK_SAFEPIN = (byte) 0xD1;
 
-    private static final byte INS_Reset = (byte) 0xFF;
+    private static final byte INS_RESET = (byte) 0xFF;
+
+    private static final byte NAME_LENGTH = 0x32; // 50
+    public static final byte CARID_LENGTH = 0x08; // 8
+    public static final byte SAFEPIN_LENGTH = 0x04; // 8
+    private static final byte BIRTHDATE_LENGTH = 0x04; // 4
 
     /**
      * Sends the given name to the card
@@ -54,7 +57,7 @@ public class IdentificationApplet
      */
     public static Result<String> getName()
     {
-        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, INS_GET_NAME);
+        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, INS_GET_NAME, NAME_LENGTH);
         if (!result.isSuccess())
         {
             return new ErrorResult<>(result.getErrorMessage());
@@ -87,7 +90,7 @@ public class IdentificationApplet
      */
     public static Result<String> getCarId()
     {
-        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, INS_GET_CARID);
+        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, INS_GET_CARID, CARID_LENGTH);
         if (!result.isSuccess())
         {
             return new ErrorResult<>(result.getErrorMessage());
@@ -109,10 +112,10 @@ public class IdentificationApplet
             return new SuccessResult<>(true);
         }
 
-        if (safePin.length() < SafePinLength || safePin.length() > SafePinLength)
+        if (safePin.length() < SAFEPIN_LENGTH || safePin.length() > SAFEPIN_LENGTH)
         {
             LogHelper.log(LogLevel.FAILURE, "Invalid SafePIN format");
-            return new ErrorResult<>(String.format("Safe SafePIN needs to be %s digits long", SafePinLength));
+            return new ErrorResult<>(String.format("Safe SafePIN needs to be %s digits long", SAFEPIN_LENGTH));
         }
 
         byte[] pin = ConvertSafePin(safePin);
@@ -127,14 +130,14 @@ public class IdentificationApplet
      */
     public static Result<Boolean> checkSafePin(String safePin)
     {
-        if (safePin.length() < SafePinLength || safePin.length() > SafePinLength)
+        if (safePin.length() < SAFEPIN_LENGTH || safePin.length() > SAFEPIN_LENGTH)
         {
             LogHelper.log(LogLevel.FAILURE, "Invalid SafePIN format");
-            return new ErrorResult<>(String.format("Safe SafePIN needs to be %s digits long", SafePinLength));
+            return new ErrorResult<>(String.format("Safe SafePIN needs to be %s digits long", SAFEPIN_LENGTH));
         }
 
         byte[] pin = ConvertSafePin(safePin);
-        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, INS_CHECK_SAFEPIN, pin);
+        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, INS_CHECK_SAFEPIN, pin, (byte) 0x01);
         if (!result.isSuccess())
         {
             return new ErrorResult<>(result.getErrorMessage());
@@ -189,7 +192,7 @@ public class IdentificationApplet
      */
     public static Result<String> getBirthDay()
     {
-        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, INS_GET_BIRTHDAY);
+        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, INS_GET_BIRTHDAY, BIRTHDATE_LENGTH);
         if (!result.isSuccess())
         {
             return new ErrorResult<>(result.getErrorMessage());
@@ -218,7 +221,7 @@ public class IdentificationApplet
         data[3] = (byte) (date.getYear() % 100);
         data[4] = (byte) age;
 
-        Result<byte[]> result = CommonApplet.sendValue(AppletName, CLA, INS_CHECK_AGE, data);
+        Result<byte[]> result = CommonApplet.sendValue(AppletName, CLA, INS_CHECK_AGE, data, (byte) 0x01);
         if (!result.isSuccess())
         {
             return new ErrorResult<>(result.getErrorMessage());
@@ -240,6 +243,6 @@ public class IdentificationApplet
      */
     public static Result<Boolean> reset()
     {
-        return CommonApplet.reset(AppletName, CLA, INS_Reset);
+        return CommonApplet.reset(AppletName, CLA, INS_RESET);
     }
 }
