@@ -436,7 +436,7 @@ public class IdentificationTest
 
         for (byte[] message : notAllowed)
         {
-            System.out.println("\nChecking Age Allowed");
+            System.out.println("\nChecking Age Not Allowed");
             CryptographyMock.DataLength = (short) message.length;
             answer = TestHelper.ExecuteCommand(sim, (byte) 0x49, (byte) 0xB2, message, (byte) 0x00);
 

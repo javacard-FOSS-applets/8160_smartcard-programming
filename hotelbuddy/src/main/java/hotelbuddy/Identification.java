@@ -175,6 +175,7 @@ public class Identification extends Applet
             return;
         }
 
+        apdu.setIncomingAndReceive();
         byte[] buffer = apdu.getBuffer();
 
         short messageLength = decryptMessage(buffer);
@@ -215,6 +216,7 @@ public class Identification extends Applet
             return;
         }
 
+        apdu.setIncomingAndReceive();
         byte[] buffer = apdu.getBuffer();
 
         short messageLength = decryptMessage(buffer);
@@ -233,7 +235,7 @@ public class Identification extends Applet
             return;
         }
 
-        Util.arrayCopy(buffer, (short) 0, safePin, (short) 0, SAFEPIN_LENGTH);
+        Util.arrayCopy(buffer, (short) (0x00 & 0x00FF), safePin, (short) (0x00 & 0x00FF), SAFEPIN_LENGTH);
     }
 
     /**
@@ -293,6 +295,7 @@ public class Identification extends Applet
             return;
         }
 
+        apdu.setIncomingAndReceive();
         byte[] buffer = apdu.getBuffer();
 
         short messageLength = decryptMessage(buffer);
@@ -304,7 +307,7 @@ public class Identification extends Applet
             return;
         }
 
-        Util.arrayCopy(buffer, (short) 0, carId, (short) 0, messageLength);
+        Util.arrayCopy(buffer, (short) (0x00 & 0x00FF), carId, (short) (0x00 & 0x00FF), messageLength);
         currentCarIdLength = (byte) messageLength;
     }
 
@@ -318,6 +321,7 @@ public class Identification extends Applet
      */
     private void checkAge(APDU apdu)
     {
+        apdu.setIncomingAndReceive();
         byte[] buffer = apdu.getBuffer();
 
         if (birthDay[0] == 0x00)
@@ -336,14 +340,14 @@ public class Identification extends Applet
             return;
         }
 
-        if (!DateHelper.checkDate(buffer, (short) 0))
+        if (!DateHelper.checkDate(buffer, (short) (0x00 & 0x00FF)))
         {
             // Wrong Date Format
             ISOException.throwIt(ISO7816.SW_DATA_INVALID);
             return;
         }
 
-        buffer[0] = DateHelper.yearDifference(buffer, (short) 0, birthDay) < buffer[DateHelper.DATE_LENGTH] ? (byte) 0x00 : (byte) 0x01;
+        buffer[0] = DateHelper.yearDifference(buffer, (short) (0x00 & 0x00FF), birthDay) < buffer[DateHelper.DATE_LENGTH] ? (byte) 0x00 : (byte) 0x01;
 
         send(apdu, buffer, (byte) 0x00, (byte) 0x01);
     }
@@ -366,6 +370,7 @@ public class Identification extends Applet
             return;
         }
 
+        apdu.setIncomingAndReceive();
         byte[] buffer = apdu.getBuffer();
 
         short messageLength = decryptMessage(buffer);
@@ -377,14 +382,14 @@ public class Identification extends Applet
             return;
         }
 
-        if (!DateHelper.checkDate(buffer, (short) 0))
+        if (!DateHelper.checkDate(buffer, (short) (0x00 & 0x00FF)))
         {
             // Data is not valid date
             ISOException.throwIt(ISO7816.SW_DATA_INVALID);
             return;
         }
 
-        Util.arrayCopy(buffer, (short) 0, birthDay, (short) 0, DateHelper.DATE_LENGTH);
+        Util.arrayCopy(buffer, (short) (0x00 & 0x00FF), birthDay, (short) (0x00 & 0x00FF), DateHelper.DATE_LENGTH);
     }
 
     /**
@@ -415,7 +420,7 @@ public class Identification extends Applet
         byte[] buffer = apdu.getBuffer();
         short len = encryptMessage(buffer, content, offset, length);
 
-        apdu.setOutgoingAndSend((short) 0, len);
+        apdu.setOutgoingAndSend((short) (0x00 & 0x00FF), len);
     }
 
     /**
@@ -434,6 +439,7 @@ public class Identification extends Applet
             return;
         }
 
+        apdu.setIncomingAndReceive();
         byte[] buffer = apdu.getBuffer();
 
         short messageLength = decryptMessage(buffer);
@@ -445,7 +451,7 @@ public class Identification extends Applet
             return;
         }
 
-        Util.arrayCopy(buffer, (short) 0, name, (short) 0, messageLength);
+        Util.arrayCopy(buffer, (short) (0x00 & 0x00FF), name, (short) (0x00 & 0x00FF), messageLength);
         currentNameLength = (byte) messageLength;
     }
 
@@ -461,7 +467,7 @@ public class Identification extends Applet
      */
     private short encryptMessage(byte[] buffer, byte[] message, byte offset, byte length)
     {
-        AID cryptographyAid = JCSystem.lookupAID(CRYPTOGRAPHY_AID, (short) 0, (byte) CRYPTOGRAPHY_AID.length);
+        AID cryptographyAid = JCSystem.lookupAID(CRYPTOGRAPHY_AID, (short) (0x00 & 0x00FF), (byte) CRYPTOGRAPHY_AID.length);
         ICryptography cryptoApp = (ICryptography) JCSystem.getAppletShareableInterfaceObject(cryptographyAid, CRYPTOGRAPHY_SECRET);
 
         return cryptoApp.encrypt(buffer, message, offset, length);
@@ -478,7 +484,7 @@ public class Identification extends Applet
      */
     private short decryptMessage(byte[] buffer)
     {
-        AID cryptographyAid = JCSystem.lookupAID(CRYPTOGRAPHY_AID, (short) 0, (byte) CRYPTOGRAPHY_AID.length);
+        AID cryptographyAid = JCSystem.lookupAID(CRYPTOGRAPHY_AID, (short) (0x00 & 0x00FF), (byte) CRYPTOGRAPHY_AID.length);
         ICryptography cryptoApp = (ICryptography) JCSystem.getAppletShareableInterfaceObject(cryptographyAid, CRYPTOGRAPHY_SECRET);
 
         return cryptoApp.decrypt(buffer, ISO7816.OFFSET_CDATA);
