@@ -25,7 +25,7 @@ public class KeyFileGenerator
             RSAPublicKey publicKey;
 
             final KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-            keyGen.initialize(1024);
+            keyGen.initialize(512);
             final KeyPair key = keyGen.generateKeyPair();
 
             privateKey = (RSAPrivateKey) key.getPrivate();

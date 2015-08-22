@@ -14,6 +14,7 @@ import javafx.scene.control.DatePicker;
 import javafx.scene.control.TextField;
 import javafx.util.converter.NumberStringConverter;
 import presentation.controls.NumericTextField;
+import presentation.controls.StringTextField;
 import presentation.models.ConfigurationModel;
 
 import java.util.HashMap;
@@ -25,7 +26,8 @@ public class ConfigurationController
 {
     public Button setIdentificationButton, resetAccessControl, resetIdentification, setAccessButton, addPointsButton, resetPoints;
     public DatePicker birthDateDatePicker;
-    public TextField carIdTextField, nameTextField, pointsTextField;
+    public TextField nameTextField, pointsTextField;
+    public StringTextField carIdTextField;
     public NumericTextField safePinTextField;
     public CheckBox classicBarCheckbox, casinoCheckbox, poolCheckbox, skyBarCheckbox, wellnessCheckbox;
 
@@ -155,8 +157,9 @@ public class ConfigurationController
         resetPoints.addEventHandler(ActionEvent.ACTION, e -> resetPoints());
 
         nameTextField.textProperty().bindBidirectional(this.model.nameProperty());
+        carIdTextField.setMaxlength(IdentificationApplet.CARID_LENGTH);
         carIdTextField.textProperty().bindBidirectional(this.model.carIdProperty());
-        safePinTextField.setMaxlength(IdentificationApplet.SafePinLength);
+        safePinTextField.setMaxlength(IdentificationApplet.SAFEPIN_LENGTH);
         safePinTextField.textProperty().bindBidirectional(this.model.safePinProperty());
         birthDateDatePicker.valueProperty().bindBidirectional(this.model.birthDateProperty());
         pointsTextField.textProperty().bindBidirectional(this.model.pointsProperty(), new NumberStringConverter());

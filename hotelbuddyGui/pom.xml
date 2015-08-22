@@ -70,6 +70,7 @@
                                     <directory>./</directory>
                                     <includes>
                                         <include>*.properties</include>
+                                        <include>*.dll</include>
                                     </includes>
                                 </resource>
                             </resources>
@@ -131,6 +132,13 @@
             <version>1.3.1843</version>
             <scope>system</scope>
             <systemPath>${project.basedir}/lib/ocf.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>reference-services</groupId>
+            <artifactId>reference-services</artifactId>
+            <version>1.3.1843</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/reference-services.jar</systemPath>
         </dependency>
     </dependencies>
 </project>

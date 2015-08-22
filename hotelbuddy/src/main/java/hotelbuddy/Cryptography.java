@@ -9,10 +9,12 @@ public class Cryptography extends Applet implements ICryptography
     // Applet
     private static final short CRYPTOGRAPHY_CLA = (byte) 0x43;
     private static final byte CRYPTOGRAPHY_SECRET = 0x2A;
+    private static final short KEY_SIZE = (byte) 0x40;
 
     // Clients
     private static final byte[] IDENTIFICATION_AID = {0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e};
     private static final byte[] ACCESS_AID = {0x41, 0x63, 0x63, 0x65, 0x73, 0x73};
+    private static final byte[] BONUS_AID = {0x42, 0x6F, 0x6E, 0x75, 0x73};
     private static final byte[] CRYPTOGRAPHY_AID = {0x43, 0x72, 0x79, 0x70, 0x74, 0x6f, 0x67, 0x72, 0x61, 0x70, 0x68, 0x79};
 
     // Instructions
@@ -51,13 +53,13 @@ public class Cryptography extends Applet implements ICryptography
         register();
 
         cardPrivateKeyFlag = 0x00;
-        cardPrivateKey = (RSAPrivateKey) KeyBuilder.buildKey(KeyBuilder.TYPE_RSA_PRIVATE, KeyBuilder.LENGTH_RSA_1024, false);
+        cardPrivateKey = (RSAPrivateKey) KeyBuilder.buildKey(KeyBuilder.TYPE_RSA_PRIVATE, KeyBuilder.LENGTH_RSA_512, false);
 
         cardPublicKeyFlag = 0x00;
-        cardPublicKey = (RSAPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_RSA_PUBLIC, KeyBuilder.LENGTH_RSA_1024, false);
+        cardPublicKey = (RSAPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_RSA_PUBLIC, KeyBuilder.LENGTH_RSA_512, false);
 
         terminalPublicKeyFlag = 0x00;
-        terminalPublicKey = (RSAPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_RSA_PUBLIC, KeyBuilder.LENGTH_RSA_1024, false);
+        terminalPublicKey = (RSAPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_RSA_PUBLIC, KeyBuilder.LENGTH_RSA_512, false);
 
         rsaCipher = Cipher.getInstance(Cipher.ALG_RSA_PKCS1, false);
 
@@ -298,33 +300,33 @@ public class Cryptography extends Applet implements ICryptography
      * @param message message to encrypt
      * @param offset  start offset of the message
      * @param length  length of the message
-     * @return length of encrypted message (usually 128 Byte)
+     * @return length of encrypted message (usually 64 Byte)
      */
     public short encrypt(byte[] buffer, byte[] message, byte offset, byte length)
     {
         signature.init(cardPrivateKey, Signature.MODE_SIGN);
-        short len = signature.sign(message, (short) offset, (short) length, buffer, (short) 128);
+        short len = signature.sign(message, (short) offset, (short) length, buffer, KEY_SIZE);
 
         rsaCipher.init(terminalPublicKey, Cipher.MODE_ENCRYPT);
         short len2 = rsaCipher.doFinal(message, (short) offset, (short) length, buffer, (short) 0);
 
-        return (short)(len + len2);
+        return (short) (len + len2);
     }
 
     /**
      * Decrypts the passed message with cardPrivateKey and writes it into the buffer at offset 0.
      *
      * @param buffer apdu buffer
-     * @param offset message to decrypt (128 Byte)
+     * @param offset message to decrypt (64 Byte)
      * @return trimmed decrypted message
      */
     public short decrypt(byte[] buffer, byte offset)
     {
         rsaCipher.init(cardPrivateKey, Cipher.MODE_DECRYPT);
-        short len = rsaCipher.doFinal(buffer, (short) offset, (short) 128, buffer, (short) 0);
+        short len = rsaCipher.doFinal(buffer, (short) offset, KEY_SIZE, buffer, (short) 0);
 
         signature.init(terminalPublicKey, Signature.MODE_VERIFY);
-        if (!signature.verify(buffer, (short) 0, len, buffer, (short) (offset + 128), (short) 128))
+        if (!signature.verify(buffer, (short) 0, len, buffer, (short) (offset + KEY_SIZE), KEY_SIZE))
         {
             ISOException.throwIt(ISO7816.SW_DATA_INVALID);
         }
@@ -342,7 +344,8 @@ public class Cryptography extends Applet implements ICryptography
     public Shareable getShareableInterfaceObject(AID client_aid, byte parameter)
     {
         if (!client_aid.equals(IDENTIFICATION_AID, (short) 0, (byte) IDENTIFICATION_AID.length)
-                && !client_aid.equals(ACCESS_AID, (short) 0, (byte) ACCESS_AID.length))
+                && !client_aid.equals(ACCESS_AID, (short) 0, (byte) ACCESS_AID.length)
+                && !client_aid.equals(BONUS_AID, (short) 0, (byte) BONUS_AID.length))
         {
             return null;
         }

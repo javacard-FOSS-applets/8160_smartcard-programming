@@ -345,7 +345,7 @@ public class Identification extends Applet
 
         buffer[0] = DateHelper.yearDifference(buffer, (short) 0, birthDay) < buffer[DateHelper.DATE_LENGTH] ? (byte) 0x00 : (byte) 0x01;
 
-        send(apdu, buffer, (byte) 0, (byte) 1);
+        send(apdu, buffer, (byte) 0x00, (byte) 0x01);
     }
 
 

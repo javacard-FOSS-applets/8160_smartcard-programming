@@ -53,7 +53,7 @@ public class SafePinController
     {
         checkButton.addEventHandler(ActionEvent.ACTION, e -> checkSafePin());
 
-        safePinTextField.setMaxlength(IdentificationApplet.SafePinLength);
+        safePinTextField.setMaxlength(IdentificationApplet.SAFEPIN_LENGTH);
         safePinTextField.textProperty().bindBidirectional(this.model.safePinProperty());
         resultLabel.textProperty().bind(this.model.checkStatusProperty());
         resultLabel.textFillProperty().bind(this.model.checkStatusColorProperty());

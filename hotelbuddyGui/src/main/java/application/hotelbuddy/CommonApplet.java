@@ -43,11 +43,11 @@ public final class CommonApplet
      *
      * @param appletName applet to select
      * @param cla        cla
-     * @param data       data to encrypt and send
      * @param ins        instruction
+     * @param data       data to encrypt and send
      * @return result of the operation
      */
-    public static Result<byte[]> sendValue(String appletName, byte cla, byte[] data, byte ins)
+    public static Result<byte[]> sendValue(String appletName, byte cla, byte ins, byte[] data, byte answerLength)
     {
         Result<Boolean> selectResult = JavaCardHelper.selectApplet(appletName);
         if (!selectResult.isSuccess())
@@ -55,7 +55,7 @@ public final class CommonApplet
             return new ErrorResult<>(selectResult.getErrorMessage());
         }
 
-        Result<byte[]> result = JavaCardHelper.sendCommand(cla, ins, data);
+        Result<byte[]> result = JavaCardHelper.sendCommand(cla, ins, data, answerLength);
 
         if (!result.isSuccess())
         {
@@ -70,13 +70,13 @@ public final class CommonApplet
      *
      * @param appletName applet to select
      * @param cla        cla
-     * @param data       data to encrypt and send
      * @param ins        instruction
+     * @param data       data to encrypt and send
      * @return result of the operation
      */
-    public static Result<byte[]> sendValue(String appletName, byte cla, byte data, byte ins)
+    public static Result<byte[]> sendValue(String appletName, byte cla, byte ins, byte[] data)
     {
-        return sendValue(appletName, cla, new byte[]{data}, ins);
+        return sendValue(appletName, cla, ins, data, (byte) 0x00);
     }
 
     /**
@@ -87,8 +87,8 @@ public final class CommonApplet
      * @param ins        instruction
      * @return result of the operation
      */
-    public static Result<byte[]> sendValue(String appletName, byte cla, byte ins)
+    public static Result<byte[]> sendValue(String appletName, byte cla, byte ins, byte answerLength)
     {
-        return sendValue(appletName, cla, new byte[0], ins);
+        return sendValue(appletName, cla, ins, new byte[0], answerLength);
     }
 }

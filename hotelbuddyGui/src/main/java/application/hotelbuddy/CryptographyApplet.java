@@ -48,7 +48,7 @@ public class CryptographyApplet
             return selectResult;
         }
 
-        return CryptographyHelper.exportKeyToCard(
+        return exportKeyToCard(
                 CLA,
                 RSACryptographyHelper.current().getPublicMod(),
                 INS_ImportTerminalPublicMod,
@@ -69,14 +69,14 @@ public class CryptographyApplet
             return selectResult;
         }
 
-        Result<byte[]> exportModResult = JavaCardHelper.sendCommandWithoutEncryption(CLA, INS_ExportCardPublicMod);
+        Result<byte[]> exportModResult = JavaCardHelper.sendCommandWithoutEncryption(CLA, INS_ExportCardPublicMod, (byte) 0x40);
         if (!exportModResult.isSuccess())
         {
             LogHelper.log(LogLevel.FAILURE, "Import of modulus from card failed.");
             return new ErrorResult<>(exportModResult.getErrorMessage());
         }
 
-        Result<byte[]> exportExponentResult = JavaCardHelper.sendCommandWithoutEncryption(CLA, INS_ExportCardPublicExp);
+        Result<byte[]> exportExponentResult = JavaCardHelper.sendCommandWithoutEncryption(CLA, INS_ExportCardPublicExp, (byte) 0x03);
         if (!exportExponentResult.isSuccess())
         {
             LogHelper.log(LogLevel.FAILURE, "Import of exponent from failed.");
@@ -105,7 +105,7 @@ public class CryptographyApplet
             return new ErrorResult<>(readResult.getErrorMessage());
         }
 
-        Result<Boolean> exportToCartResult = CryptographyHelper.exportKeyToCard(
+        Result<Boolean> exportToCartResult = exportKeyToCard(
                 CLA,
                 readResult.get().getPrivateMod().toByteArray(),
                 INS_ImportCardPrivateMod,
@@ -116,11 +116,34 @@ public class CryptographyApplet
             return exportToCartResult;
         }
 
-        return CryptographyHelper.exportKeyToCard(
+        return exportKeyToCard(
                 CLA,
                 readResult.get().getPublicMod().toByteArray(),
                 INS_ImportCardPublicMod,
                 readResult.get().getPublicExp().toByteArray(),
                 INS_ImportCardPublicExp);
+    }
+
+    private static Result<Boolean> exportKeyToCard(byte cla, byte[] modulus, byte insMod, byte[] exponent, byte insExp)
+    {
+        byte[] mod = CryptographyHelper.stripLeadingZero(modulus);
+
+        Result<byte[]> importModResult = JavaCardHelper.sendCommandWithoutEncryption(cla, insMod, mod);
+        if (!importModResult.isSuccess())
+        {
+            LogHelper.log(LogLevel.FAILURE, "Import of modulus failed.");
+            return new ErrorResult<>(importModResult.getErrorMessage());
+        }
+
+        byte[] exp = CryptographyHelper.stripLeadingZero(exponent);
+
+        Result<byte[]> importExpResult = JavaCardHelper.sendCommandWithoutEncryption(cla, insExp, exp);
+        if (!importExpResult.isSuccess())
+        {
+            LogHelper.log(LogLevel.FAILURE, "Import of exponent failed.");
+            return new ErrorResult<>(importExpResult.getErrorMessage());
+        }
+
+        return new SuccessResult<>(true);
     }
 }

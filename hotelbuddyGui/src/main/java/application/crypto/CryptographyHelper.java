@@ -1,7 +1,6 @@
 package application.crypto;
 
 import application.card.JavaCardHelper;
-import application.hotelbuddy.CryptographyApplet;
 import application.log.LogHelper;
 import application.log.LogLevel;
 import common.ErrorResult;
@@ -63,29 +62,6 @@ public class CryptographyHelper
         }
 
         return new BigInteger(str);
-    }
-
-    public static Result<Boolean> exportKeyToCard(byte cla, byte[] modulus, byte insMod, byte[] exponent, byte insExp)
-    {
-        byte[] mod = stripLeadingZero(modulus);
-
-        Result<byte[]> importModResult = JavaCardHelper.sendCommandWithoutEncryption(cla, insMod, mod);
-        if (!importModResult.isSuccess())
-        {
-            LogHelper.log(LogLevel.FAILURE, "Import of modulus failed.");
-            return new ErrorResult<>(importModResult.getErrorMessage());
-        }
-
-        byte[] exp = stripLeadingZero(exponent);
-
-        Result<byte[]> importExpResult = JavaCardHelper.sendCommandWithoutEncryption(cla, insExp, exp);
-        if (!importExpResult.isSuccess())
-        {
-            LogHelper.log(LogLevel.FAILURE, "Import of exponent failed.");
-            return new ErrorResult<>(importExpResult.getErrorMessage());
-        }
-
-        return new SuccessResult<>(true);
     }
 
     public static byte[] stripLeadingZero(byte[] value)

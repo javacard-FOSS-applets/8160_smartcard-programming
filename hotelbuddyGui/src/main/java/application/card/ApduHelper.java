@@ -7,11 +7,11 @@ public class ApduHelper
 {
     public static HotelBuddyCommand getSelectCommand(String appletId)
     {
-        return new HotelBuddyCommand((byte) 0x00, (byte) 0xa4, (byte) 0x04, (byte) 0x00, appletId.getBytes());
+        return new HotelBuddyCommand((byte) 0x00, (byte) 0xa4, (byte) 0x04, (byte) 0x00, appletId.getBytes(), (byte) 0x00);
     }
 
-    public static HotelBuddyCommand getCommand(byte classByte, byte instruction, byte[] content)
+    public static HotelBuddyCommand getCommand(byte classByte, byte instruction, byte[] content, byte answerLength)
     {
-        return new HotelBuddyCommand(classByte, instruction, (byte)0x00, (byte)0x00, content);
+        return new HotelBuddyCommand(classByte, instruction, (byte)0x00, (byte)0x00, content, answerLength);
     }
 }

@@ -8,11 +8,9 @@ import opencard.core.terminal.CommandAPDU;
  */
 public class HotelBuddyCommand extends CommandAPDU
 {
-    protected int lc;
-
-    public HotelBuddyCommand(byte classByte, byte instruction, byte p1, byte p2, byte[] content)
+    public HotelBuddyCommand(byte classByte, byte instruction, byte p1, byte p2, byte[] content, byte answerLength)
     {
-        super(ToCommandBytes(classByte, instruction, p1, p2, content));
+        super(ToCommandBytes(classByte, instruction, p1, p2, content, answerLength));
     }
 
     public byte getCLA()
@@ -35,23 +33,30 @@ public class HotelBuddyCommand extends CommandAPDU
         return this.apdu_buffer[3];
     }
 
-    public int getLC()
+    public byte getLC()
     {
         return this.apdu_buffer[4];
+    }
+
+    public byte getLE()
+    {
+        return this.apdu_buffer[this.apdu_buffer.length - 1];
     }
 
     public String toString()
     {
         StringBuffer ret = new StringBuffer("APDU_Buffer = ");
-        ret.append(this.makeHex(this.getBytes()));
-        ret.append(" (hex) | lc = ");
-        ret.append(this.lc);
+        ret.append(makeHex(this.getBytes()));
+        ret.append(" | lc = ");
+        ret.append(Byte.toUnsignedInt(getLC()));
+        ret.append(" | le = ");
+        ret.append(Byte.toUnsignedInt(getLE()));
         return ret.toString();
     }
 
     private String makeHex(byte[] buffer)
     {
-        int length = buffer.length;
+        Integer length = buffer.length;
         String blank = "";
         StringBuffer ret = new StringBuffer(2 * length);
 
@@ -64,27 +69,38 @@ public class HotelBuddyCommand extends CommandAPDU
         return ret.toString();
     }
 
-    private static byte[] ToCommandBytes(byte classByte, byte instruction, byte p1, byte p2, byte[] content)
+    private static byte[] ToCommandBytes(byte cla, byte ins, byte p1, byte p2, byte[] content, byte answerLength)
     {
-        final int contentLength = content.length;
-        final byte[] command = new byte[5 + contentLength];
+        if (content.length < 1)
+        {
+            return ToCommandBytes(cla, ins, p1, p2, answerLength);
+        }
 
-        command[0] = classByte;
-        command[1] = instruction;
+        final Integer contentLength = content.length;
+        final byte[] command = new byte[6 + contentLength];
+
+        command[0] = cla;
+        command[1] = ins;
         command[2] = p1;
         command[3] = p2;
+        command[4] = contentLength.byteValue();
+        System.arraycopy(content, 0, command, 5, contentLength);
 
-        if (contentLength > 0)
-        {
-            command[4] = (byte) contentLength;
-            System.arraycopy(content, 0, command, 5, contentLength);
-        }
+        command[5 + contentLength] = answerLength;
 
         return command;
     }
 
-    private static byte[] ToCommandBytes(byte classByte, byte instruction, byte[] content)
+    private static byte[] ToCommandBytes(byte cla, byte ins, byte p1, byte p2, byte answerLength)
     {
-        return ToCommandBytes(classByte, instruction, (byte) 0x00, (byte) 0x00, content);
+        final byte[] command = new byte[5];
+
+        command[0] = cla;
+        command[1] = ins;
+        command[2] = p1;
+        command[3] = p2;
+        command[4] = answerLength;
+
+        return command;
     }
 }
