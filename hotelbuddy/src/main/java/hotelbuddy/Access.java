@@ -145,12 +145,14 @@ public class Access extends Applet
             if (!valueAllowed(buffer, (byte) (bufferIndex + KEY_LENGTH)))
             {
                 // Value does not contain known access right, invalid data
+                nextFreeIndex = 0;
                 ISOException.throwIt(ISO7816.SW_DATA_INVALID);
             }
 
             if (keyExists(buffer, (byte) (bufferIndex)))
             {
                 // Key already set, data contains key duplicates.
+                nextFreeIndex = 0;
                 ISOException.throwIt(ISO7816.SW_DATA_INVALID);
             }
 
@@ -196,7 +198,7 @@ public class Access extends Applet
         // dictionary key index
         buffer[OFFSET_INDEX_KEY_EXISTS] = 0;
 
-        while (buffer[OFFSET_INDEX_KEY_EXISTS] < permissionDictionary.length)
+        while (buffer[OFFSET_INDEX_KEY_EXISTS] < nextFreeIndex)
         {
             // Check the key at the current dictionary key index and compare it to the key from the APDU buffer.
             if (Util.arrayCompare(permissionDictionary, (short) (buffer[OFFSET_INDEX_KEY_EXISTS] & 0x00FF), buffer, (short) (offset & 0x00FF), KEY_LENGTH) == 0)
