@@ -51,6 +51,7 @@ public class Access extends Applet
 
         nextFreeIndex = 0;
         accessRightsAlreadySet = false;
+        permissionDictionary = new byte[MAX_ENTRY_COUNT * ENTRY_LENGTH];
     }
 
     /**
@@ -132,16 +133,14 @@ public class Access extends Applet
 
         short messageLength = decryptMessage(buffer);
 
-        if (messageLength % ENTRY_LENGTH != 0 || messageLength == 0 || messageLength > MAX_ENTRY_COUNT * ENTRY_LENGTH)
+        if (messageLength % ENTRY_LENGTH != 0 || messageLength == 0 || messageLength > permissionDictionary.length)
         {
             // Data has invalid length.
             // Minimum is key value pair. Must also contain complete pairs and not exceed max entry count.
             ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
         }
 
-        permissionDictionary = new byte[messageLength];
-
-        for (short bufferIndex = 0; bufferIndex < permissionDictionary.length; bufferIndex += ENTRY_LENGTH)
+        for (short bufferIndex = 0; bufferIndex < messageLength; bufferIndex += ENTRY_LENGTH)
         {
             if (!valueAllowed(buffer, (byte) (bufferIndex + KEY_LENGTH)))
             {
