@@ -9,7 +9,7 @@ import application.log.LogLevel;
 import common.ErrorResult;
 import common.Result;
 import common.SuccessResult;
-import common.TerminalPaths;
+import common.KeyPaths;
 
 import java.math.BigInteger;
 import java.nio.file.Path;
@@ -32,7 +32,7 @@ public class CryptographyApplet
     private static final byte INS_ImportTerminalPublicMod = (byte) 0xE0;
     private static final byte INS_ImportTerminalPublicExp = (byte) 0xE1;
 
-    private static final Path CardKeyFilePath = TerminalPaths.CardKeyPath;
+    private static final Path CardKeyFilePath = KeyPaths.CardKeyPath;
 
     /**
      * Exports the public key of the terminal to the card
@@ -40,7 +40,7 @@ public class CryptographyApplet
      *
      * @return result of the operation
      */
-    public static Result<Boolean> exportTerminalPublicKeyToCard()
+    public static Result<Boolean> setTerminalPublicKeyToCard()
     {
         Result<Boolean> selectResult = JavaCardHelper.selectApplet(AppletName);
         if (!selectResult.isSuccess())
@@ -48,7 +48,7 @@ public class CryptographyApplet
             return selectResult;
         }
 
-        return exportKeyToCard(
+        return setKeyToCard(
                 CLA,
                 RSACryptographyHelper.current().getPublicMod(),
                 INS_ImportTerminalPublicMod,
@@ -61,7 +61,7 @@ public class CryptographyApplet
      *
      * @return result of the operation
      */
-    public static Result<Boolean> importPublicKeyFromCard()
+    public static Result<Boolean> getPublicKeyFromCard()
     {
         Result<Boolean> selectResult = JavaCardHelper.selectApplet(AppletName);
         if (!selectResult.isSuccess())
@@ -97,7 +97,7 @@ public class CryptographyApplet
      *
      * @return result of the operation
      */
-    public static Result<Boolean> loadAndExportCardKeysFromFile()
+    public static Result<Boolean> loadAndSetCardKeys()
     {
         Result<ImportedKeys> readResult = CryptographyHelper.readKeysFromFile(CardKeyFilePath);
         if (!readResult.isSuccess())
@@ -105,7 +105,7 @@ public class CryptographyApplet
             return new ErrorResult<>(readResult.getErrorMessage());
         }
 
-        Result<Boolean> exportToCartResult = exportKeyToCard(
+        Result<Boolean> exportToCartResult = setKeyToCard(
                 CLA,
                 readResult.get().getPrivateMod().toByteArray(),
                 INS_ImportCardPrivateMod,
@@ -116,7 +116,7 @@ public class CryptographyApplet
             return exportToCartResult;
         }
 
-        return exportKeyToCard(
+        return setKeyToCard(
                 CLA,
                 readResult.get().getPublicMod().toByteArray(),
                 INS_ImportCardPublicMod,
@@ -124,7 +124,7 @@ public class CryptographyApplet
                 INS_ImportCardPublicExp);
     }
 
-    private static Result<Boolean> exportKeyToCard(byte cla, byte[] modulus, byte insMod, byte[] exponent, byte insExp)
+    private static Result<Boolean> setKeyToCard(byte cla, byte[] modulus, byte insMod, byte[] exponent, byte insExp)
     {
         byte[] mod = CryptographyHelper.stripLeadingZero(modulus);
 

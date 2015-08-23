@@ -18,15 +18,15 @@ public class Cryptography extends Applet implements ICryptography
     private static final byte[] CRYPTOGRAPHY_AID = {0x43, 0x72, 0x79, 0x70, 0x74, 0x6f, 0x67, 0x72, 0x61, 0x70, 0x68, 0x79};
 
     // Instructions
-    private static final byte INS_ImportCardPrivateMod = (byte) 0xF0;
-    private static final byte INS_ImportCardPrivateExp = (byte) 0xF1;
-    private static final byte INS_ImportCardPublicMod = (byte) 0xF2;
-    private static final byte INS_ImportCardPublicExp = (byte) 0xF3;
-    private static final byte INS_ExportCardPublicMod = (byte) 0xF4;
-    private static final byte INS_ExportCardPublicExp = (byte) 0xF5;
+    private static final byte INS_IMPORT_CARD_PRIVATE_MOD = (byte) 0xF0;
+    private static final byte INS_IMPORT_CARD_PRIVATE_EXP = (byte) 0xF1;
+    private static final byte INS_IMPORT_CARD_PUBLIC_MOD = (byte) 0xF2;
+    private static final byte INS_IMPORT_CARD_PUBLIC_EXP = (byte) 0xF3;
+    private static final byte INS_EXPORT_CARD_PUBLIC_MOD = (byte) 0xF4;
+    private static final byte INS_EXPORT_CARD_PUBLIC_EXP = (byte) 0xF5;
 
-    private static final byte INS_ImportTerminalPublicMod = (byte) 0xE0;
-    private static final byte INS_ImportTerminalPublicExp = (byte) 0xE1;
+    private static final byte INS_IMPORT_TERMINAL_PUBLIC_MOD = (byte) 0xE0;
+    private static final byte INS_IMPORT_TERMINAL_PUBLIC_EXP = (byte) 0xE1;
 
     // Crypto
     private RSAPrivateKey cardPrivateKey;
@@ -91,33 +91,33 @@ public class Cryptography extends Applet implements ICryptography
         short messageLength;
         switch (buf[ISO7816.OFFSET_INS])
         {
-            case INS_ExportCardPublicMod:
+            case INS_EXPORT_CARD_PUBLIC_MOD:
                 exportPublicModulus(apdu);
                 break;
-            case INS_ExportCardPublicExp:
+            case INS_EXPORT_CARD_PUBLIC_EXP:
                 exportPublicExponent(apdu);
                 break;
-            case INS_ImportTerminalPublicMod:
+            case INS_IMPORT_TERMINAL_PUBLIC_MOD:
                 messageLength = (short) (buf[ISO7816.OFFSET_LC] & 0xFF);
                 importTerminalPublicModulus(apdu, messageLength);
                 break;
-            case INS_ImportTerminalPublicExp:
+            case INS_IMPORT_TERMINAL_PUBLIC_EXP:
                 messageLength = (short) (buf[ISO7816.OFFSET_LC] & 0xFF);
                 importTerminalPublicExponent(apdu, messageLength);
                 break;
-            case INS_ImportCardPrivateMod:
+            case INS_IMPORT_CARD_PRIVATE_MOD:
                 messageLength = (short) (buf[ISO7816.OFFSET_LC] & 0xFF);
                 importCardPrivateModulus(apdu, messageLength);
                 break;
-            case INS_ImportCardPrivateExp:
+            case INS_IMPORT_CARD_PRIVATE_EXP:
                 messageLength = (short) (buf[ISO7816.OFFSET_LC] & 0xFF);
                 importCardPrivateExponent(apdu, messageLength);
                 break;
-            case INS_ImportCardPublicMod:
+            case INS_IMPORT_CARD_PUBLIC_MOD:
                 messageLength = (short) (buf[ISO7816.OFFSET_LC] & 0xFF);
                 importCardPublicModulus(apdu, messageLength);
                 break;
-            case INS_ImportCardPublicExp:
+            case INS_IMPORT_CARD_PUBLIC_EXP:
                 messageLength = (short) (buf[ISO7816.OFFSET_LC] & 0xFF);
                 importCardPublicExponent(apdu, messageLength);
                 break;

@@ -29,11 +29,6 @@
                         <fx:include fx:id="AccessTab" source="AccessView.fxml"/>
                     </content>
                 </Tab>
-                <Tab text="Safe-Pin">
-                    <content>
-                        <fx:include fx:id="SafePinTab" source="SafePinView.fxml"/>
-                    </content>
-                </Tab>
                 <Tab text="Bonus Points">
                     <content>
                         <fx:include fx:id="BonusTab" source="Bonus.fxml"/>

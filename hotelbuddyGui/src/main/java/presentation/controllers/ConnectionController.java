@@ -88,7 +88,7 @@ public class ConnectionController
             return;
         }
 
-        Result<Boolean> importCardPublicKeyResult = CryptographyApplet.importPublicKeyFromCard();
+        Result<Boolean> importCardPublicKeyResult = CryptographyApplet.getPublicKeyFromCard();
         if (!importCardPublicKeyResult.isSuccess())
         {
             setConnectionStatus(false, "Cryptography failure, please initalize your card", Color.ORANGE);
@@ -170,21 +170,21 @@ public class ConnectionController
      */
     private void setupCardKeys()
     {
-        Result<Boolean> result = CryptographyApplet.loadAndExportCardKeysFromFile();
+        Result<Boolean> result = CryptographyApplet.loadAndSetCardKeys();
         if (!result.isSuccess())
         {
             AlertHelper.showErrorAlert(result.getErrorMessage());
             return;
         }
 
-        result = CryptographyApplet.exportTerminalPublicKeyToCard();
+        result = CryptographyApplet.setTerminalPublicKeyToCard();
         if (!result.isSuccess())
         {
             AlertHelper.showErrorAlert(result.getErrorMessage());
             return;
         }
 
-        result = CryptographyApplet.importPublicKeyFromCard();
+        result = CryptographyApplet.getPublicKeyFromCard();
         if (!result.isSuccess())
         {
             AlertHelper.showErrorAlert(result.getErrorMessage());

@@ -6,7 +6,7 @@ import application.log.LogLevel;
 import common.ErrorResult;
 import common.Result;
 import common.SuccessResult;
-import common.TerminalPaths;
+import common.KeyPaths;
 
 import javax.crypto.Cipher;
 import java.math.BigInteger;
@@ -24,7 +24,7 @@ import java.security.spec.RSAPublicKeySpec;
  */
 public class RSACryptographyHelper implements IRSACryptographyHelper
 {
-    private static final Path TerminalKeyPath = TerminalPaths.TerminalKeyPath;
+    private static final Path TerminalKeyPath = KeyPaths.TerminalKeyPath;
 
     private static IRSACryptographyHelper instance;
     private Cipher rsaCipher;
