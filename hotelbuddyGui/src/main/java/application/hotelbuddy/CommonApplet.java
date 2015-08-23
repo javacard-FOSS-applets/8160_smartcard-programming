@@ -12,6 +12,8 @@ import common.SuccessResult;
  */
 public final class CommonApplet
 {
+    public static final byte ANSWER_LENGTH = (byte) 0x80;
+
     /**
      * Resets the applet
      *

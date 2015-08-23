@@ -65,7 +65,7 @@ public class AccessApplet
         roomByte[0] = (byte) Integer.parseInt(roomNumber.substring(0, 2));
         roomByte[1] = (byte) Integer.parseInt(roomNumber.substring(2, 4));
 
-        Result<byte[]> result = CommonApplet.sendValue(APPLET_NAME, CLA, INS_GET_RIGHT, roomByte, (byte) 0x01);
+        Result<byte[]> result = CommonApplet.sendValue(APPLET_NAME, CLA, INS_GET_RIGHT, roomByte, CommonApplet.ANSWER_LENGTH);
         return result.isSuccess() && result.get()[0] == ACCESS_GRANTED ? new SuccessResult<>(true) : new ErrorResult<>("Access Denied");
     }
 }

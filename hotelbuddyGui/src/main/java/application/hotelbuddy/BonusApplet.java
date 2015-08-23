@@ -19,8 +19,6 @@ public class BonusApplet
     private static final byte INS_GET_ALL_BONUS = (byte) 0xB1;
     private static final byte INS_RESET = (byte) 0xF0;
 
-    private static final byte BONUS_LENGTH = (byte) 0x02;
-
     /**
      * Sends the given name to the card
      *
@@ -49,7 +47,7 @@ public class BonusApplet
      */
     public static Result<Short> getAllBonus()
     {
-        Result<byte[]> result =  CommonApplet.sendValue(APPLET_NAME, CLA, INS_GET_ALL_BONUS, BONUS_LENGTH);
+        Result<byte[]> result =  CommonApplet.sendValue(APPLET_NAME, CLA, INS_GET_ALL_BONUS, CommonApplet.ANSWER_LENGTH);
         if (!result.isSuccess())
         {
             return new ErrorResult<>(result.getErrorMessage());
