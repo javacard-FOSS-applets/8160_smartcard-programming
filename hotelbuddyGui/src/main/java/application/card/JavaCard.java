@@ -2,6 +2,7 @@ package application.card;
 
 import application.log.LogHelper;
 import application.log.LogLevel;
+import common.Action;
 import common.ErrorResult;
 import common.Result;
 import common.SuccessResult;
@@ -21,6 +22,9 @@ import opencard.opt.util.PassThruCardService;
 public class JavaCard implements IJavaCard, CTListener
 {
     private static IJavaCard instance = null;
+
+    private Action onCardInserted = null;
+    private Action onCardRemoved = null;
 
     SmartCard card;
 
@@ -49,20 +53,18 @@ public class JavaCard implements IJavaCard, CTListener
         catch (ClassNotFoundException ex)
         {
             LogHelper.log(ex);
-            shutdown();
             return new ErrorResult<>("Terminal not available. Please check your opencard2.properties file.");
         }
         catch (Exception ex)
         {
             LogHelper.log(ex);
-            shutdown();
             return new ErrorResult<>("SmartCard couldn't be started.");
         }
 
         LogHelper.log(LogLevel.INFO, "Setting up connection to smartcard");
 
         CardRequest cardRequest = new CardRequest(CardRequest.ANYCARD, null, null);
-        cardRequest.setTimeout(5);
+        cardRequest.setTimeout(1);
 
         try
         {
@@ -71,14 +73,12 @@ public class JavaCard implements IJavaCard, CTListener
         catch (Exception ex)
         {
             LogHelper.log(ex);
-            shutdown();
             return new ErrorResult<>("No smartcard found.");
         }
 
         if (card == null)
         {
             LogHelper.log(LogLevel.WARNING, "No smartcard found");
-            shutdown();
             return new ErrorResult<>("No smartcard found.");
         }
 
@@ -123,11 +123,23 @@ public class JavaCard implements IJavaCard, CTListener
                 LogHelper.log(LogLevel.FAILURE, "Data invalid. Signature verification failed.");
                 return new ErrorResult<>("Data invalid. Signature verification failed.");
             }
+            else if (status.startsWith("61"))
+            {
+                //new ISOCommandAPDU((byte) 0x00, (byte) 0x0C, (byte) 0x00, (byte) 0x00, (byte) 0x01)  ;
+
+                HotelBuddyCommand c = new HotelBuddyCommand((byte) 0x00, (byte) 0xC0, (byte) 0x00, (byte) 0x00, (byte) 0x80);
+                LogHelper.log(LogLevel.INFO, "Sending %s", c.toString());
+                ResponseAPDU response = passThru.sendCommandAPDU(c);
+                LogHelper.log(LogLevel.INFO, "Command successfull");
+                byte[] data = response.data();
+                return data == null ? new SuccessResult<>(new byte[0]) : new SuccessResult<>(data);
+            }
             else if (!status.equals("9000"))
             {
                 LogHelper.log(LogLevel.FAILURE, "Answer incorrect: %s", status);
                 return new ErrorResult<>("Incorrect answer. Please check your command.");
             }
+
 
             LogHelper.log(LogLevel.INFO, "Command successfull");
             byte[] data = responseApdu.data();
@@ -165,6 +177,23 @@ public class JavaCard implements IJavaCard, CTListener
     public void cardInserted(CardTerminalEvent cardTerminalEvent) throws CardTerminalException
     {
         LogHelper.log(LogLevel.INFO, "Card inserted");
+
+        try
+        {
+            Thread.sleep(1000);
+        }
+        catch (InterruptedException e)
+        {
+        }
+
+        CardRequest cardRequest = new CardRequest(CardRequest.ANYCARD, null, null);
+        cardRequest.setTimeout(5);
+        card = SmartCard.getSmartCard(cardTerminalEvent, cardRequest);
+
+        if (onCardInserted != null)
+        {
+            onCardInserted.execute();
+        }
     }
 
     @Override
@@ -172,5 +201,19 @@ public class JavaCard implements IJavaCard, CTListener
     {
         LogHelper.log(LogLevel.INFO, "Card removed");
 
+        if (onCardRemoved != null)
+        {
+            onCardRemoved.execute();
+        }
+    }
+
+    public void setOnCardInserted(Action onCardInserted)
+    {
+        this.onCardInserted = onCardInserted;
+    }
+
+    public void setOnCardRemoved(Action onCardRemoved)
+    {
+        this.onCardRemoved = onCardRemoved;
     }
 }

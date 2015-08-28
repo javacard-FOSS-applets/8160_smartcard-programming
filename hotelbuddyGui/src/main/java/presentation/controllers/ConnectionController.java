@@ -53,7 +53,10 @@ public class ConnectionController
             return;
         }
 
-        connectToSmartCardAsync(false);
+        connectToSmarCard(false);
+
+        JavaCard.current().setOnCardInserted(() -> onCardInserted());
+        JavaCard.current().setOnCardRemoved(() -> onCardRemoved());
     }
 
     /**
@@ -214,12 +217,28 @@ public class ConnectionController
         initializeCardButton.addEventHandler(ActionEvent.ACTION, e -> setupCardKeys());
         initializeCardButton.disableProperty().bind(this.model.isConnectionEstablishedProperty());
 
-
         statusLabel.textProperty().bind(this.model.connectionStatusProperty());
         statusLabel.textFillProperty().bind(this.model.connectionStatusColorProperty());
         terminalKeyStatus.textProperty().bind(this.model.terminalKeyStatusProperty());
         terminalKeyStatus.textFillProperty().bind(this.model.terminalKeyStatusColorProperty());
         cardKeyStatus.textProperty().bind(this.model.cardKeyStatusProperty());
         cardKeyStatus.textFillProperty().bind(this.model.cardKeyStatusColorProperty());
+    }
+
+    private void onCardInserted()
+    {
+
+        Result<Boolean> result = CryptographyApplet.getPublicKeyFromCard();
+        if (!result.isSuccess())
+        {
+            AlertHelper.showErrorAlert(result.getErrorMessage());
+            return;
+        }
+        setConnectionStatus(true, "Connected", Color.GREEN);
+    }
+
+    private void onCardRemoved()
+    {
+        setConnectionStatus(false, "Disconnected", Color.ORANGERED);
     }
 }

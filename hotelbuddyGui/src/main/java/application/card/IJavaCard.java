@@ -1,5 +1,6 @@
 package application.card;
 
+import common.Action;
 import common.Result;
 
 /**
@@ -12,4 +13,8 @@ public interface IJavaCard
     Result<byte[]> sendCommand(HotelBuddyCommand command);
 
     void shutdown();
+
+    void setOnCardInserted(Action onCardInserted);
+
+    void setOnCardRemoved(Action onCardRemoved);
 }

@@ -98,27 +98,27 @@ public class Cryptography extends Applet implements ICryptography
                 exportPublicExponent(apdu);
                 break;
             case INS_IMPORT_TERMINAL_PUBLIC_MOD:
-                messageLength = (short) (buf[ISO7816.OFFSET_LC] & 0xFF);
+                messageLength = (short) (buf[ISO7816.OFFSET_LC] & 0x00FF);
                 importTerminalPublicModulus(apdu, messageLength);
                 break;
             case INS_IMPORT_TERMINAL_PUBLIC_EXP:
-                messageLength = (short) (buf[ISO7816.OFFSET_LC] & 0xFF);
+                messageLength = (short) (buf[ISO7816.OFFSET_LC] & 0x00FF);
                 importTerminalPublicExponent(apdu, messageLength);
                 break;
             case INS_IMPORT_CARD_PRIVATE_MOD:
-                messageLength = (short) (buf[ISO7816.OFFSET_LC] & 0xFF);
+                messageLength = (short) (buf[ISO7816.OFFSET_LC] & 0x00FF);
                 importCardPrivateModulus(apdu, messageLength);
                 break;
             case INS_IMPORT_CARD_PRIVATE_EXP:
-                messageLength = (short) (buf[ISO7816.OFFSET_LC] & 0xFF);
+                messageLength = (short) (buf[ISO7816.OFFSET_LC] & 0x00FF);
                 importCardPrivateExponent(apdu, messageLength);
                 break;
             case INS_IMPORT_CARD_PUBLIC_MOD:
-                messageLength = (short) (buf[ISO7816.OFFSET_LC] & 0xFF);
+                messageLength = (short) (buf[ISO7816.OFFSET_LC] & 0x00FF);
                 importCardPublicModulus(apdu, messageLength);
                 break;
             case INS_IMPORT_CARD_PUBLIC_EXP:
-                messageLength = (short) (buf[ISO7816.OFFSET_LC] & 0xFF);
+                messageLength = (short) (buf[ISO7816.OFFSET_LC] & 0x00FF);
                 importCardPublicExponent(apdu, messageLength);
                 break;
             default:
@@ -187,6 +187,7 @@ public class Cryptography extends Applet implements ICryptography
             return;
         }
 
+        apdu.setIncomingAndReceive();
         byte[] buffer = apdu.getBuffer();
         cardPrivateKey.setModulus(buffer, ISO7816.OFFSET_CDATA, lc);
 
@@ -207,6 +208,7 @@ public class Cryptography extends Applet implements ICryptography
             return;
         }
 
+        apdu.setIncomingAndReceive();
         byte[] buffer = apdu.getBuffer();
         cardPrivateKey.setExponent(buffer, ISO7816.OFFSET_CDATA, lc);
 
@@ -227,6 +229,7 @@ public class Cryptography extends Applet implements ICryptography
             return;
         }
 
+        apdu.setIncomingAndReceive();
         byte[] buffer = apdu.getBuffer();
         cardPublicKey.setModulus(buffer, ISO7816.OFFSET_CDATA, lc);
 
@@ -247,6 +250,7 @@ public class Cryptography extends Applet implements ICryptography
             return;
         }
 
+        apdu.setIncomingAndReceive();
         byte[] buffer = apdu.getBuffer();
         cardPublicKey.setExponent(buffer, ISO7816.OFFSET_CDATA, lc);
 
@@ -267,6 +271,7 @@ public class Cryptography extends Applet implements ICryptography
             return;
         }
 
+        apdu.setIncomingAndReceive();
         byte[] buffer = apdu.getBuffer();
         terminalPublicKey.setModulus(buffer, ISO7816.OFFSET_CDATA, lc);
 
@@ -287,6 +292,7 @@ public class Cryptography extends Applet implements ICryptography
             return;
         }
 
+        apdu.setIncomingAndReceive();
         byte[] buffer = apdu.getBuffer();
         terminalPublicKey.setExponent(buffer, ISO7816.OFFSET_CDATA, lc);
 

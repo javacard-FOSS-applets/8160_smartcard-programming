@@ -87,6 +87,8 @@ public class ConfigurationController
         {
             AlertHelper.showErrorAlert(result.getErrorMessage());
         }
+
+        AlertHelper.showSuccessAlert("Data successfully set.");
     }
 
     /**

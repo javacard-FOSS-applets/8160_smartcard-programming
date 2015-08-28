@@ -146,6 +146,7 @@ public class Identification extends Applet
             return;
         }
 
+        apdu.setIncomingAndReceive();
         send(apdu, birthDay, (byte) 0, DateHelper.DATE_LENGTH);
     }
 
@@ -276,6 +277,7 @@ public class Identification extends Applet
             ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
         }
 
+        apdu.setIncomingAndReceive();
         send(apdu, carId, (byte) 0, currentCarIdLength);
     }
 
@@ -406,6 +408,7 @@ public class Identification extends Applet
             ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
         }
 
+        apdu.setIncomingAndReceive();
         send(apdu, name, (byte) 0, currentNameLength);
     }
 

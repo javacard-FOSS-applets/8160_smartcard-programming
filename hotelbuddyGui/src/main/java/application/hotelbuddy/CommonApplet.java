@@ -93,4 +93,9 @@ public final class CommonApplet
     {
         return sendValue(appletName, cla, ins, new byte[0], answerLength);
     }
+
+    public static Result<byte[]> sendValue(String appletName, byte cla, byte ins)
+    {
+        return sendValue(appletName, cla, ins, new byte[0]);
+    }
 }

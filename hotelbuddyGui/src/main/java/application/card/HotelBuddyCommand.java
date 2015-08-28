@@ -12,6 +12,10 @@ public class HotelBuddyCommand extends CommandAPDU
     {
         super(ToCommandBytes(classByte, instruction, p1, p2, content, answerLength));
     }
+    public HotelBuddyCommand(byte classByte, byte instruction, byte p1, byte p2, byte answerLength)
+    {
+        super(ToCommandBytes(classByte, instruction, p1, p2, answerLength));
+    }
 
     public byte getCLA()
     {

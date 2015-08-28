@@ -55,7 +55,7 @@ public class IdentificationApplet
      */
     public static Result<String> getName()
     {
-        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, INS_GET_NAME, CommonApplet.ANSWER_LENGTH);
+        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, INS_GET_NAME);
         if (!result.isSuccess())
         {
             return new ErrorResult<>(result.getErrorMessage());
@@ -88,7 +88,7 @@ public class IdentificationApplet
      */
     public static Result<String> getCarId()
     {
-        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, INS_GET_CARID, CommonApplet.ANSWER_LENGTH);
+        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, INS_GET_CARID);
         if (!result.isSuccess())
         {
             return new ErrorResult<>(result.getErrorMessage());
@@ -135,7 +135,7 @@ public class IdentificationApplet
         }
 
         byte[] pin = ConvertSafePin(safePin);
-        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, INS_CHECK_SAFEPIN, pin, CommonApplet.ANSWER_LENGTH);
+        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, INS_CHECK_SAFEPIN, pin);
         if (!result.isSuccess())
         {
             return new ErrorResult<>(result.getErrorMessage());
@@ -190,7 +190,7 @@ public class IdentificationApplet
      */
     public static Result<String> getBirthDay()
     {
-        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, INS_GET_BIRTHDAY, CommonApplet.ANSWER_LENGTH);
+        Result<byte[]> result =  CommonApplet.sendValue(AppletName, CLA, INS_GET_BIRTHDAY);
         if (!result.isSuccess())
         {
             return new ErrorResult<>(result.getErrorMessage());
@@ -219,7 +219,7 @@ public class IdentificationApplet
         data[3] = (byte) (date.getYear() % 100);
         data[4] = (byte) age;
 
-        Result<byte[]> result = CommonApplet.sendValue(AppletName, CLA, INS_CHECK_AGE, data, CommonApplet.ANSWER_LENGTH);
+        Result<byte[]> result = CommonApplet.sendValue(AppletName, CLA, INS_CHECK_AGE, data);
         if (!result.isSuccess())
         {
             return new ErrorResult<>(result.getErrorMessage());
